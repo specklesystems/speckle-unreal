@@ -1,0 +1,2 @@
+# speckle-ue
+Our Team is developing a Speckle plugin and interoperability transport schema for UE4. Our goal is to enable Revit/Dynamo and Rhino/Grasshopper to send + receive geometry to UE4 for visualization. Our current priority is to establish and release a data sender (TO UE4). We’re also working on receiver methods, however our initial focus  is on Rhino/Grasshopper to UE4 translation and the attachment of UE4-specific metadata to the core JSON ‘blobs’ in transport.
