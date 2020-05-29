@@ -48,6 +48,8 @@ protected:
 
 	UWorld* World;
 
+	float ScaleFactor;
+
 	void SetUpGetRequest(TSharedRef<IHttpRequest> Request);
 
 	void GetStreamObjects(int32 objectCount);
