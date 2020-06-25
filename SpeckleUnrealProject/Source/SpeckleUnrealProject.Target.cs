@@ -3,12 +3,12 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class SpeckleUnrealTarget : TargetRules
+public class SpeckleUnrealProjectTarget : TargetRules
 {
-	public SpeckleUnrealTarget( TargetInfo Target) : base(Target)
+	public SpeckleUnrealProjectTarget( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "SpeckleUnreal" } );
+		ExtraModuleNames.AddRange( new string[] { "SpeckleUnrealProject" } );
 	}
 }

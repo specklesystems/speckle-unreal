@@ -5,7 +5,8 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 {
 	//When the object is constructed, Get the HTTP module
 	Http = &FHttpModule::Get();
-	ScaleFactor = 0.1;
+	// default conversion is millimeters to centimeters because streams tend to be in ml and unreal is in cm by defaults
+	ScaleFactor = 0.1; 
 }
 
 // Called when the game starts or when spawned
@@ -88,7 +89,7 @@ void ASpeckleUnrealManager::OnStreamResponseReceived(FHttpRequestPtr Request, FH
 			ScaleFactor = 2.5399986;
 
 		//Output it to the engine
-		GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "Units: " + FString::SanitizeFloat (ScaleFactor));
+		GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "Units: " + FString::SanitizeFloat(ScaleFactor));
 		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Green, "Status: " + ResponseMessage);
 		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Green, "Name: " + StreamName);
 		GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, "Description: " + StreamDescription);
@@ -106,7 +107,7 @@ void ASpeckleUnrealManager::OnStreamResponseReceived(FHttpRequestPtr Request, FH
 
 void ASpeckleUnrealManager::GetStreamObjects(int32 objectCount)
 {
-	int32 RequestLimit = 20;
+	int32 RequestLimit = 1;
 
 	for (size_t i = 0; i < objectCount; i += RequestLimit)
 	{
