@@ -31,3 +31,9 @@
 *.out
 *.app
 *.umap
+SpeckleUnrealProject/Binaries/
+SpeckleUnrealProject/Intermediate/
+SpeckleUnrealProject/Plugins/SpeckleUnreal/Binaries/
+SpeckleUnrealProject/Plugins/SpeckleUnreal/Intermediate/
+SpeckleUnrealProject/Saved/
+SpeckleUnrealProject/.vs/

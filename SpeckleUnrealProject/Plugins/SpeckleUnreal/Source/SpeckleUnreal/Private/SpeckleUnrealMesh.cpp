@@ -48,7 +48,7 @@ void ASpeckleUnrealMesh::SetMesh(TArray<FVector> Vertices, TArray<int32> Triangl
 void ASpeckleUnrealMesh::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame

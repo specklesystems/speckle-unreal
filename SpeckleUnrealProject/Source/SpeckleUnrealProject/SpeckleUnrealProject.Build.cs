@@ -2,13 +2,13 @@
 
 using UnrealBuildTool;
 
-public class SpeckleUnreal : ModuleRules
+public class SpeckleUnrealProject : ModuleRules
 {
-	public SpeckleUnreal(ReadOnlyTargetRules Target) : base(Target)
+	public SpeckleUnrealProject(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Http", "Json", "JsonUtilities", "ProceduralMeshComponent" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
