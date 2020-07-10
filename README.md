@@ -6,19 +6,19 @@ Our Team is developing a Speckle plugin and interoperability transport schema fo
 
 In this repository you will find the source code, assets and project settings of the SpeckleUnreal plugin for Unreal Engine app development (Unreal Engine 4.25.1 or newer recommended).
 
-## Useful Links
+# Useful Links
 Use the following links to access resources related to bug reporting, issues, feature requests, and general questions regarding SpeckleUnreal. Future releases may not contain these links & note.
 
-# Speckle Unreal Server
+## Speckle Unreal Server
 https://speckle.mobiusnode.io
 
-# Discourse Forums (Bugs, Issues, etc.)
+## Discourse Forums (Bugs, Issues, etc.)
 https://discourse.mobiusnode.io
 
-# SpeckleUnreal Slack Workspace
+## SpeckleUnreal Slack Workspace
 https://speckle-works-unreal.slack.com
 
-# YouTub Demo & Tutorial - Getting Started
+## YouTub Demo & Tutorial - Getting Started
 https://bit.ly/3ehHQE6
 
 ## NOTICE
