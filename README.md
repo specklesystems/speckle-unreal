@@ -8,7 +8,7 @@ In this repository you will find the source code, assets and project settings of
 
 ## NOTICE
 
-* Tested on Windows and MacOS.
+* Tested on Windows and MacOS and Linux.
 * Only displays meshes. Breps are converted using their display values.
 * Does not use the Speckle Kit workflow as conversions all happen in C++. 
 
