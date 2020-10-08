@@ -1,0 +1,30 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.0.1",
+	"FriendlyName": "SpeckleUnreal",
+	"Description": "Speckle is an open source data platform for Architecture, Engineering, and Construction. It has been open sourced under the MIT license, is customizable, and available in the cloud or via a self-hosted server. It allows users to exchange data between various AEC modelling and content creation platforms.",
+	"Category": "AEC",
+	"CreatedBy": "Mobius Node",
+	"CreatedByURL": "https://www.mobiusnode.io/",
+	"DocsURL": "https://github.com/mobiusnode/SpeckleUnreal",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "SpeckleUnreal",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ProceduralMeshComponent",
+			"Enabled": true
+		}
+	]
+}

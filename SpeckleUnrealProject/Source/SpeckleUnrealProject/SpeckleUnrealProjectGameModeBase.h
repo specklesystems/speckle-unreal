@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "SpeckleUnrealGameModeBase.generated.h"
+#include "SpeckleUnrealProjectGameModeBase.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SPECKLEUNREAL_API ASpeckleUnrealGameModeBase : public AGameModeBase
+class SPECKLEUNREALPROJECT_API ASpeckleUnrealProjectGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
