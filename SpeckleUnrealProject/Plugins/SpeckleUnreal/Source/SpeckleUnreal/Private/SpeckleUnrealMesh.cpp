@@ -13,7 +13,7 @@ ASpeckleUnrealMesh::ASpeckleUnrealMesh()
 	ProceduralMesh->SetupAttachment(RootComponent);
 }
 
-void ASpeckleUnrealMesh::SetMesh(TArray<FVector> Vertices, TArray<int32> Triangles)
+void ASpeckleUnrealMesh::SetMesh(TArray<FVector> Vertices, TArray<int32> Triangles, UMaterialInterface* Material, FLinearColor Color)
 {
 	ProceduralMesh->ClearAllMeshSections();
 
@@ -42,6 +42,12 @@ void ASpeckleUnrealMesh::SetMesh(TArray<FVector> Vertices, TArray<int32> Triangl
 	}
 
 	ProceduralMesh->CreateMeshSection(0, Vertices, Triangles, Normals, UVs, Colors, Tangents, true);
+
+	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(Material, this);
+	
+	DynMaterial->SetVectorParameterValue("BaseColor", Color);
+
+	ProceduralMesh->SetMaterial(0, DynMaterial);
 }
 
 // Called when the game starts or when spawned

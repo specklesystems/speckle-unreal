@@ -7,7 +7,7 @@
 #include "ProceduralMeshComponent.h"
 #include "SpeckleUnrealMesh.generated.h"
 
-UCLASS()
+UCLASS(BlueprintType)
 class SPECKLEUNREAL_API ASpeckleUnrealMesh : public AActor
 {
 	GENERATED_BODY()
@@ -16,13 +16,13 @@ public:
 	UPROPERTY(VisibleAnywhere)
 		USceneComponent* Scene;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		UProceduralMeshComponent* ProceduralMesh;
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealMesh();
 
-	virtual void SetMesh(TArray<FVector> Vertices, TArray<int32> Triangles);
+	virtual void SetMesh(TArray<FVector> Vertices, TArray<int32> Triangles, UMaterialInterface* Material, FLinearColor Color);
 
 protected:
 	// Called when the game starts or when spawned

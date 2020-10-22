@@ -88,6 +88,23 @@ void ASpeckleUnrealManager::OnStreamResponseReceived(FHttpRequestPtr Request, FH
 		if (Units == "inches")
 			ScaleFactor = 2.5399986;
 
+		TArray<TSharedPtr<FJsonValue>> LayersInStream = Stream->GetArrayField("layers");
+		SpeckleUnrealLayers = TArray<USpeckleUnrealLayer*>();
+
+		for (size_t i = 0; i < LayersInStream.Num(); i++)
+		{
+			TSharedPtr<FJsonObject> LayerObject = LayersInStream[i]->AsObject();
+
+			FString LayerName = LayerObject->GetStringField("name");
+			int32 StartIndex = LayerObject->GetIntegerField("startIndex");
+			int32 ObjectCount = LayerObject->GetIntegerField("objectCount");
+
+			//USpeckleUnrealLayer NewLayer = USpeckleUnrealLayer(LayerName, StartIndex, ObjectCount);
+			USpeckleUnrealLayer* NewLayer = NewObject<USpeckleUnrealLayer> (this);
+			NewLayer->Init(LayerName, StartIndex, ObjectCount);
+			SpeckleUnrealLayers.Add(NewLayer);
+		}
+
 		//Output it to the engine
 		GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "Units: " + FString::SanitizeFloat(ScaleFactor));
 		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Green, "Status: " + ResponseMessage);
@@ -108,6 +125,8 @@ void ASpeckleUnrealManager::OnStreamResponseReceived(FHttpRequestPtr Request, FH
 void ASpeckleUnrealManager::GetStreamObjects(int32 objectCount)
 {
 	int32 RequestLimit = 1;
+	CurrentObjectIndex = 0;
+	LayerIndex = 0;
 
 	for (size_t i = 0; i < objectCount; i += RequestLimit)
 	{
@@ -141,8 +160,19 @@ void ASpeckleUnrealManager::OnStreamObjectResponseReceived(FHttpRequestPtr Reque
 	//Deserialize the json data given Reader and the actual object to deserialize
 	if (FJsonSerializer::Deserialize(Reader, ResponseJsonObject))
 	{
+		
+		int32 Offset = FCString::Atoi (*Request->GetURLParameter("offset"));
 		//Get the value of the json object by field name
 		TArray<TSharedPtr<FJsonValue>> StreamObjects = ResponseJsonObject->GetArrayField("resources");
+
+		for (size_t i = 0; i < SpeckleUnrealLayers.Num(); i++)
+		{
+			if (Offset >= SpeckleUnrealLayers[i]->StartIndex)
+			{
+				if (Offset < (SpeckleUnrealLayers[i]->StartIndex + SpeckleUnrealLayers[i]->ObjectCount))
+					LayerIndex = i;
+			}
+		}
 
 		for (size_t i = 0; i < StreamObjects.Num(); i++)
 		{
@@ -207,7 +237,14 @@ void ASpeckleUnrealManager::OnStreamObjectResponseReceived(FHttpRequestPtr Reque
 					}
 				}
 
-				MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles);
+				if (RandomColorsPerLayer)
+					MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, DefaultMeshMaterial, SpeckleUnrealLayers[LayerIndex]->LayerColor);
+				else
+					MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, DefaultMeshMaterial, FLinearColor::White);
+
+				UE_LOG(LogTemp, Warning, TEXT("%d"), Offset);
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *SpeckleUnrealLayers[LayerIndex]->LayerName);
+
 			}
 		}
 	}
