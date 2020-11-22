@@ -37,6 +37,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Speckle")
 		void ReceiveStream();
 
+	UFUNCTION(BlueprintCallable, Category = "Speckle")
+		float GetStreamProgress();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
 		"https://hestia.speckle.works/api/"
@@ -74,6 +77,8 @@ protected:
 	UWorld* World;
 
 	float ScaleFactor;
+
+	TArray<bool> ObjectsReceived;
 
 	int32 LayerIndex;
 	int32 CurrentObjectIndex;

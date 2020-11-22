@@ -121,6 +121,8 @@ void USpeckleUnrealReceiver::OnStreamResponseReceived(FHttpRequestPtr Request, F
 
 void USpeckleUnrealReceiver::GetStreamObjects(int32 objectCount)
 {
+	ObjectsReceived = TArray<bool>();
+
 	int32 RequestLimit = 1;
 	CurrentObjectIndex = 0;
 	LayerIndex = 0;
@@ -136,12 +138,16 @@ void USpeckleUnrealReceiver::GetStreamObjects(int32 objectCount)
 		//This is the url on which to process the request
 		Request->SetURL(ServerUrl + "streams/" + StreamID + "/objects?limit=" + FString::FromInt(RequestLimit) + "&offset=" + FString::FromInt(i));
 
+		ObjectsReceived.Add(false);
+
 		Request->ProcessRequest();
 	}
 }
 
 void USpeckleUnrealReceiver::OnStreamObjectResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	int32 Offset = FCString::Atoi(*Request->GetURLParameter("offset"));
+
 	if (!bWasSuccessful)
 	{
 		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Object Request failed");
@@ -157,8 +163,6 @@ void USpeckleUnrealReceiver::OnStreamObjectResponseReceived(FHttpRequestPtr Requ
 	//Deserialize the json data given Reader and the actual object to deserialize
 	if (FJsonSerializer::Deserialize(Reader, ResponseJsonObject))
 	{
-
-		int32 Offset = FCString::Atoi(*Request->GetURLParameter("offset"));
 		//Get the value of the json object by field name
 		TArray<TSharedPtr<FJsonValue>> StreamObjects = ResponseJsonObject->GetArrayField("resources");
 
@@ -250,4 +254,23 @@ void USpeckleUnrealReceiver::OnStreamObjectResponseReceived(FHttpRequestPtr Requ
 		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Couldn't deserialize Json from object response");
 		GEngine->AddOnScreenDebugMessage(2, 10.0f, FColor::Red, Response->GetContentAsString());
 	}
+
+	
+	ObjectsReceived[Offset] = true;
+}
+
+float USpeckleUnrealReceiver::GetStreamProgress()
+{
+	if (ObjectsReceived.Num() == 0)
+		return 0;
+
+	float ProgressMade = 0;
+
+	for (size_t i = 0; i < ObjectsReceived.Num(); i++)
+	{
+		if (ObjectsReceived[i])
+			ProgressMade++;
+	}
+
+	return ProgressMade / ObjectsReceived.Num();
 }
