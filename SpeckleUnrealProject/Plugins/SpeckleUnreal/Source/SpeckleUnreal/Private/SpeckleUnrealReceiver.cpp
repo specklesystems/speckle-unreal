@@ -86,18 +86,42 @@ void USpeckleUnrealReceiver::OnStreamResponseReceived(FHttpRequestPtr Request, F
 			ScaleFactor = 2.5399986;
 
 		TArray<TSharedPtr<FJsonValue>> LayersInStream = Stream->GetArrayField("layers");
-		SpeckleUnrealLayers = TArray<USpeckleUnrealLayer*>();
+		SpeckleUnrealLayers = TArray<ASpeckleUnrealLayer*>();
 
 		for (size_t i = 0; i < LayersInStream.Num(); i++)
 		{
 			TSharedPtr<FJsonObject> LayerObject = LayersInStream[i]->AsObject();
 
+			ASpeckleUnrealLayer* NewLayer = (ASpeckleUnrealLayer*)World->SpawnActor(ASpeckleUnrealLayer::StaticClass());
+
 			FString LayerName = LayerObject->GetStringField("name");
+			
+			if (LayerName.Contains("::"))
+			{
+				TArray<FString> Parsed = TArray<FString> ();
+				int32 heirarchySize = LayerName.ParseIntoArray(Parsed, TEXT("::"), true);
+
+				LayerName = Parsed[heirarchySize - 1];
+				FString ParentLayerName = Parsed[heirarchySize - 2];
+
+				for (size_t j = 0; j < SpeckleUnrealLayers.Num(); j++)
+				{
+					if (SpeckleUnrealLayers[j]->LayerName == ParentLayerName)
+					{
+						EAttachmentRule rule = EAttachmentRule();
+						FAttachmentTransformRules rules = FAttachmentTransformRules(rule, false);
+						NewLayer->AttachToActor(SpeckleUnrealLayers[j], rules);
+
+						break;
+					}
+				}
+			}
+
+
+
 			int32 StartIndex = LayerObject->GetIntegerField("startIndex");
 			int32 ObjectCount = LayerObject->GetIntegerField("objectCount");
 
-			//USpeckleUnrealLayer NewLayer = USpeckleUnrealLayer(LayerName, StartIndex, ObjectCount);
-			USpeckleUnrealLayer* NewLayer = NewObject<USpeckleUnrealLayer>(this);
 			NewLayer->Init(LayerName, StartIndex, ObjectCount);
 			SpeckleUnrealLayers.Add(NewLayer);
 		}
@@ -192,8 +216,10 @@ void USpeckleUnrealReceiver::OnStreamObjectResponseReceived(FHttpRequestPtr Requ
 
 			if (objectType.ToLower().Contains("mesh"))
 			{
-				AActor* ActorInstance = World->SpawnActor(MeshActor);
-				ASpeckleUnrealMesh* MeshInstance = (ASpeckleUnrealMesh*)ActorInstance;
+				EAttachmentRule rule = EAttachmentRule();
+				FAttachmentTransformRules rules = FAttachmentTransformRules(rule, false);
+
+				ASpeckleUnrealMesh* MeshInstance = World->SpawnActor<ASpeckleUnrealMesh>(ASpeckleUnrealMesh::StaticClass());
 
 				TArray<TSharedPtr<FJsonValue>> ObjectVertices = ObjectToConvert->GetArrayField("vertices");
 				TArray<TSharedPtr<FJsonValue>> ObjectFaces = ObjectToConvert->GetArrayField("faces");
@@ -242,6 +268,8 @@ void USpeckleUnrealReceiver::OnStreamObjectResponseReceived(FHttpRequestPtr Requ
 					MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, DefaultMeshMaterial, SpeckleUnrealLayers[LayerIndex]->LayerColor);
 				else
 					MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, DefaultMeshMaterial, FLinearColor::White);
+
+				MeshInstance->AttachToActor(SpeckleUnrealLayers[LayerIndex], rules);
 
 				UE_LOG(LogTemp, Warning, TEXT("%d"), Offset);
 				UE_LOG(LogTemp, Warning, TEXT("%s"), *SpeckleUnrealLayers[LayerIndex]->LayerName);

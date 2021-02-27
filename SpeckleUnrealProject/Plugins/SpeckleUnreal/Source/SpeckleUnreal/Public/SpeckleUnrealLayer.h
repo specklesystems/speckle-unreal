@@ -3,18 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
+#include "GameFramework/Actor.h"
 #include "SpeckleUnrealLayer.generated.h"
 
 /**
  * 
  */
 UCLASS(BlueprintType)
-class SPECKLEUNREAL_API USpeckleUnrealLayer : public UObject
+class SPECKLEUNREAL_API ASpeckleUnrealLayer : public AActor
 {
 	GENERATED_BODY()
 	
 public:
+	UPROPERTY(VisibleAnywhere)
+		USceneComponent* Scene;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Speckle")
 		FString LayerName;
 
@@ -27,7 +30,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Speckle")
 		int32 ObjectCount;
 
-	USpeckleUnrealLayer();
+	ASpeckleUnrealLayer();
 
 	void Init(FString NewLayerName, int32 NewStartIndex, int32 NewObjectCount);
 };

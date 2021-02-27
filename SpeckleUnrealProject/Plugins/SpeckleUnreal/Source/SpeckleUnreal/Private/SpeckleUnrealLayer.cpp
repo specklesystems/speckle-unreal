@@ -3,13 +3,16 @@
 
 #include "SpeckleUnrealLayer.h"
 
-USpeckleUnrealLayer::USpeckleUnrealLayer()
+ASpeckleUnrealLayer::ASpeckleUnrealLayer()
 {
-
+	Scene = CreateDefaultSubobject<USceneComponent>("Root");
+	RootComponent = Scene;
 }
 
-void USpeckleUnrealLayer::Init(FString NewLayerName, int32 NewStartIndex, int32 NewObjectCount)
+void ASpeckleUnrealLayer::Init(FString NewLayerName, int32 NewStartIndex, int32 NewObjectCount)
 {
+	SetActorLabel(NewLayerName);
+
 	LayerName = NewLayerName;
 	LayerColor = FLinearColor(FMath::FRandRange(0, 1), FMath::FRandRange(0, 1), FMath::FRandRange(0, 1), 1);
 	StartIndex = NewStartIndex;

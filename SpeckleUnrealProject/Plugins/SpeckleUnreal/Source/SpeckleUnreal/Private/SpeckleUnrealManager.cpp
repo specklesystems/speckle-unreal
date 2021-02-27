@@ -89,7 +89,7 @@ void ASpeckleUnrealManager::OnStreamResponseReceived(FHttpRequestPtr Request, FH
 			ScaleFactor = 2.5399986;
 
 		TArray<TSharedPtr<FJsonValue>> LayersInStream = Stream->GetArrayField("layers");
-		SpeckleUnrealLayers = TArray<USpeckleUnrealLayer*>();
+		SpeckleUnrealLayers = TArray<ASpeckleUnrealLayer*>();
 
 		for (size_t i = 0; i < LayersInStream.Num(); i++)
 		{
@@ -100,7 +100,7 @@ void ASpeckleUnrealManager::OnStreamResponseReceived(FHttpRequestPtr Request, FH
 			int32 ObjectCount = LayerObject->GetIntegerField("objectCount");
 
 			//USpeckleUnrealLayer NewLayer = USpeckleUnrealLayer(LayerName, StartIndex, ObjectCount);
-			USpeckleUnrealLayer* NewLayer = NewObject<USpeckleUnrealLayer> (this);
+			ASpeckleUnrealLayer* NewLayer = (ASpeckleUnrealLayer*)World->SpawnActor(ASpeckleUnrealLayer::StaticClass());
 			NewLayer->Init(LayerName, StartIndex, ObjectCount);
 			SpeckleUnrealLayers.Add(NewLayer);
 		}

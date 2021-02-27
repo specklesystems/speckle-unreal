@@ -64,7 +64,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		bool RandomColorsPerLayer;
 
-	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
+	TArray<ASpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	/*Assign this function to call when the GET request processes sucessfully*/
 	void OnStreamResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
