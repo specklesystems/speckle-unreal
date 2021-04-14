@@ -26,16 +26,25 @@ public:
 	FHttpModule* Http;
 
 	/* The actual HTTP call */
-	UFUNCTION()
-		void GetStream();
+	UFUNCTION(CallInEditor, Category = "Speckle")
+		void ImportSpeckleObject();
+
+	UFUNCTION(CallInEditor, Category = "Speckle")
+		void DeleteObjects();
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
-		"https://hestia.speckle.works/api/"
+		"https://speckle.xyz"
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString StreamID {
+		""
+	};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+		FString ObjectID {
 		""
 	};
 
@@ -45,18 +54,22 @@ public:
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		TSubclassOf<ASpeckleUnrealMesh> MeshActor;
+		TSubclassOf<ASpeckleUnrealMesh> MeshActor {
+		ASpeckleUnrealMesh::StaticClass()
+	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		UMaterialInterface* DefaultMeshMaterial;
+		UMaterialInterface* DefaultMeshOpaqueMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		bool RandomColorsPerLayer;
+		UMaterialInterface* DefaultMeshTransparentMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+		bool ImportAtRuntime;
 
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
-	/*Assign this function to call when the GET request processes sucessfully*/
-	void OnStreamResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
@@ -70,12 +83,16 @@ protected:
 
 	float ScaleFactor;
 
-	int32 LayerIndex;
-	int32 CurrentObjectIndex;
+	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
 
-	void SetUpGetRequest(TSharedRef<IHttpRequest> Request);
+	TMap<FString, ASpeckleUnrealMesh*> CreatedSpeckleMeshes;
+	TMap<FString, ASpeckleUnrealMesh*> InProgressSpeckleMeshes;
 
-	void GetStreamObjects(int32 objectCount);
+	ASpeckleUnrealMesh* GetExistingMesh(const FString &objectId);
 
-	void OnStreamObjectResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject);
+
+	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
+	ASpeckleUnrealMesh* CreateMesh(TSharedPtr<FJsonObject>, UMaterialInterface *explicitMaterial = nullptr);
+
 };

@@ -11,9 +11,10 @@ ASpeckleUnrealMesh::ASpeckleUnrealMesh()
 
 	ProceduralMesh = CreateDefaultSubobject<UProceduralMeshComponent>("Mesh");
 	ProceduralMesh->SetupAttachment(RootComponent);
+
 }
 
-void ASpeckleUnrealMesh::SetMesh(TArray<FVector> Vertices, TArray<int32> Triangles, UMaterialInterface* Material, FLinearColor Color)
+void ASpeckleUnrealMesh::SetMesh(const TArray<FVector> &Vertices, const TArray<int32> &Triangles, UMaterialInterface* Material, FLinearColor Color)
 {
 	ProceduralMesh->ClearAllMeshSections();
 
@@ -45,7 +46,7 @@ void ASpeckleUnrealMesh::SetMesh(TArray<FVector> Vertices, TArray<int32> Triangl
 
 	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(Material, this);
 	
-	DynMaterial->SetVectorParameterValue("BaseColor", Color);
+	DynMaterial->SetVectorParameterValue("BaseColor", FLinearColor::White);
 
 	ProceduralMesh->SetMaterial(0, DynMaterial);
 }

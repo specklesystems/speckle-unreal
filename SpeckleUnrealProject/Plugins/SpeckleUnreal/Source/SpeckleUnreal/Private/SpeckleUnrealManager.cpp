@@ -3,10 +3,17 @@
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
 {
+	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleMaterial(TEXT("Material'/SpeckleUnreal/SpeckleMaterial.SpeckleMaterial'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleGlassMaterial(TEXT("Material'/SpeckleUnreal/SpeckleGlassMaterial.SpeckleGlassMaterial'"));
+
 	//When the object is constructed, Get the HTTP module
 	Http = &FHttpModule::Get();
 	// default conversion is millimeters to centimeters because streams tend to be in ml and unreal is in cm by defaults
-	ScaleFactor = 0.1; 
+	ScaleFactor = 0.1;
+	World = GetWorld();
+
+	DefaultMeshOpaqueMaterial = SpeckleMaterial.Object;
+	DefaultMeshTransparentMaterial = SpeckleGlassMaterial.Object;
 }
 
 // Called when the game starts or when spawned
@@ -15,242 +22,308 @@ void ASpeckleUnrealManager::BeginPlay()
 	Super::BeginPlay();
 
 	World = GetWorld();
-	GetStream();
+	if (ImportAtRuntime)
+		ImportSpeckleObject();
 }
 
-void ASpeckleUnrealManager::SetUpGetRequest(TSharedRef<IHttpRequest> Request)
+/*Import the Speckle object*/
+void ASpeckleUnrealManager::ImportSpeckleObject()
 {
+	FString url = ServerUrl + "/objects/" + StreamID + "/" + ObjectID;
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "[Speckle] Downloading: " + url);
+
+	FHttpRequestRef Request = Http->CreateRequest();
+	
 	Request->SetVerb("GET");
-	Request->SetHeader("Content-Type", TEXT("application/json"));
-	Request->SetHeader("Authorization", AuthToken);
-}
+	Request->SetHeader("Accept", TEXT("text/plain"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
 
-/*Http call*/
-void ASpeckleUnrealManager::GetStream()
-{
-	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "Downloading: " + StreamID);
-
-	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
-
-	SetUpGetRequest(Request);
-
-	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamResponseReceived);
-
-	//This is the url on which to process the request
-	Request->SetURL(ServerUrl + "streams/" + StreamID);
-
+	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamTextResponseReceived);
+	Request->SetURL(url);
 	Request->ProcessRequest();
 }
 
-/*Assigned function on successfull http call*/
-void ASpeckleUnrealManager::OnStreamResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Stream Request failed");
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Stream Request failed: " + Response->GetContentAsString());
+		return;
+	}
+	auto responseCode = Response->GetResponseCode();
+	if (responseCode != 200)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, FString::Printf(TEXT("Error response. Response code %d"), responseCode));
 		return;
 	}
 
-	//Create a pointer to hold the json serialized data
-	TSharedPtr<FJsonObject> ResponseJsonObject;
+	FString response = Response->GetContentAsString();
+	
+	// ParseIntoArray is very inneficient for large strings.
+	// https://docs.unrealengine.com/en-US/API/Runtime/Core/Containers/FString/ParseIntoArrayLines/index.html
+	// https://answers.unrealengine.com/questions/81697/reading-text-file-line-by-line.html
+	// Can be fixed by setting the size of the array
+	int lineCount = 0;
+	for (const TCHAR* ptr = *response; *ptr; ptr++)
+		if (*ptr == '\n')
+			lineCount++;
+	TArray<FString> lines;
+	lines.Reserve(lineCount);
+	response.ParseIntoArray(lines, TEXT("\n"), true);
 
-	//Create a reader pointer to read the json data
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Parsing %d downloaded objects..."), lineCount));
 
-	//Deserialize the json data given Reader and the actual object to deserialize
-	if (FJsonSerializer::Deserialize(Reader, ResponseJsonObject))
+	for (auto& line : lines)
 	{
-		//Get the value of the json object by field name
-		FString ResponseMessage = ResponseJsonObject->GetStringField("message");
-		TSharedPtr<FJsonObject> Stream = ResponseJsonObject->GetObjectField("resource");
-		FString StreamName = Stream->GetStringField("name");
-		FString StreamDescription = Stream->GetStringField("description");
+		FString objectId, objectJson;
+		if (!line.Split("\t", &objectId, &objectJson))
+			continue;
+		TSharedPtr<FJsonObject> jsonObject;
+		TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(objectJson);
+		if (!FJsonSerializer::Deserialize(jsonReader, jsonObject))
+			continue;
 
-		FString Units = ResponseJsonObject->GetObjectField("baseProperties")->GetStringField("units").ToLower();
-
-		// unreal engine units are in cm by default but the conversion is editable by users so
-		// this needs to be accounted for later.
-		if (Units == "meters" || Units == "metres")
-			ScaleFactor = 100;
-
-		if (Units == "centimeters" || Units == "centimetres")
-			ScaleFactor = 1;
-
-		if (Units == "millimeters" || Units == "millimetres")
-			ScaleFactor = 0.1;
-
-		if (Units == "yards")
-			ScaleFactor = 91.4402757;
-
-		if (Units == "feet")
-			ScaleFactor = 30.4799990;
-
-		if (Units == "inches")
-			ScaleFactor = 2.5399986;
-
-		TArray<TSharedPtr<FJsonValue>> LayersInStream = Stream->GetArrayField("layers");
-		SpeckleUnrealLayers = TArray<USpeckleUnrealLayer*>();
-
-		for (size_t i = 0; i < LayersInStream.Num(); i++)
-		{
-			TSharedPtr<FJsonObject> LayerObject = LayersInStream[i]->AsObject();
-
-			FString LayerName = LayerObject->GetStringField("name");
-			int32 StartIndex = LayerObject->GetIntegerField("startIndex");
-			int32 ObjectCount = LayerObject->GetIntegerField("objectCount");
-
-			//USpeckleUnrealLayer NewLayer = USpeckleUnrealLayer(LayerName, StartIndex, ObjectCount);
-			USpeckleUnrealLayer* NewLayer = NewObject<USpeckleUnrealLayer> (this);
-			NewLayer->Init(LayerName, StartIndex, ObjectCount);
-			SpeckleUnrealLayers.Add(NewLayer);
-		}
-
-		//Output it to the engine
-		GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "Units: " + FString::SanitizeFloat(ScaleFactor));
-		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Green, "Status: " + ResponseMessage);
-		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Green, "Name: " + StreamName);
-		GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, "Description: " + StreamDescription);
-
-		TArray<TSharedPtr<FJsonValue>> ObjectPlaceholderArray = Stream->GetArrayField("objects");
-
-		GetStreamObjects(ObjectPlaceholderArray.Num());
+		SpeckleObjects.Add(objectId, jsonObject);
 	}
-	else
+
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
+
+	ImportObjectFromCache(SpeckleObjects[ObjectID]);
+	
+	for (auto& m : CreatedSpeckleMeshes)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Couldn't deserialize Json from stream response");
-		GEngine->AddOnScreenDebugMessage(2, 10.0f, FColor::Red, Response->GetContentAsString());
+		if (InProgressSpeckleMeshes.Contains(m.Key) && InProgressSpeckleMeshes[m.Key] == m.Value)
+			continue;
+		if (m.Value->Scene) // actors removed by the user in the editor have the Scene set to nullptr
+			m.Value->Destroy();
 	}
+
+	CreatedSpeckleMeshes = InProgressSpeckleMeshes;
+	InProgressSpeckleMeshes.Empty();
+
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedSpeckleMeshes.Num()));
+
 }
 
-void ASpeckleUnrealManager::GetStreamObjects(int32 objectCount)
+ASpeckleUnrealMesh* ASpeckleUnrealManager::GetExistingMesh(const FString &objectId)
 {
-	int32 RequestLimit = 1;
-	CurrentObjectIndex = 0;
-	LayerIndex = 0;
+	if (InProgressSpeckleMeshes.Contains(objectId))
+		return InProgressSpeckleMeshes[objectId];
 
-	for (size_t i = 0; i < objectCount; i += RequestLimit)
-	{
-		TSharedRef<IHttpRequest> Request = Http->CreateRequest();
-
-		SetUpGetRequest(Request);
-
-		Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamObjectResponseReceived);
-
-		//This is the url on which to process the request
-		Request->SetURL(ServerUrl + "streams/" + StreamID + "/objects?limit=" + FString::FromInt(RequestLimit) + "&offset=" + FString::FromInt(i));
-
-		Request->ProcessRequest();
-	}
+	if(!CreatedSpeckleMeshes.Contains(objectId))
+		return nullptr;
+	ASpeckleUnrealMesh* meshActor = CreatedSpeckleMeshes[objectId];
+	// Check if actor has been deleted by the user
+	if (!meshActor || !meshActor->Scene)
+		return nullptr;
+	return meshActor;
 }
 
-void ASpeckleUnrealManager::OnStreamObjectResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObj)
 {
-	if (!bWasSuccessful)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Object Request failed");
+	if (!speckleObj->HasField("speckle_type"))
+		return;
+	if (speckleObj->GetStringField("speckle_type") == "reference" && speckleObj->HasField("referencedId")) {
+		TSharedPtr<FJsonObject> referencedObj;
+		if (SpeckleObjects.Contains(speckleObj->GetStringField("referencedId")))
+			ImportObjectFromCache(SpeckleObjects[speckleObj->GetStringField("referencedId")]);		
+		return;
+	}
+	if (!speckleObj->HasField("id"))
+		return;
+	FString objectId = speckleObj->GetStringField("id");
+	FString speckleType = speckleObj->GetStringField("speckle_type");
+	
+	// UE_LOG(LogTemp, Warning, TEXT("Importing object %s (type %s)"), *objectId, *speckleType);
+
+	if (speckleObj->GetStringField("speckle_type") == "Objects.Geometry.Mesh") {
+		ASpeckleUnrealMesh* mesh = GetExistingMesh(objectId);
+		if (!mesh)
+			mesh = CreateMesh(speckleObj);
+		InProgressSpeckleMeshes.Add(objectId, mesh);
 		return;
 	}
 
-	//Create a pointer to hold the json serialized data
-	TSharedPtr<FJsonObject> ResponseJsonObject;
-
-	//Create a reader pointer to read the json data
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-
-	//Deserialize the json data given Reader and the actual object to deserialize
-	if (FJsonSerializer::Deserialize(Reader, ResponseJsonObject))
+	if (speckleObj->HasField("@displayMesh"))
 	{
-		
-		int32 Offset = FCString::Atoi (*Request->GetURLParameter("offset"));
-		//Get the value of the json object by field name
-		TArray<TSharedPtr<FJsonValue>> StreamObjects = ResponseJsonObject->GetArrayField("resources");
+		UMaterialInterface* explicitMaterial = nullptr;
+		if (speckleObj->HasField("renderMaterial"))
+			explicitMaterial = CreateMaterial(speckleObj->GetObjectField("renderMaterial"));
 
-		for (size_t i = 0; i < SpeckleUnrealLayers.Num(); i++)
+		// Check if the @displayMesh is an object or an array
+		const TSharedPtr<FJsonObject> *meshObjPtr;
+		const TArray<TSharedPtr<FJsonValue>> *meshArrayPtr;
+
+		if (speckleObj->TryGetObjectField("@displayMesh", meshObjPtr))
 		{
-			if (Offset >= SpeckleUnrealLayers[i]->StartIndex)
-			{
-				if (Offset < (SpeckleUnrealLayers[i]->StartIndex + SpeckleUnrealLayers[i]->ObjectCount))
-					LayerIndex = i;
-			}
+			TSharedPtr<FJsonObject> meshObj = SpeckleObjects[(*meshObjPtr)->GetStringField("referencedId")];
+
+			ASpeckleUnrealMesh* mesh = GetExistingMesh(objectId);
+			if (!mesh)
+				mesh = CreateMesh(meshObj, explicitMaterial);
+			InProgressSpeckleMeshes.Add(objectId, mesh);
 		}
-
-		for (size_t i = 0; i < StreamObjects.Num(); i++)
+		else if (speckleObj->TryGetArrayField("@displayMesh", meshArrayPtr))
 		{
-			TSharedPtr<FJsonObject> StreamObject = StreamObjects[i].Get()->AsObject();
-
-			TSharedPtr<FJsonObject> ObjectToConvert = StreamObject;
-
-			FString objectType = ObjectToConvert->GetStringField("type");
-
-			if (objectType.ToLower().Contains("brep"))
+			for (auto& meshObjValue : *meshArrayPtr)
 			{
-				ObjectToConvert = StreamObject->GetObjectField("displayValue");
+				FString meshId = meshObjValue->AsObject()->GetStringField("referencedId");
+				FString unrealMeshKey = objectId + meshId;
 
-				objectType = ObjectToConvert->GetStringField("type");
-			}
-
-			if (objectType.ToLower().Contains("mesh"))
-			{
-				AActor* ActorInstance = World->SpawnActor(MeshActor);
-				ASpeckleUnrealMesh* MeshInstance = (ASpeckleUnrealMesh*)ActorInstance;
-
-				TArray<TSharedPtr<FJsonValue>> ObjectVertices = ObjectToConvert->GetArrayField("vertices");
-				TArray<TSharedPtr<FJsonValue>> ObjectFaces = ObjectToConvert->GetArrayField("faces");
-
-				TArray<FVector> ParsedVerticies;
-
-				for (size_t j = 0; j < ObjectVertices.Num(); j += 3)
-				{
-					ParsedVerticies.Add(FVector
-					(
-						(float)(ObjectVertices[j].Get()->AsNumber()) * -1,
-						(float)(ObjectVertices[j + 1].Get()->AsNumber()),
-						(float)(ObjectVertices[j + 2].Get()->AsNumber())
-					) * ScaleFactor);
-				}
-
-				//convert mesh faces into triangle array regardless of whether or not they are quads
-				TArray<int32> ParsedTriangles;
-				int32 j = 0;
-				while (j < ObjectFaces.Num())
-				{
-					if (ObjectFaces[j].Get()->AsNumber() == 0)
-					{
-						//Triangles
-						ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-						ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-						ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-						j += 4;
-					}
-					else
-					{
-						//Quads to triangles
-						ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-						ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-						ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-
-						ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-						ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-						ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
-
-						j += 5;
-					}
-				}
-
-				if (RandomColorsPerLayer)
-					MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, DefaultMeshMaterial, SpeckleUnrealLayers[LayerIndex]->LayerColor);
-				else
-					MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, DefaultMeshMaterial, FLinearColor::White);
-
-				UE_LOG(LogTemp, Warning, TEXT("%d"), Offset);
-				UE_LOG(LogTemp, Warning, TEXT("%s"), *SpeckleUnrealLayers[LayerIndex]->LayerName);
-
+				ASpeckleUnrealMesh* mesh = GetExistingMesh(unrealMeshKey);
+				if (!mesh)
+					mesh = CreateMesh(SpeckleObjects[meshId], explicitMaterial);
+				InProgressSpeckleMeshes.Add(unrealMeshKey, mesh);
 			}
 		}
 	}
-	else
+
+	// Go recursively into all object fields (except @displayMesh)
+	for (auto& kv : speckleObj->Values)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Couldn't deserialize Json from object response");
-		GEngine->AddOnScreenDebugMessage(2, 10.0f, FColor::Red, Response->GetContentAsString());
+		if (kv.Key == "@displayMesh")
+			continue;
+
+		const TSharedPtr< FJsonObject > *subObjectPtr;
+		if (kv.Value->TryGetObject(subObjectPtr))
+		{
+			ImportObjectFromCache(*subObjectPtr);
+			continue;
+		}
+
+		const TArray<TSharedPtr<FJsonValue>> *subArrayPtr;
+		if (kv.Value->TryGetArray(subArrayPtr))
+		{
+			for (auto& arrayElement : *subArrayPtr)
+			{
+				const TSharedPtr<FJsonObject> *arraySubObjPtr;
+				if (!arrayElement->TryGetObject(arraySubObjPtr))
+					continue;
+				ImportObjectFromCache(*arraySubObjPtr);
+			}
+		}
 	}
+
+}
+
+UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> obj)
+{
+	if (obj->GetStringField("speckle_type") == "reference")
+		obj = SpeckleObjects[obj->GetStringField("referencedId")];
+
+	int opacity;
+	if (obj->TryGetNumberField("opacity", opacity)) {
+		if (opacity < 1) {
+			return DefaultMeshTransparentMaterial;
+		}
+	}
+	return DefaultMeshOpaqueMaterial;
+}
+
+ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> obj, UMaterialInterface* explicitMaterial)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Creating mesh for object %s"), *obj->GetStringField("id"));
+
+	FString Units = obj->GetStringField("units");
+	// unreal engine units are in cm by default but the conversion is editable by users so
+	// this needs to be accounted for later.
+	ScaleFactor = 1;
+	if (Units == "meters" || Units == "metres" || Units == "m")
+		ScaleFactor = 100;
+
+	if (Units == "centimeters" || Units == "centimetres" || Units == "cm")
+		ScaleFactor = 1;
+
+	if (Units == "millimeters" || Units == "millimetres" || Units == "mm")
+		ScaleFactor = 0.1;
+
+	if (Units == "yards" || Units == "yd")
+		ScaleFactor = 91.4402757;
+
+	if (Units == "feet" || Units == "ft")
+		ScaleFactor = 30.4799990;
+
+	if (Units == "inches" || Units == "in")
+		ScaleFactor = 2.5399986;
+
+	// The following line can be used to debug large objects
+	// ScaleFactor = ScaleFactor * 0.1;
+
+	FString verticesId = obj->GetArrayField("vertices")[0]->AsObject()->GetStringField("referencedId");
+	FString facesId = obj->GetArrayField("faces")[0]->AsObject()->GetStringField("referencedId");
+
+	TArray<TSharedPtr<FJsonValue>> ObjectVertices = SpeckleObjects[verticesId]->GetArrayField("data");
+	TArray<TSharedPtr<FJsonValue>> ObjectFaces = SpeckleObjects[facesId]->GetArrayField("data");
+
+	AActor* ActorInstance = World->SpawnActor(MeshActor);
+	ASpeckleUnrealMesh* MeshInstance = (ASpeckleUnrealMesh*)ActorInstance;
+
+#if WITH_EDITOR
+	MeshInstance->SetFolderPath(FName(GetActorLabel() + FString(TEXT("_")) + StreamID));
+#endif
+
+	TArray<FVector> ParsedVerticies;
+
+	for (size_t j = 0; j < ObjectVertices.Num(); j += 3)
+	{
+		ParsedVerticies.Add(FVector
+		(
+			(float)(ObjectVertices[j].Get()->AsNumber()) * -1,
+			(float)(ObjectVertices[j + 1].Get()->AsNumber()),
+			(float)(ObjectVertices[j + 2].Get()->AsNumber())
+		) * ScaleFactor);
+	}
+
+	//convert mesh faces into triangle array regardless of whether or not they are quads
+	TArray<int32> ParsedTriangles;
+	int32 j = 0;
+	while (j < ObjectFaces.Num())
+	{
+		if (ObjectFaces[j].Get()->AsNumber() == 0)
+		{
+			//Triangles
+			ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
+			ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
+			ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+			j += 4;
+		}
+		else
+		{
+			//Quads to triangles
+			ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
+			ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
+			ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+
+			ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
+			ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+			ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
+
+			j += 5;
+		}
+	}
+
+	// Material priority (low to high): DefaultMeshOpaqueMaterial, renderMaterial set on parent, renderMaterial set on mesh
+	if (!explicitMaterial)
+		explicitMaterial = DefaultMeshOpaqueMaterial;
+	if (obj->HasField("renderMaterial"))
+		explicitMaterial = CreateMaterial(obj->GetObjectField("renderMaterial"));
+
+	MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, explicitMaterial, FLinearColor::White);
+
+	// UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVerticies.Num(), ParsedTriangles.Num());
+
+	return MeshInstance;
+}
+
+
+void ASpeckleUnrealManager::DeleteObjects()
+{
+	for (auto& m : CreatedSpeckleMeshes)
+	{
+		if (m.Value->Scene)
+			m.Value->Destroy();
+	}
+
+	CreatedSpeckleMeshes.Empty();
+	InProgressSpeckleMeshes.Empty();
 }

@@ -22,7 +22,7 @@ public:
 	// Sets default values for this actor's properties
 	ASpeckleUnrealMesh();
 
-	virtual void SetMesh(TArray<FVector> Vertices, TArray<int32> Triangles, UMaterialInterface* Material, FLinearColor Color);
+	virtual void SetMesh(const TArray<FVector> &Vertices, const TArray<int32> &Triangles, UMaterialInterface* Material, FLinearColor Color);
 
 protected:
 	// Called when the game starts or when spawned
