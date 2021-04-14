@@ -5,6 +5,11 @@
 Plugin for Unreal Engine 4 to import objects from Speckle v2.
 
 
+Screencast of an example: https://user-images.githubusercontent.com/2551138/114720093-61403e00-9d40-11eb-8045-6e8ca656554d.mp4
+
+
+
+
 ## NOTICE
 
 * Tested on Windows, Unreal Engine v4.26 and Visual Studio Community 2019
@@ -23,3 +28,6 @@ We will eventually look to distributing the plugin officially on the Unreal Engi
 
 ## Credits
 Based off the original Unreal integration for Speckle v1 by Mark and Jak which can be found here: [https://github.com/mobiusnode/SpeckleUnreal](https://github.com/mobiusnode/SpeckleUnreal).
+
+https://user-images.githubusercontent.com/2551138/114720051-571e3f80-9d40-11eb-9099-d3394747a1d3.mp4
+
