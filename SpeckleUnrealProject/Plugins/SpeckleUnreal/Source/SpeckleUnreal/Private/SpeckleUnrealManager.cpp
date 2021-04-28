@@ -101,6 +101,8 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	CreatedSpeckleMeshes = InProgressSpeckleMeshes;
 	InProgressSpeckleMeshes.Empty();
 
+	PlaceMeshesUnderRootActor(CreatedSpeckleMeshes);
+	
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedSpeckleMeshes.Num()));
 
 }
@@ -258,9 +260,10 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	AActor* ActorInstance = World->SpawnActor(MeshActor);
 	ASpeckleUnrealMesh* MeshInstance = (ASpeckleUnrealMesh*)ActorInstance;
 
-#if WITH_EDITOR
-	MeshInstance->SetFolderPath(FName(GetActorLabel() + FString(TEXT("_")) + StreamID));
-#endif
+//Currently not needed since meshes are placed under this actor.
+// #if WITH_EDITOR
+// 	MeshInstance->SetFolderPath(FName(GetActorLabel() + FString(TEXT("_")) + StreamID));
+// #endif
 
 	TArray<FVector> ParsedVerticies;
 
@@ -315,6 +318,18 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	return MeshInstance;
 }
 
+void ASpeckleUnrealManager::PlaceMeshesUnderRootActor(const TMap<FString, ASpeckleUnrealMesh*>& SpeckleMeshes)
+{
+	if(SpeckleMeshes.Num() == 0) return;
+
+	//attaches each speckleMesh under this actor
+	for (auto m : SpeckleMeshes)
+	{
+		GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Blue, FString::Printf(TEXT("[Speckle] Object placed under root actor %s"), *m.Key));
+		SpeckleMeshes[m.Key]->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+		SpeckleMeshes[m.Key]->SetOwner(this);
+	}
+}
 
 void ASpeckleUnrealManager::DeleteObjects()
 {
