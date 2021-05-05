@@ -94,6 +94,4 @@ protected:
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
 	ASpeckleUnrealMesh* CreateMesh(TSharedPtr<FJsonObject>, UMaterialInterface *explicitMaterial = nullptr);
-
-	void PlaceMeshesUnderRootActor(const TMap<FString, ASpeckleUnrealMesh*>& SpeckleMeshes);
 };

@@ -100,8 +100,6 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	CreatedSpeckleMeshes = InProgressSpeckleMeshes;
 	InProgressSpeckleMeshes.Empty();
-
-	PlaceMeshesUnderRootActor(CreatedSpeckleMeshes);
 	
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedSpeckleMeshes.Num()));
 
@@ -265,6 +263,14 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 // 	MeshInstance->SetFolderPath(FName(GetActorLabel() + FString(TEXT("_")) + StreamID));
 // #endif
 
+	
+	// attaches each speckleMesh under this actor (SpeckleManager)
+	if(MeshInstance != nullptr)
+	{
+		MeshInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+		MeshInstance->SetOwner(this);
+	}
+	
 	TArray<FVector> ParsedVerticies;
 
 	for (size_t j = 0; j < ObjectVertices.Num(); j += 3)
@@ -316,19 +322,6 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	// UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVerticies.Num(), ParsedTriangles.Num());
 
 	return MeshInstance;
-}
-
-void ASpeckleUnrealManager::PlaceMeshesUnderRootActor(const TMap<FString, ASpeckleUnrealMesh*>& SpeckleMeshes)
-{
-	if(SpeckleMeshes.Num() == 0) return;
-
-	//attaches each speckleMesh under this actor
-	for (auto m : SpeckleMeshes)
-	{
-		GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Blue, FString::Printf(TEXT("[Speckle] Object placed under root actor %s"), *m.Key));
-		SpeckleMeshes[m.Key]->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-		SpeckleMeshes[m.Key]->SetOwner(this);
-	}
 }
 
 void ASpeckleUnrealManager::DeleteObjects()
