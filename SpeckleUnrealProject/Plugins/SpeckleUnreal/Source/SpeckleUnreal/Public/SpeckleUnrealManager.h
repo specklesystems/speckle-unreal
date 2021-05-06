@@ -94,5 +94,4 @@ protected:
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
 	ASpeckleUnrealMesh* CreateMesh(TSharedPtr<FJsonObject>, UMaterialInterface *explicitMaterial = nullptr);
-
 };
