@@ -2,11 +2,18 @@
 
 #include "SpeckleUnreal.h"
 
+
+#include "SpeckleManagerDetailsPanel.h"
+#include "SpeckleUnrealManager.h"
+
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
 void FSpeckleUnrealModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	//Register the custom details panel we have created
+	PropertyModule.RegisterCustomClassLayout(ASpeckleUnrealManager::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&SpeckleManagerDetailsPanel::MakeInstance));
 }
 
 void FSpeckleUnrealModule::ShutdownModule()

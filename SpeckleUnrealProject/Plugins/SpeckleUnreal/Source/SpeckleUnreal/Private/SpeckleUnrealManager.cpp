@@ -75,6 +75,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	for (auto& line : lines)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *line);
 		FString objectId, objectJson;
 		if (!line.Split("\t", &objectId, &objectJson))
 			continue;
@@ -87,7 +88,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	}
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
-
+	
 	ImportObjectFromCache(SpeckleObjects[ObjectID]);
 	
 	for (auto& m : CreatedSpeckleMeshes)
@@ -102,7 +103,6 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	InProgressSpeckleMeshes.Empty();
 	
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedSpeckleMeshes.Num()));
-
 }
 
 ASpeckleUnrealMesh* ASpeckleUnrealManager::GetExistingMesh(const FString &objectId)
@@ -322,6 +322,100 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	// UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVerticies.Num(), ParsedTriangles.Num());
 
 	return MeshInstance;
+}
+
+void ASpeckleUnrealManager::OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWasSuccessful)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Stream Request failed: " + Response->GetContentAsString());
+		return;
+	}
+
+	auto responseCode = Response-> GetResponseCode();
+	if (responseCode != 200)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, FString::Printf(TEXT("Error response. Response code %d"), responseCode));
+		return;
+	}
+
+	FString response = Response->GetContentAsString();
+	
+	//Create a pointer to hold the json serialized data
+	TSharedPtr<FJsonObject> JsonObject;
+
+	//Create a reader pointer to read the json data
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
+
+	//Deserialize the json data given Reader and the actual object to deserialize
+	if (FJsonSerializer::Deserialize(Reader, JsonObject))
+	{
+		for(const auto& pair:JsonObject->Values)
+		{
+			auto CommitsArr = JsonObject->GetObjectField(TEXT("data"))
+			->GetObjectField(TEXT("stream"))
+			->GetObjectField(TEXT("commits"))
+			->GetArrayField(TEXT("items"));
+
+			for (auto commit : CommitsArr)
+			{
+				auto objID = commit->AsObject()->GetStringField("referencedObject");
+				ArrayOfCommits.Emplace(objID);
+			}
+		}
+	}
+}
+
+void ASpeckleUnrealManager::FetchCommits()
+{
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, "Fetching commits...");
+	}
+	
+	FString url = ServerUrl + "/graphql";
+
+	FHttpRequestRef Request = Http->CreateRequest();
+
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Accept", TEXT("application/json"));
+	Request->SetHeader("DNT", TEXT("1"));
+	Request->SetHeader("Origin", TEXT("https://speckle.xyz"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+
+	FString streamId = "2455b33e6b";
+	FString postPayload = "{\"query\": \"query{\\n stream (id: \\\"" + streamId + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n referencedObject\\n }\\n }\\n }\\n}\"}";
+	Request->SetContentAsString(postPayload);
+
+
+	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamCommitsListResponseReceived);
+	Request->SetURL(url);
+	Request->ProcessRequest();
+
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, "Fetched commits");
+	}
+}
+
+void ASpeckleUnrealManager::ImportSpeckleObject(FString RefID)
+{
+	ObjectID = RefID;
+	FString url = ServerUrl + "/objects/" + StreamID + "/" + ObjectID;
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "[Speckle] Downloading: " + url);
+
+	FHttpRequestRef Request = Http->CreateRequest();
+	
+	Request->SetVerb("GET");
+	Request->SetHeader("Accept", TEXT("text/plain"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+
+	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamTextResponseReceived);
+	Request->SetURL(url);
+	Request->ProcessRequest();
 }
 
 void ASpeckleUnrealManager::DeleteObjects()

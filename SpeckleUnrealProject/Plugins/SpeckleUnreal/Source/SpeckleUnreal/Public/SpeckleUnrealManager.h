@@ -77,6 +77,12 @@ public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	TArray<FString> ArrayOfCommits;
+
+	void FetchCommits();
+
+	void ImportSpeckleObject(FString RefID);
+
 protected:
 
 	UWorld* World;
@@ -84,7 +90,8 @@ protected:
 	float ScaleFactor;
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
-
+	TMap<FString, TSharedPtr<FJsonObject>> SpeckleCommits;
+	
 	TMap<FString, ASpeckleUnrealMesh*> CreatedSpeckleMeshes;
 	TMap<FString, ASpeckleUnrealMesh*> InProgressSpeckleMeshes;
 
@@ -94,4 +101,21 @@ protected:
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
 	ASpeckleUnrealMesh* CreateMesh(TSharedPtr<FJsonObject>, UMaterialInterface *explicitMaterial = nullptr);
+
+	void OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	
+	TArray<uint8> FStringToUint8(const FString& InString)
+	{
+		TArray<uint8> OutBytes;
+
+		// Handle empty strings
+		if (InString.Len() > 0)
+		{
+			FTCHARToUTF8 Converted(*InString); // Convert to UTF8
+			OutBytes.Append(reinterpret_cast<const uint8*>(Converted.Get()), Converted.Length());
+		}
+
+		return OutBytes;
+	}
 };

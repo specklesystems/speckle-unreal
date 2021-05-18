@@ -29,7 +29,16 @@ public class SpeckleUnreal : ModuleRules
 				"Http", 
 				"Json", 
 				"JsonUtilities", 
-				"ProceduralMeshComponent"
+				"ProceduralMeshComponent",
+				"InputCore",
+				"Slate",
+				"SlateCore",
+				"PropertyEditor",
+				"MainFrame",
+				"EditorStyle",
+				"Blutility",
+				"UMG",
+				"UMGEditor"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -42,6 +51,10 @@ public class SpeckleUnreal : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"PropertyEditor",
+				"Blutility",
+				"UMG",
+				"UMGEditor"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
