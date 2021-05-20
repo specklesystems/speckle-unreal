@@ -20,19 +20,19 @@ class SPECKLEUNREAL_API USpeckleEditorWidget : public UEditorUtilityWidget
     
     void NativeConstruct() override;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY()
     class UButton* ImportObjectButton;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY()
     UButton* FetchButton;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY()
     class UTextBlock* StreamName;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY()
     class UComboBoxString* BranchesCBox;
     
-    UPROPERTY(EditAnywhere)
+    UPROPERTY()
     class UComboBoxString* CommitsCBox;
 
     UFUNCTION(BlueprintCallable)
@@ -42,7 +42,8 @@ class SPECKLEUNREAL_API USpeckleEditorWidget : public UEditorUtilityWidget
     void FetchButtonListener();
 
     UPROPERTY(EditAnywhere)
-    TSubclassOf<ASpeckleUnrealManager> SpecklManager;
+    TSubclassOf<ASpeckleUnrealManager> SpecklManagerClass;
 
+	UPROPERTY()
 	ASpeckleUnrealManager* SpeckleUnrealManager;
 };

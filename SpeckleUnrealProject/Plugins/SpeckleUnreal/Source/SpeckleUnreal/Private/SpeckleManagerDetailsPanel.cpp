@@ -109,16 +109,16 @@ FReply SpeckleManagerDetailsPanel::FecthBtnListener()
 {
 	if(CustomComboBox.IsValid() && SpeckleManager != nullptr)
 	{
-		//CustomComboBox->Options.Add(MakeShareable(new FString("extra commit")));
-		if(SpeckleManager != nullptr)
-		{
-			SpeckleManager->FetchCommits();
-			auto commits = SpeckleManager->ArrayOfCommits;
-			for (auto Commit : commits)
-			{
-				CustomComboBox->Options.Add(MakeShareable(new FString(Commit)));
-			}
-		}
+		// //CustomComboBox->Options.Add(MakeShareable(new FString("extra commit")));
+		// if(SpeckleManager != nullptr)
+		// {
+		// 	SpeckleManager->FetchCommits();
+		// 	auto commits = SpeckleManager->ArrayOfCommits;
+		// 	for (auto Commit : commits)
+		// 	{
+		// 		CustomComboBox->Options.Add(MakeShareable(new FString(Commit)));
+		// 	}
+		// }
 	}
 	return	FReply::Handled();
 }

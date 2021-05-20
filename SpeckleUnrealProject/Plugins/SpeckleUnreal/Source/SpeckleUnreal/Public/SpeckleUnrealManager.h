@@ -17,6 +17,33 @@
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
 
+USTRUCT()
+struct FSpeckleCommit
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	FString ReferenceObjectID;
+
+	UPROPERTY()
+	FString AuthorName;
+
+	UPROPERTY()
+	FString Message;
+
+	FSpeckleCommit()
+	{
+	}
+
+	FSpeckleCommit(const FString& ReferenceObjectID, const FString& AuthorName, const FString& Message)
+		: ReferenceObjectID(ReferenceObjectID),
+		  AuthorName(AuthorName),
+		  Message(Message)
+	{
+	}
+};
+
+
 UCLASS(BlueprintType)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
@@ -77,7 +104,8 @@ public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	TArray<FString> ArrayOfCommits;
+	UPROPERTY()
+	TArray<FSpeckleCommit> ArrayOfCommits;
 
 	void FetchCommits();
 

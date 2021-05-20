@@ -39,10 +39,16 @@ public class SpeckleUnreal : ModuleRules
 				"Blutility",
 				"UMG",
 				"UMGEditor"
-				// ... add other public dependencies that you statically link with here ...
 			}
-			);
-			
+		);
+
+		if (Target.bBuildEditor)
+		{
+			PublicDependencyModuleNames.AddRange(new string[]
+			{
+				"UnrealEd",
+			});
+		}
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]

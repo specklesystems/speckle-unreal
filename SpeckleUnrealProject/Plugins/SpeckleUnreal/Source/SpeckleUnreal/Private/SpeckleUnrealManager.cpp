@@ -1,4 +1,5 @@
 #include "SpeckleUnrealManager.h"
+#include "UObject/ConstructorHelpers.h"
 
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
@@ -75,7 +76,6 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	for (auto& line : lines)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *line);
 		FString objectId, objectJson;
 		if (!line.Split("\t", &objectId, &objectJson))
 			continue;
@@ -341,13 +341,13 @@ void ASpeckleUnrealManager::OnStreamCommitsListResponseReceived(FHttpRequestPtr 
 	}
 
 	FString response = Response->GetContentAsString();
-	
 	//Create a pointer to hold the json serialized data
 	TSharedPtr<FJsonObject> JsonObject;
-
 	//Create a reader pointer to read the json data
 	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
 
+	ArrayOfCommits.Empty();
+	
 	//Deserialize the json data given Reader and the actual object to deserialize
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
@@ -360,8 +360,11 @@ void ASpeckleUnrealManager::OnStreamCommitsListResponseReceived(FHttpRequestPtr 
 
 			for (auto commit : CommitsArr)
 			{
-				auto objID = commit->AsObject()->GetStringField("referencedObject");
-				ArrayOfCommits.Emplace(objID);
+				auto ObjID = commit->AsObject()->GetStringField("referencedObject");
+				auto Message = commit->AsObject()->GetStringField("message");
+				auto AuthorName = commit->AsObject()->GetStringField("authorName");
+				auto Commit = FSpeckleCommit(ObjID, AuthorName, Message);
+				ArrayOfCommits.Add(Commit);
 			}
 		}
 	}
@@ -387,9 +390,8 @@ void ASpeckleUnrealManager::FetchCommits()
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
 
 	FString streamId = "2455b33e6b";
-	FString postPayload = "{\"query\": \"query{\\n stream (id: \\\"" + streamId + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n referencedObject\\n }\\n }\\n }\\n}\"}";
+	FString postPayload = "{\"query\": \"query{\\n stream (id: \\\"" + streamId + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n referencedObject\\n authorName\\n message\\n }\\n }\\n }\\n}\"}";
 	Request->SetContentAsString(postPayload);
-
 
 	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamCommitsListResponseReceived);
 	Request->SetURL(url);
