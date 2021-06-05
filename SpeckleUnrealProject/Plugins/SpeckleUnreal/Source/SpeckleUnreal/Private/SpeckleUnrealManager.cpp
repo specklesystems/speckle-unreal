@@ -375,7 +375,7 @@ void ASpeckleUnrealManager::FetchCommits()
 {
 	if(GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, "Fetching commits...");
+		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Green, "Fetching commits...");
 	}
 	
 	FString url = ServerUrl + "/graphql";
@@ -399,7 +399,7 @@ void ASpeckleUnrealManager::FetchCommits()
 
 	if(GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, "Fetched commits");
+		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Green, "Fetched commits");
 	}
 }
 

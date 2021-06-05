@@ -37,8 +37,8 @@ void USpeckleEditorWidget::NativeConstruct()
 	{
 		if(GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red,
-				"[Speckle]: No available speckle managers in the scene. Place and reopen the window");
+			GEngine->AddOnScreenDebugMessage(1, 8.0f, FColor::Red,
+				"[SPECKLE LOG]: No available speckle managers in the scene. Place and reopen the window");
 		}
 	}
 
@@ -69,7 +69,7 @@ void USpeckleEditorWidget::ImportButtonListener()
 			return;
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("[SPECKLE LOGs]: Speckle unreal commits array index out of bounds"));
+		UE_LOG(LogTemp, Warning, TEXT("[SPECKLE LOG]: Speckle unreal commits array index out of bounds"));
 	}
 }
 
