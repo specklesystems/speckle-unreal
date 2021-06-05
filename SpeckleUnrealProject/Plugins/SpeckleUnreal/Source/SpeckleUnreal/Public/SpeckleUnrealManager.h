@@ -17,6 +17,11 @@
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
 
+/*
+ * Struct that holds all the properties required
+ * from a speckle commit
+ * received from GraphQL.
+ */
 USTRUCT()
 struct FSpeckleCommit
 {
@@ -61,42 +66,47 @@ public:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString ServerUrl {
+	FString ServerUrl
+	{
 		"https://speckle.xyz"
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString StreamID {
+	FString StreamID
+	{
+		""
+	};
+
+	UPROPERTY()
+	FString ObjectID;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	FString AuthToken
+	{
 		""
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString ObjectID {
-		""
-	};
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString AuthToken {
-		""
-	};
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		TSubclassOf<ASpeckleUnrealMesh> MeshActor {
+	TSubclassOf<ASpeckleUnrealMesh> MeshActor
+	{
 		ASpeckleUnrealMesh::StaticClass()
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		UMaterialInterface* DefaultMeshOpaqueMaterial;
+	UMaterialInterface* DefaultMeshOpaqueMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		UMaterialInterface* DefaultMeshTransparentMaterial;
+	UMaterialInterface* DefaultMeshTransparentMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		bool ImportAtRuntime;
+	bool ImportAtRuntime;
 
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	void OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
@@ -129,9 +139,6 @@ protected:
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
 	ASpeckleUnrealMesh* CreateMesh(TSharedPtr<FJsonObject>, UMaterialInterface *explicitMaterial = nullptr);
-
-	void OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
 	
 	TArray<uint8> FStringToUint8(const FString& InString)
 	{

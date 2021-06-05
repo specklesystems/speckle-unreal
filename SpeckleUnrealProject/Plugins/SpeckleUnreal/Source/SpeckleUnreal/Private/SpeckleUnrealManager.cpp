@@ -1,5 +1,6 @@
 #include "SpeckleUnrealManager.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Dom/JsonObject.h"
 
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
@@ -389,8 +390,7 @@ void ASpeckleUnrealManager::FetchCommits()
 	Request->SetHeader("Origin", TEXT("https://speckle.xyz"));
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
 
-	FString streamId = "2455b33e6b";
-	FString postPayload = "{\"query\": \"query{\\n stream (id: \\\"" + streamId + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n referencedObject\\n authorName\\n message\\n }\\n }\\n }\\n}\"}";
+	FString postPayload = "{\"query\": \"query{\\n stream (id: \\\"" + StreamID + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n referencedObject\\n authorName\\n message\\n }\\n }\\n }\\n}\"}";
 	Request->SetContentAsString(postPayload);
 
 	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamCommitsListResponseReceived);
@@ -401,23 +401,6 @@ void ASpeckleUnrealManager::FetchCommits()
 	{
 		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, "Fetched commits");
 	}
-}
-
-void ASpeckleUnrealManager::ImportSpeckleObject(FString RefID)
-{
-	ObjectID = RefID;
-	FString url = ServerUrl + "/objects/" + StreamID + "/" + ObjectID;
-	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "[Speckle] Downloading: " + url);
-
-	FHttpRequestRef Request = Http->CreateRequest();
-	
-	Request->SetVerb("GET");
-	Request->SetHeader("Accept", TEXT("text/plain"));
-	Request->SetHeader("Authorization", "Bearer " + AuthToken);
-
-	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamTextResponseReceived);
-	Request->SetURL(url);
-	Request->ProcessRequest();
 }
 
 void ASpeckleUnrealManager::DeleteObjects()

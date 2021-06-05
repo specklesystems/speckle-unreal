@@ -33,12 +33,8 @@ public class SpeckleUnreal : ModuleRules
 				"InputCore",
 				"Slate",
 				"SlateCore",
-				"PropertyEditor",
 				"MainFrame",
-				"EditorStyle",
-				"Blutility",
-				"UMG",
-				"UMGEditor"
+				"EditorStyle"
 			}
 		);
 
@@ -57,7 +53,6 @@ public class SpeckleUnreal : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"PropertyEditor",
 				"Blutility",
 				"UMG",
 				"UMGEditor"

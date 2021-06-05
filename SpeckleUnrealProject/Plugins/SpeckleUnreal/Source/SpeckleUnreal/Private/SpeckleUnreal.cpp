@@ -12,11 +12,6 @@
 
 void FSpeckleUnrealModule::StartupModule()
 {
-	// Load custom details panel to speckleManager
-	//FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	//Register the custom details panel we have created
-	//PropertyModule.RegisterCustomClassLayout(ASpeckleUnrealManager::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&SpeckleManagerDetailsPanel::MakeInstance));
-
 	FSpeckleEditorCommands::Register();
 	TSharedPtr<FUICommandList> CommandList = MakeShareable(new FUICommandList());
 	
@@ -40,8 +35,7 @@ void FSpeckleUnrealModule::StartupModule()
 	);
 
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-	LevelEditorModule.GetToolBarExtensibilityManager()
-    ->AddExtender(ToolbarExtender); 
+	LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender); 
 }
 
 void FSpeckleUnrealModule::ShutdownModule()
@@ -54,27 +48,59 @@ void FSpeckleUnrealModule::ShutdownModule()
 }
 
 void FSpeckleUnrealModule::SpeckleButtonListener()
-{
-	//Start the editor Utility widget
-	auto EditorUIClass = LoadClass<UEditorUtilityWidget>(nullptr, TEXT("EditorUtilityWidgetBlueprint'/SpeckleUnreal/EWBP_SpeckleWindow.EWBP_SpeckleWindow_C'"));
+{	
+	if(SpeckleEditorWindow == nullptr)
+	{	
+		//Start the editor Utility widget
+		auto EditorUIClass = LoadClass<UEditorUtilityWidget>(nullptr, TEXT("EditorUtilityWidgetBlueprint'/SpeckleUnreal/EWBP_SpeckleWindow.EWBP_SpeckleWindow_C'"));
 
-	UWorld* World = GEditor->GetEditorWorldContext().World();
-	check(World);
-	auto CreatedUMGWidget = Cast<UEditorUtilityWidget>(CreateWidget(World, EditorUIClass));
+		IMainFrameModule& MainFrameModule = FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT("MainFrame"));
 
-	FVector2D Size = (300, 500); // set a window size to your widget
-	auto SpeckleWindow = SNew(SWindow).ClientSize(Size).MaxHeight(600).MaxWidth(400);
+		UWorld* World = GEditor->GetEditorWorldContext().World();
+		check(World);
+		auto CreatedUMGWidget = Cast<UEditorUtilityWidget>(CreateWidget(World, EditorUIClass));
 
-	if(CreatedUMGWidget != nullptr)
-	{
-		SpeckleWindow->SetContent(CreatedUMGWidget->TakeWidget());
-		FSlateApplication::Get().AddWindow(SpeckleWindow, true);
+		// create new slate window
+		SpeckleEditorWindow = SNew(SWindow)
+            .AutoCenter(EAutoCenter::None)
+            .IsInitiallyMaximized(false)
+            .ClientSize(FVector2D(300,500))
+            .SizingRule(ESizingRule::UserSized)
+            .SupportsMaximize(false)
+            .SupportsMinimize(true)
+            .CreateTitleBar(true)
+            .HasCloseButton(true)
+            .MaxHeight(600)
+            .MaxWidth(400);
+
+		// Use UMG in slate
+		if(CreatedUMGWidget != nullptr)
+		{
+			SpeckleEditorWindow->SetContent(CreatedUMGWidget->TakeWidget());		
+		}
+
+		// Add Windows to slate app
+		FSlateApplication & SlateApp = FSlateApplication::Get();
+		if (MainFrameModule.GetParentWindow().IsValid())
+		{
+			SlateApp.AddWindow(SpeckleEditorWindow.ToSharedRef(), true);
+		}
+
+		//Bind delegate when window is closed
+		OnSpeckleWindowClosed.BindRaw(this, &FSpeckleUnrealModule::OnEditorWindowClosed);
+		SpeckleEditorWindow->SetOnWindowClosed(OnSpeckleWindowClosed);
 	}
-	else
+	else // if editor window already exists
 	{
-		
+		SpeckleEditorWindow->BringToFront();
 	}
 	
+}
+
+void FSpeckleUnrealModule::OnEditorWindowClosed(const TSharedRef<SWindow>&)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[SPECKLE LOG] :Speckle editor window closed"));
+	SpeckleEditorWindow = nullptr;
 }
 
 #undef LOCTEXT_NAMESPACE

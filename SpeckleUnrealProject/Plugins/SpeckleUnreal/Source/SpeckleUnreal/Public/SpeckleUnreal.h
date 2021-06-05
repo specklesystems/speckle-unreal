@@ -9,6 +9,7 @@
 #include "Interfaces/IMainFrameModule.h"
 #include "FSpeckleEditorCommands.h"
 
+
 class FSpeckleUnrealModule : public IModuleInterface
 {
 public:
@@ -19,13 +20,19 @@ public:
 
 	TSharedPtr<FExtender> ToolbarExtender;
 	TSharedPtr<const FExtensionBase> Extension;
+	TSharedPtr<SWindow> SpeckleEditorWindow;
+	FOnWindowClosed OnSpeckleWindowClosed;
 
+	
 	void SpeckleButtonListener();
+
+	UFUNCTION()
+	void OnEditorWindowClosed(const TSharedRef<SWindow>&);
 	
 	void AddToolbarExtension(FToolBarBuilder &builder)
 	{
 		FSlateIcon IconBrush = FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.ViewOptions", "LevelEditor.ViewOptions.Small");
-
+		
 		builder.AddToolBarButton
 		(
 			FSpeckleEditorCommands::Get().SpeckleToolBarBtn,
