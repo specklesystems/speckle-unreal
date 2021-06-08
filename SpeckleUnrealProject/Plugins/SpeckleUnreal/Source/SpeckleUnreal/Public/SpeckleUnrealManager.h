@@ -17,6 +17,38 @@
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
 
+/*
+ * Struct that holds all the properties required
+ * from a speckle commit
+ * received from GraphQL.
+ */
+USTRUCT()
+struct FSpeckleCommit
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	FString ReferenceObjectID;
+
+	UPROPERTY()
+	FString AuthorName;
+
+	UPROPERTY()
+	FString Message;
+
+	FSpeckleCommit()
+	{
+	}
+
+	FSpeckleCommit(const FString& ReferenceObjectID, const FString& AuthorName, const FString& Message)
+		: ReferenceObjectID(ReferenceObjectID),
+		  AuthorName(AuthorName),
+		  Message(Message)
+	{
+	}
+};
+
+
 UCLASS(BlueprintType)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
@@ -34,48 +66,60 @@ public:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString ServerUrl {
+	FString ServerUrl
+	{
 		"https://speckle.xyz"
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString StreamID {
+	FString StreamID
+	{
+		""
+	};
+
+	UPROPERTY()
+	FString ObjectID;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	FString AuthToken
+	{
 		""
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString ObjectID {
-		""
-	};
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString AuthToken {
-		""
-	};
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		TSubclassOf<ASpeckleUnrealMesh> MeshActor {
+	TSubclassOf<ASpeckleUnrealMesh> MeshActor
+	{
 		ASpeckleUnrealMesh::StaticClass()
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		UMaterialInterface* DefaultMeshOpaqueMaterial;
+	UMaterialInterface* DefaultMeshOpaqueMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		UMaterialInterface* DefaultMeshTransparentMaterial;
+	UMaterialInterface* DefaultMeshTransparentMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		bool ImportAtRuntime;
+	bool ImportAtRuntime;
 
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	void OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY()
+	TArray<FSpeckleCommit> ArrayOfCommits;
+
+	void FetchCommits();
+
+	void ImportSpeckleObject(FString RefID);
 
 protected:
 
@@ -84,7 +128,8 @@ protected:
 	float ScaleFactor;
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
-
+	TMap<FString, TSharedPtr<FJsonObject>> SpeckleCommits;
+	
 	TMap<FString, ASpeckleUnrealMesh*> CreatedSpeckleMeshes;
 	TMap<FString, ASpeckleUnrealMesh*> InProgressSpeckleMeshes;
 
@@ -94,4 +139,18 @@ protected:
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
 	ASpeckleUnrealMesh* CreateMesh(TSharedPtr<FJsonObject>, UMaterialInterface *explicitMaterial = nullptr);
+	
+	TArray<uint8> FStringToUint8(const FString& InString)
+	{
+		TArray<uint8> OutBytes;
+
+		// Handle empty strings
+		if (InString.Len() > 0)
+		{
+			FTCHARToUTF8 Converted(*InString); // Convert to UTF8
+			OutBytes.Append(reinterpret_cast<const uint8*>(Converted.Get()), Converted.Length());
+		}
+
+		return OutBytes;
+	}
 };

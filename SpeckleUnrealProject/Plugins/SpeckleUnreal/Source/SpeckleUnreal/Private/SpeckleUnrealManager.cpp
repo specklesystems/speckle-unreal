@@ -1,4 +1,6 @@
 #include "SpeckleUnrealManager.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Dom/JsonObject.h"
 
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
@@ -87,7 +89,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	}
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
-
+	
 	ImportObjectFromCache(SpeckleObjects[ObjectID]);
 	
 	for (auto& m : CreatedSpeckleMeshes)
@@ -102,7 +104,6 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	InProgressSpeckleMeshes.Empty();
 	
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedSpeckleMeshes.Num()));
-
 }
 
 ASpeckleUnrealMesh* ASpeckleUnrealManager::GetExistingMesh(const FString &objectId)
@@ -322,6 +323,84 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	// UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVerticies.Num(), ParsedTriangles.Num());
 
 	return MeshInstance;
+}
+
+void ASpeckleUnrealManager::OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWasSuccessful)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Stream Request failed: " + Response->GetContentAsString());
+		return;
+	}
+
+	auto responseCode = Response-> GetResponseCode();
+	if (responseCode != 200)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, FString::Printf(TEXT("Error response. Response code %d"), responseCode));
+		return;
+	}
+
+	FString response = Response->GetContentAsString();
+	//Create a pointer to hold the json serialized data
+	TSharedPtr<FJsonObject> JsonObject;
+	//Create a reader pointer to read the json data
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
+
+	ArrayOfCommits.Empty();
+	
+	//Deserialize the json data given Reader and the actual object to deserialize
+	if (FJsonSerializer::Deserialize(Reader, JsonObject))
+	{
+		for(const auto& pair:JsonObject->Values)
+		{
+			auto CommitsArr = JsonObject->GetObjectField(TEXT("data"))
+			->GetObjectField(TEXT("stream"))
+			->GetObjectField(TEXT("commits"))
+			->GetArrayField(TEXT("items"));
+
+			for (auto commit : CommitsArr)
+			{
+				auto ObjID = commit->AsObject()->GetStringField("referencedObject");
+				auto Message = commit->AsObject()->GetStringField("message");
+				auto AuthorName = commit->AsObject()->GetStringField("authorName");
+				auto Commit = FSpeckleCommit(ObjID, AuthorName, Message);
+				ArrayOfCommits.Add(Commit);
+			}
+		}
+	}
+}
+
+void ASpeckleUnrealManager::FetchCommits()
+{
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Green, "Fetching commits...");
+	}
+	
+	FString url = ServerUrl + "/graphql";
+
+	FHttpRequestRef Request = Http->CreateRequest();
+
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Accept", TEXT("application/json"));
+	Request->SetHeader("DNT", TEXT("1"));
+	Request->SetHeader("Origin", TEXT("https://speckle.xyz"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+
+	FString postPayload = "{\"query\": \"query{\\n stream (id: \\\"" + StreamID + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n referencedObject\\n authorName\\n message\\n }\\n }\\n }\\n}\"}";
+	Request->SetContentAsString(postPayload);
+
+	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamCommitsListResponseReceived);
+	Request->SetURL(url);
+	Request->ProcessRequest();
+
+	if(GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Green, "Fetched commits");
+	}
 }
 
 void ASpeckleUnrealManager::DeleteObjects()

@@ -2,6 +2,7 @@
 
 
 #include "SpeckleUnrealMesh.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 // Sets default values
 ASpeckleUnrealMesh::ASpeckleUnrealMesh()
