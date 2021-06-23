@@ -5,6 +5,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/ComboBoxString.h"
 #include "Components/TextBlock.h"
+#include "ObjectEditorUtils.h"
 #include "SpeckleUnreal/Public/SpeckleUnrealManager.h"
 
 
@@ -63,10 +64,11 @@ void USpeckleEditorWidget::ImportButtonListener()
 		const auto CurrentIdx = CommitsCBox->FindOptionIndex(CommitsCBox->GetSelectedOption());
 		if(CurrentIdx <= Commits.Num() && CurrentIdx >= 0)
 		{
-			const auto ObjectRefID = Commits[CurrentIdx].ReferenceObjectID;
-			CurrentSpeckleManager->ObjectID = ObjectRefID;
+			const auto InputObjectRefID = Commits[CurrentIdx].ReferenceObjectID;
+			CurrentSpeckleManager->ObjectID = InputObjectRefID;
 			CurrentSpeckleManager->ImportSpeckleObject();
-			return;
+
+		return;
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("[SPECKLE LOG]: Speckle unreal commits array index out of bounds"));

@@ -32,8 +32,7 @@ void ASpeckleUnrealManager::BeginPlay()
 void ASpeckleUnrealManager::ImportSpeckleObject()
 {
 	FString url = ServerUrl + "/objects/" + StreamID + "/" + ObjectID;
-	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "[Speckle] Downloading: " + url);
-
+	
 	FHttpRequestRef Request = Http->CreateRequest();
 	
 	Request->SetVerb("GET");

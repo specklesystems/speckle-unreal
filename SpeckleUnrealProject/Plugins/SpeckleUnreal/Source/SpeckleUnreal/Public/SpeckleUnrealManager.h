@@ -77,8 +77,11 @@ public:
 		""
 	};
 
-	UPROPERTY()
-	FString ObjectID;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	FString ObjectID
+	{
+		""
+	};
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
@@ -118,8 +121,6 @@ public:
 	TArray<FSpeckleCommit> ArrayOfCommits;
 
 	void FetchCommits();
-
-	void ImportSpeckleObject(FString RefID);
 
 protected:
 
