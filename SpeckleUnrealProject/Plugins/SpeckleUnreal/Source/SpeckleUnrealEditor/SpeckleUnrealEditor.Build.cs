@@ -44,6 +44,11 @@ public class SpeckleUnrealEditor : ModuleRules
 			});
 		}
 		
+		if (Target.Type == TargetType.Editor) // Is UBT building for Editor ?
+		{
+			PrivateDependencyModuleNames.Add("SpeckleUnreal");
+		}
+		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{

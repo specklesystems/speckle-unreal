@@ -9,7 +9,7 @@
 /**
  * 
  */
-class SPECKLEUNREAL_API FSpeckleEditorCommands : public TCommands<FSpeckleEditorCommands>
+class FSpeckleEditorCommands : public TCommands<FSpeckleEditorCommands>
 {
 public:
 	FSpeckleEditorCommands() :TCommands<FSpeckleEditorCommands>(FName(TEXT("Speckle Commands")), 

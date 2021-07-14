@@ -9,11 +9,9 @@
 
 class ASpeckleUnrealManager;
 
-/**
- * 
- */
+
 UCLASS()
-class SPECKLEUNREAL_API USpeckleEditorWidget : public UEditorUtilityWidget
+class USpeckleEditorWidget : public UEditorUtilityWidget
 {
 	GENERATED_BODY()
 	

@@ -38,14 +38,6 @@ public class SpeckleUnreal : ModuleRules
 			}
 		);
 
-		if (Target.bBuildEditor)
-		{
-			PublicDependencyModuleNames.AddRange(new string[]
-			{
-				"UnrealEd",
-			});
-		}
-		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
