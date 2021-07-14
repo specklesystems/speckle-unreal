@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EditorUtilityWidget.h"
 #include "EngineUtils.h"
+#include "SpeckleUnreal/Public/ISpeckleReceiver.h"
 #include "SpeckleEditorWidget.generated.h"
 
 class ASpeckleUnrealManager;
@@ -53,6 +54,12 @@ public:
     void FetchButtonListener();
 
 	UFUNCTION(BlueprintCallable)
+	void ImportSpeckleObject(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
+    void FetchSpeckleCommits(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
 	void SpeckleManagerSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType);
 
 	template<typename T>
@@ -68,7 +75,7 @@ public:
     UPROPERTY(EditAnywhere)
     TSubclassOf<ASpeckleUnrealManager> SpeckleManagerClass;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASpeckleUnrealManager* CurrentSpeckleManager;
 
 	UPROPERTY()

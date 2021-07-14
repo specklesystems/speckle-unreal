@@ -68,7 +68,7 @@ void USpeckleEditorWidget::ImportButtonListener()
 			CurrentSpeckleManager->ObjectID = InputObjectRefID;
 			CurrentSpeckleManager->ImportSpeckleObject();
 
-		return;
+			return;
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("[SPECKLE LOG]: Speckle unreal commits array index out of bounds"));
@@ -85,6 +85,36 @@ void USpeckleEditorWidget::FetchButtonListener()
 		for(auto c : CurrentSpeckleManager->ArrayOfCommits)
 		{
 			CommitsCBox->AddOption(c.Message + " [" + c.AuthorName + "]");
+		}
+	}
+}
+
+void USpeckleEditorWidget::ImportSpeckleObject(UActorComponent* SpeckleActorComponent)
+{
+	if(SpeckleActorComponent != nullptr)
+	{
+		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
+		if(SpeckleReceiver)
+		{
+			const auto CurrentIdx = CommitsCBox->FindOptionIndex(CommitsCBox->GetSelectedOption());
+			SpeckleReceiver->ImportSpeckleObject(CurrentIdx);
+		}
+	}
+}
+
+void USpeckleEditorWidget::FetchSpeckleCommits(UActorComponent* SpeckleActorComponent)
+{
+	if(SpeckleActorComponent != nullptr)
+	{
+		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
+		if(SpeckleReceiver)
+		{
+			CommitsCBox->ClearOptions();
+			auto CommitsList = SpeckleReceiver->FetchListOfCommits();
+			for(auto c : CommitsList)
+			{
+				CommitsCBox->AddOption(c.Message + " [" + c.AuthorName + "]");
+			}
 		}
 	}
 }
