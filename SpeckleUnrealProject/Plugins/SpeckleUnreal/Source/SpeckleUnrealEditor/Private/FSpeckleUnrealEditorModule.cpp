@@ -51,7 +51,8 @@ void FSpeckleUnrealEditorModule::SpeckleButtonListener()
 	if(SpeckleEditorWindow == nullptr)
 	{	
 		//Start the editor Utility widget
-		auto EditorUIClass = LoadClass<UEditorUtilityWidget>(nullptr, TEXT("EditorUtilityWidgetBlueprint'/SpeckleUnreal/EWBP_SpeckleWindow.EWBP_SpeckleWindow_C'"));
+		auto EditorUIClass = LoadClass<UEditorUtilityWidget>(nullptr,
+			TEXT("EditorUtilityWidgetBlueprint'/SpeckleUnreal/EWBP_SpeckleEditorWindow.EWBP_SpeckleEditorWindow_C'"));
 
 		IMainFrameModule& MainFrameModule = FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT("MainFrame"));
 
