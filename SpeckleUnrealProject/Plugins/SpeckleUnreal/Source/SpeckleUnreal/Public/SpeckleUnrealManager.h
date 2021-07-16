@@ -12,6 +12,13 @@
 // web requests
 #include "Runtime/Online/HTTP/Public/Http.h"
 
+// point clouds
+#include "LidarPointCloudRuntime/Public/LidarPointCloud.h"
+#include "LidarPointCloudRuntime/Public/LidarPointCloudActor.h"
+#include "LidarPointCloudRuntime/Public/LidarPointCloudShared.h"
+#include "LidarPointCloudRuntime/Public/LidarPointCloudSettings.h"
+#include "Math/Vector.h"
+
 #include "SpeckleUnrealMesh.h"
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
@@ -88,10 +95,16 @@ protected:
 	TMap<FString, ASpeckleUnrealMesh*> CreatedSpeckleMeshes;
 	TMap<FString, ASpeckleUnrealMesh*> InProgressSpeckleMeshes;
 
+	TMap<FString, ALidarPointCloudActor*> CreatedLidarPointClouds;
+	TMap<FString, ALidarPointCloudActor*> InProgressLidarPointClouds;
+
 	ASpeckleUnrealMesh* GetExistingMesh(const FString &objectId);
 
 	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject);
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
 	ASpeckleUnrealMesh* CreateMesh(TSharedPtr<FJsonObject>, UMaterialInterface *explicitMaterial = nullptr);
+	ALidarPointCloudActor* CreatePointCloud(TSharedPtr<FJsonObject>);
+
+	static float ParseScaleFactor(const FString units);
 };

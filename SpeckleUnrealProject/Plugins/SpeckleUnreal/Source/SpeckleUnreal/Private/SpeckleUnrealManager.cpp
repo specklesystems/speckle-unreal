@@ -100,6 +100,9 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	CreatedSpeckleMeshes = InProgressSpeckleMeshes;
 	InProgressSpeckleMeshes.Empty();
+
+	CreatedLidarPointClouds = InProgressLidarPointClouds; //TODO a similar check to above for points
+	InProgressLidarPointClouds.Empty();
 	
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedSpeckleMeshes.Num()));
 
@@ -131,12 +134,20 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 	}
 	if (!speckleObj->HasField("id"))
 		return;
+	
 	FString objectId = speckleObj->GetStringField("id");
 	FString speckleType = speckleObj->GetStringField("speckle_type");
 	
 	// UE_LOG(LogTemp, Warning, TEXT("Importing object %s (type %s)"), *objectId, *speckleType);
 
-	if (speckleObj->GetStringField("speckle_type") == "Objects.Geometry.Mesh") {
+	if (speckleType == "Objects.Geometry.PointCloud")
+	{
+		ALidarPointCloudActor* pointCloud = CreatePointCloud(speckleObj);
+		InProgressLidarPointClouds.Add(objectId, pointCloud);
+		return;
+	}
+
+	if (speckleType == "Objects.Geometry.Mesh") {
 		ASpeckleUnrealMesh* mesh = GetExistingMesh(objectId);
 		if (!mesh)
 			mesh = CreateMesh(speckleObj);
@@ -220,6 +231,29 @@ UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject
 	return DefaultMeshOpaqueMaterial;
 }
 
+float ASpeckleUnrealManager::ParseScaleFactor(const FString units)
+{
+	float scaleFactor = 1;
+	if (units == "meters" || units == "metres" || units == "m")
+		scaleFactor = 100;
+
+	if (units == "centimeters" || units == "centimetres" || units == "cm")
+		scaleFactor = 1;
+
+	if (units == "millimeters" || units == "millimetres" || units == "mm")
+		scaleFactor = 0.1;
+
+	if (units == "yards" || units == "yd")
+		scaleFactor = 91.4402757;
+
+	if (units == "feet" || units == "ft")
+		scaleFactor = 30.4799990;
+
+	if (units == "inches" || units == "in")
+		scaleFactor = 2.5399986;
+	return scaleFactor;
+}
+
 ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> obj, UMaterialInterface* explicitMaterial)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Creating mesh for object %s"), *obj->GetStringField("id"));
@@ -227,24 +261,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	FString Units = obj->GetStringField("units");
 	// unreal engine units are in cm by default but the conversion is editable by users so
 	// this needs to be accounted for later.
-	ScaleFactor = 1;
-	if (Units == "meters" || Units == "metres" || Units == "m")
-		ScaleFactor = 100;
-
-	if (Units == "centimeters" || Units == "centimetres" || Units == "cm")
-		ScaleFactor = 1;
-
-	if (Units == "millimeters" || Units == "millimetres" || Units == "mm")
-		ScaleFactor = 0.1;
-
-	if (Units == "yards" || Units == "yd")
-		ScaleFactor = 91.4402757;
-
-	if (Units == "feet" || Units == "ft")
-		ScaleFactor = 30.4799990;
-
-	if (Units == "inches" || Units == "in")
-		ScaleFactor = 2.5399986;
+	ScaleFactor = ParseScaleFactor(Units);
 
 	// The following line can be used to debug large objects
 	// ScaleFactor = ScaleFactor * 0.1;
@@ -322,6 +339,65 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	// UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVerticies.Num(), ParsedTriangles.Num());
 
 	return MeshInstance;
+}
+
+ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonObject> obj)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Creating point cloud for object %s"), *obj->GetStringField("id"));
+
+	FString Units = obj->GetStringField("units");
+	// unreal engine units are in cm by default but the conversion is editable by users so
+	// this needs to be accounted for later.
+	ScaleFactor = ParseScaleFactor(Units);
+
+	// The following line can be used to debug large objects
+	// ScaleFactor = ScaleFactor * 0.1;
+
+	FString pointsId = obj->GetArrayField("points")[0]->AsObject()->GetStringField("referencedId");
+	FString colorsId = obj->GetArrayField("colors")[0]->AsObject()->GetStringField("referencedId");
+
+	TArray<TSharedPtr<FJsonValue>> ObjectPoints = SpeckleObjects[pointsId]->GetArrayField("data");
+	TArray<TSharedPtr<FJsonValue>> ObjectColors = SpeckleObjects[colorsId]->GetArrayField("data");
+
+	AActor* ActorInstance = World->SpawnActor(MeshActor); //TODO
+	ALidarPointCloudActor* PointCloudInstance = (ALidarPointCloudActor*)ActorInstance;
+
+	if (PointCloudInstance != nullptr)
+	{
+		PointCloudInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+		PointCloudInstance->SetOwner(this);
+		
+	}
+
+
+	TArray<FVector> ParsedPoints;
+
+	for (size_t j = 0; j < ObjectPoints.Num(); j += 3)
+	{
+		ParsedPoints.Add(FVector
+		(
+			(float)(ObjectPoints[j].Get()->AsNumber()),
+			(float)(ObjectPoints[j + 1].Get()->AsNumber()),
+			(float)(ObjectPoints[j + 2].Get()->AsNumber())
+		) * ScaleFactor);
+	}
+
+	//TODO parse point colors
+
+	
+	ULidarPointCloud pointCloud;
+
+	for (size_t i = 0; i < ParsedPoints.Num(); i++)
+	{
+		FLidarPointCloudPoint* point = new FLidarPointCloudPoint(ParsedPoints[i]);
+
+		pointCloud.InsertPoint(*point, ELidarPointCloudDuplicateHandling::Ignore, false, FVector::ZeroVector);
+	}
+
+	pointCloud.RefreshBounds();
+	PointCloudInstance->SetPointCloud(&pointCloud);
+
+	return PointCloudInstance;
 }
 
 void ASpeckleUnrealManager::DeleteObjects()

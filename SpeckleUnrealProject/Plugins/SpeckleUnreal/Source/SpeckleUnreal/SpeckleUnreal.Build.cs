@@ -11,6 +11,7 @@ public class SpeckleUnreal : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
+				"LidarPointCloudRuntime/Public",
 			}
 			);
 				
@@ -29,7 +30,8 @@ public class SpeckleUnreal : ModuleRules
 				"Http", 
 				"Json", 
 				"JsonUtilities", 
-				"ProceduralMeshComponent"
+				"ProceduralMeshComponent",
+				"LidarPointCloudRuntime",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
