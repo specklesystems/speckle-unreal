@@ -12,7 +12,7 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	Http = &FHttpModule::Get();
 	// default conversion is millimeters to centimeters because streams tend to be in ml and unreal is in cm by defaults
 	ScaleFactor = 0.1;
-	World = GetWorld();
+	World = AActor::GetWorld();
 
 	DefaultMeshOpaqueMaterial = SpeckleMaterial.Object;
 	DefaultMeshTransparentMaterial = SpeckleGlassMaterial.Object;
@@ -254,15 +254,19 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 
 	TArray<TSharedPtr<FJsonValue>> ObjectVertices = SpeckleObjects[verticesId]->GetArrayField("data");
 	TArray<TSharedPtr<FJsonValue>> ObjectFaces = SpeckleObjects[facesId]->GetArrayField("data");
+	
+#if WITH_EDITOR
+	World = GetWorld();
+#endif
 
+	if(World == nullptr)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Null World")));
+		return nullptr;
+	}
+	
 	AActor* ActorInstance = World->SpawnActor(MeshActor);
 	ASpeckleUnrealMesh* MeshInstance = (ASpeckleUnrealMesh*)ActorInstance;
-
-//Currently not needed since meshes are placed under this actor.
-// #if WITH_EDITOR
-// 	MeshInstance->SetFolderPath(FName(GetActorLabel() + FString(TEXT("_")) + StreamID));
-// #endif
-
 	
 	// attaches each speckleMesh under this actor (SpeckleManager)
 	if(MeshInstance != nullptr)

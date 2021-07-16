@@ -43,6 +43,7 @@ void USpeckleEditorWidget::NativeConstruct()
 		}
 	}
 
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Constructing UI")));	
 	InitUI();
 }
 
@@ -50,43 +51,8 @@ void USpeckleEditorWidget::InitUI()
 {
 	if(CurrentSpeckleManager)
 	{
-		StreamName->SetText(FText::FromString("Stream ID: " + CurrentSpeckleManager->StreamID));
-		
-		FetchButtonListener();
+		StreamName->SetText(FText::FromString("Stream ID: " + CurrentSpeckleManager->StreamID));		
 	}	
-}
-
-void USpeckleEditorWidget::ImportButtonListener()
-{
-	if(CurrentSpeckleManager != nullptr)
-	{
-		auto Commits = CurrentSpeckleManager->ArrayOfCommits;
-		const auto CurrentIdx = CommitsCBox->FindOptionIndex(CommitsCBox->GetSelectedOption());
-		if(CurrentIdx <= Commits.Num() && CurrentIdx >= 0)
-		{
-			const auto InputObjectRefID = Commits[CurrentIdx].ReferenceObjectID;
-			CurrentSpeckleManager->ObjectID = InputObjectRefID;
-			CurrentSpeckleManager->ImportSpeckleObject();
-
-			return;
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("[SPECKLE LOG]: Speckle unreal commits array index out of bounds"));
-	}
-}
-
-void USpeckleEditorWidget::FetchButtonListener()
-{	
-	if(CurrentSpeckleManager != nullptr)
-	{
-		CurrentSpeckleManager->FetchCommits();
-		CommitsCBox->ClearOptions();
-
-		for(auto c : CurrentSpeckleManager->ArrayOfCommits)
-		{
-			CommitsCBox->AddOption(c.Message + " [" + c.AuthorName + "]");
-		}
-	}
 }
 
 void USpeckleEditorWidget::ImportSpeckleObject(UActorComponent* SpeckleActorComponent)

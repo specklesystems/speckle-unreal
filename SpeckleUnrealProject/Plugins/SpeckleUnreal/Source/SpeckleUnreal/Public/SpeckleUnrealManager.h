@@ -22,18 +22,18 @@
  * from a speckle commit
  * received from GraphQL.
  */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FSpeckleCommit
 {
 	GENERATED_BODY()
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FString ReferenceObjectID;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FString AuthorName;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FString Message;
 
 	FSpeckleCommit()

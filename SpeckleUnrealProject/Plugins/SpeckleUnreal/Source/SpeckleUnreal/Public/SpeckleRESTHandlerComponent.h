@@ -25,7 +25,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	UFUNCTION(BlueprintCallable, Category="Speckle REST")
 	virtual void ImportSpeckleObject(int CurrIndex) override;
+	
+	UFUNCTION(BlueprintCallable, Category="Speckle REST")
 	virtual TArray<FSpeckleCommit> FetchListOfCommits() override;
 
 	UPROPERTY()

@@ -46,12 +46,6 @@ public:
 
 	//FUNCTIONS
 	void InitUI();
-	
-    UFUNCTION(BlueprintCallable)
-    void ImportButtonListener();
-
-    UFUNCTION(BlueprintCallable)
-    void FetchButtonListener();
 
 	UFUNCTION(BlueprintCallable)
 	void ImportSpeckleObject(UActorComponent* SpeckleReceiver);
