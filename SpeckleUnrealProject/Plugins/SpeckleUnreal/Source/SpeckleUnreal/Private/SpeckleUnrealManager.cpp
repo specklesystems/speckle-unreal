@@ -1,4 +1,5 @@
 #include "SpeckleUnrealManager.h"
+#pragma optimize("", off)
 
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
@@ -353,49 +354,53 @@ ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonO
 	// The following line can be used to debug large objects
 	// ScaleFactor = ScaleFactor * 0.1;
 
-	FString pointsId = obj->GetArrayField("points")[0]->AsObject()->GetStringField("referencedId");
-	FString colorsId = obj->GetArrayField("colors")[0]->AsObject()->GetStringField("referencedId");
-
-	TArray<TSharedPtr<FJsonValue>> ObjectPoints = SpeckleObjects[pointsId]->GetArrayField("data");
-	TArray<TSharedPtr<FJsonValue>> ObjectColors = SpeckleObjects[colorsId]->GetArrayField("data");
-
-	AActor* ActorInstance = World->SpawnActor(MeshActor); //TODO
+	AActor* ActorInstance = World->SpawnActor(ALidarPointCloudActor::StaticClass());
 	ALidarPointCloudActor* PointCloudInstance = (ALidarPointCloudActor*)ActorInstance;
-
-	if (PointCloudInstance != nullptr)
-	{
-		PointCloudInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-		PointCloudInstance->SetOwner(this);
-		
-	}
-
-
-	TArray<FVector> ParsedPoints;
-
-	for (size_t j = 0; j < ObjectPoints.Num(); j += 3)
-	{
-		ParsedPoints.Add(FVector
-		(
-			(float)(ObjectPoints[j].Get()->AsNumber()),
-			(float)(ObjectPoints[j + 1].Get()->AsNumber()),
-			(float)(ObjectPoints[j + 2].Get()->AsNumber())
-		) * ScaleFactor);
-	}
-
-	//TODO parse point colors
-
 	
-	ULidarPointCloud pointCloud;
-
-	for (size_t i = 0; i < ParsedPoints.Num(); i++)
+	auto pointsField = obj->GetArrayField("points");
+	if(pointsField.Num() > 0)
 	{
-		FLidarPointCloudPoint* point = new FLidarPointCloudPoint(ParsedPoints[i]);
+		FString pointsId = pointsField[0]->AsObject()->GetStringField("referencedId");
+		//FString colorsId = obj->GetArrayField("colors")[0]->AsObject()->GetStringField("referencedId");
 
-		pointCloud.InsertPoint(*point, ELidarPointCloudDuplicateHandling::Ignore, false, FVector::ZeroVector);
+		TArray<TSharedPtr<FJsonValue>> ObjectPoints = SpeckleObjects[pointsId]->GetArrayField("data");
+		//TArray<TSharedPtr<FJsonValue>> ObjectColors = SpeckleObjects[colorsId]->GetArrayField("data");
+
+		if (PointCloudInstance != nullptr)
+		{
+			PointCloudInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+			PointCloudInstance->SetOwner(this);
+		}
+
+		
+		TArray<FVector> ParsedPoints;
+		
+		for (size_t j = 0; j + 2 < ObjectPoints.Num(); j += 3)
+		{
+			ParsedPoints.Add(FVector
+			(
+				(float)(ObjectPoints[j].Get()->AsNumber()),
+				(float)(ObjectPoints[j + 1].Get()->AsNumber()),
+				(float)(ObjectPoints[j + 2].Get()->AsNumber())
+			) * ScaleFactor);
+		}
+
+		//TODO parse point colors
+
+
+		ULidarPointCloud* pointCloud = NewObject<ULidarPointCloud>();
+
+		for (size_t i = 0; i < ParsedPoints.Num(); i++)
+		{
+			FLidarPointCloudPoint* point = new FLidarPointCloudPoint(ParsedPoints[i]);
+
+			pointCloud->InsertPoint(*point, ELidarPointCloudDuplicateHandling::Ignore, false, FVector::ZeroVector);
+		}
+
+		pointCloud->RefreshBounds();
+		ULidarPointCloudComponent* t = PointCloudInstance->GetPointCloudComponent();
+		PointCloudInstance->SetPointCloud(pointCloud);
 	}
-
-	pointCloud.RefreshBounds();
-	PointCloudInstance->SetPointCloud(&pointCloud);
 
 	return PointCloudInstance;
 }
@@ -410,4 +415,6 @@ void ASpeckleUnrealManager::DeleteObjects()
 
 	CreatedSpeckleMeshes.Empty();
 	InProgressSpeckleMeshes.Empty();
+	CreatedLidarPointClouds.Empty();
+	InProgressLidarPointClouds.Empty();
 }
