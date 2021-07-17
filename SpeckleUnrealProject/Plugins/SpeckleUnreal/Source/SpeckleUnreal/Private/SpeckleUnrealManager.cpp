@@ -1,5 +1,4 @@
 #include "SpeckleUnrealManager.h"
-#pragma optimize("", off)
 
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
@@ -358,9 +357,11 @@ ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonO
 	ALidarPointCloudActor* PointCloudInstance = (ALidarPointCloudActor*)ActorInstance;
 	
 	auto pointsField = obj->GetArrayField("points");
+	
 	if(pointsField.Num() > 0)
 	{
 		FString pointsId = pointsField[0]->AsObject()->GetStringField("referencedId");
+		FString bboxId = pointsField[0]->AsObject()->GetStringField("referencedId");
 		//FString colorsId = obj->GetArrayField("colors")[0]->AsObject()->GetStringField("referencedId");
 
 		TArray<TSharedPtr<FJsonValue>> ObjectPoints = SpeckleObjects[pointsId]->GetArrayField("data");
@@ -390,6 +391,8 @@ ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonO
 
 		ULidarPointCloud* pointCloud = NewObject<ULidarPointCloud>();
 
+		pointCloud->Initialize(FBox(ParsedPoints));
+		
 		for (size_t i = 0; i < ParsedPoints.Num(); i++)
 		{
 			FLidarPointCloudPoint* point = new FLidarPointCloudPoint(ParsedPoints[i]);
@@ -398,7 +401,7 @@ ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonO
 		}
 
 		pointCloud->RefreshBounds();
-		ULidarPointCloudComponent* t = PointCloudInstance->GetPointCloudComponent();
+
 		PointCloudInstance->SetPointCloud(pointCloud);
 	}
 
