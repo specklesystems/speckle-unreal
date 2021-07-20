@@ -344,11 +344,11 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	return MeshInstance;
 }
 
-ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonObject> obj)
+ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(const TSharedPtr<FJsonObject> Obj)
 {
-	UE_LOG(LogTemp, Log, TEXT("Creating point cloud for object %s"), *obj->GetStringField("id"));
+	UE_LOG(LogTemp, Log, TEXT("Creating point cloud for object %s"), *Obj->GetStringField("id"));
 
-	const FString Units = obj->GetStringField("units");
+	const FString Units = Obj->GetStringField("units");
 
 	ScaleFactor = ParseScaleFactor(Units);
 
@@ -361,21 +361,25 @@ ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonO
 		PointCloudInstance->SetOwner(this);
 	}
 	
-	auto pointsField = obj->GetArrayField("points");
+	const auto PointsField = Obj->GetArrayField("points");
 
 
 	TArray<TSharedPtr<FJsonValue>> ObjectPoints;
-	for(int i = 0; i < pointsField.Num(); i++)
+	for(int i = 0; i < PointsField.Num(); i++)
 	{
-		FString pointsId = pointsField[i]->AsObject()->GetStringField("referencedId");
-		auto chunk = SpeckleObjects[pointsId]->GetArrayField("data");
-		ObjectPoints.Append(chunk);
+		const FString PointsId = PointsField[i]->AsObject()->GetStringField("referencedId");
+		const auto Chunk = SpeckleObjects[PointsId]->GetArrayField("data");
+		ObjectPoints.Append(Chunk);
 	}
 
-	TArray<FVector> ParsedPoints;
+	const auto NumberOfPoints = ObjectPoints.Num() / 3;
+	
+	TArray<FVector> PointPositions;
+	//PointPositions.SetNum(NumberOfPoints);
+
 	for (int j = 0; j + 2 < ObjectPoints.Num(); j += 3) 
 	{
-		ParsedPoints.Add(FVector
+		PointPositions.Add(FVector
 		(
 			(float)(ObjectPoints[j].Get()->AsNumber()),
 			(float)(ObjectPoints[j + 1].Get()->AsNumber()),
@@ -384,21 +388,24 @@ ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(TSharedPtr<FJsonO
 	}
 	//TODO parse point colors
 
-	
-	ULidarPointCloud* pointCloud = NewObject<ULidarPointCloud>();
 
-	pointCloud->Initialize(FBox(ParsedPoints));
-	
-	for (size_t i = 0; i < ParsedPoints.Num(); i++)
+	TArray<FLidarPointCloudPoint> ParsedPoints;
+	//ParsedPoints.SetNum(NumberOfPoints);
+
+	for(FVector Position : PointPositions)
 	{
-		FLidarPointCloudPoint* point = new FLidarPointCloudPoint(ParsedPoints[i]);
-
-		pointCloud->InsertPoint(*point, ELidarPointCloudDuplicateHandling::Ignore, false, FVector::ZeroVector);
+		ParsedPoints.Add(FLidarPointCloudPoint(Position));
 	}
+	
+	ULidarPointCloud* PointCloud = NewObject<ULidarPointCloud>();
 
-	pointCloud->RefreshBounds();
+	PointCloud->Initialize(FBox(PointPositions));
 
-	PointCloudInstance->SetPointCloud(pointCloud);
+	PointCloud->InsertPoints(ParsedPoints, ELidarPointCloudDuplicateHandling::Ignore, false, FVector::ZeroVector);
+
+	PointCloud->RefreshBounds();
+
+	PointCloudInstance->SetPointCloud(PointCloud);
 
 	return PointCloudInstance;
 }
