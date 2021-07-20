@@ -375,26 +375,29 @@ ALidarPointCloudActor* ASpeckleUnrealManager::CreatePointCloud(const TSharedPtr<
 	const auto NumberOfPoints = ObjectPoints.Num() / 3;
 	
 	TArray<FVector> PointPositions;
-	//PointPositions.SetNum(NumberOfPoints);
+	PointPositions.SetNum(NumberOfPoints);
 
-	for (int j = 0; j + 2 < ObjectPoints.Num(); j += 3) 
+	for (int i = 0, j = 0; i < NumberOfPoints; i++, j += 3) 
 	{
-		PointPositions.Add(FVector
+		PointPositions[i] = FVector
 		(
-			(float)(ObjectPoints[j].Get()->AsNumber()),
-			(float)(ObjectPoints[j + 1].Get()->AsNumber()),
-			(float)(ObjectPoints[j + 2].Get()->AsNumber())
-		));
+			static_cast<float>(ObjectPoints[j].Get()->AsNumber()),
+			static_cast<float>(ObjectPoints[j + 1].Get()->AsNumber()),
+			static_cast<float>(ObjectPoints[j + 2].Get()->AsNumber())
+			
+		) * ScaleFactor;
 	}
 	//TODO parse point colors
 
 
 	TArray<FLidarPointCloudPoint> ParsedPoints;
-	//ParsedPoints.SetNum(NumberOfPoints);
+	ParsedPoints.SetNum(NumberOfPoints);
 
+	int i = 0;
 	for(FVector Position : PointPositions)
 	{
-		ParsedPoints.Add(FLidarPointCloudPoint(Position));
+		ParsedPoints[i] = FLidarPointCloudPoint(Position);
+		i++;
 	}
 	
 	ULidarPointCloud* PointCloud = NewObject<ULidarPointCloud>();
