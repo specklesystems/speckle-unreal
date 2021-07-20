@@ -5,9 +5,9 @@
 
 // json manipulation
 #include "Dom/JsonObject.h"
-#include "Dom/JsonValue.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
+// #include "Dom/JsonValue.h"
+// #include "Serialization/JsonReader.h"
+// #include "Serialization/JsonSerializer.h"
 
 // web requests
 #include "Runtime/Online/HTTP/Public/Http.h"
@@ -15,38 +15,8 @@
 #include "SpeckleUnrealMesh.h"
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
+#include "SpeckleStructs.h"
 #include "SpeckleUnrealManager.generated.h"
-
-/*
- * Struct that holds all the properties required
- * from a speckle commit
- * received from GraphQL.
- */
-USTRUCT(BlueprintType)
-struct FSpeckleCommit
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(BlueprintReadWrite)
-	FString ReferenceObjectID;
-
-	UPROPERTY(BlueprintReadWrite)
-	FString AuthorName;
-
-	UPROPERTY(BlueprintReadWrite)
-	FString Message;
-
-	FSpeckleCommit()
-	{
-	}
-
-	FSpeckleCommit(const FString& ReferenceObjectID, const FString& AuthorName, const FString& Message)
-		: ReferenceObjectID(ReferenceObjectID),
-		  AuthorName(AuthorName),
-		  Message(Message)
-	{
-	}
-};
 
 
 UCLASS(BlueprintType)
@@ -108,8 +78,9 @@ public:
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
 	void OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStreamBranchesListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
@@ -120,8 +91,11 @@ public:
 	UPROPERTY()
 	TArray<FSpeckleCommit> ArrayOfCommits;
 
-	void FetchCommits();
+	UPROPERTY()
+	TArray<FSpeckleBranch> ArrayOfBranches;
 
+	void FetchStreamItems(ESpeckleItemType ItemType);
+	
 protected:
 
 	UWorld* World;

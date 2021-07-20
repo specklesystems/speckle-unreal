@@ -18,6 +18,7 @@ void USpeckleEditorWidget::NativeConstruct()
 	SelectedCommitText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("SelectedCommit")));
 	SpeckleManagersCBox = Cast<UComboBoxString>(WidgetTree->FindWidget(TEXT("SpeckleManagersBox")));
 	SpeckleManagersCBox->OnSelectionChanged.AddDynamic(this, &USpeckleEditorWidget::SpeckleManagerSelectionListener);
+	BranchesCBox->OnSelectionChanged.AddDynamic(this,&USpeckleEditorWidget::BranchesBoxSelectionListener);
 
 	//Grab all speckleManagers in the scene
 	FindAllActors(GetWorld(), SpeckleManagers);
@@ -42,8 +43,7 @@ void USpeckleEditorWidget::NativeConstruct()
 				"[SPECKLE LOG]: No available speckle managers in the scene. Place and reopen the window");
 		}
 	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Constructing UI")));	
+	
 	InitUI();
 }
 
@@ -59,7 +59,7 @@ void USpeckleEditorWidget::ImportSpeckleObject(UActorComponent* SpeckleActorComp
 {
 	if(SpeckleActorComponent != nullptr)
 	{
-		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
+		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);	
 		if(SpeckleReceiver)
 		{
 			const auto CurrentIdx = CommitsCBox->FindOptionIndex(CommitsCBox->GetSelectedOption());
@@ -75,11 +75,32 @@ void USpeckleEditorWidget::FetchSpeckleCommits(UActorComponent* SpeckleActorComp
 		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
 		if(SpeckleReceiver)
 		{
-			CommitsCBox->ClearOptions();
+			CommitsCBox->ClearOptions();			
+			//keep commits only from the selected branch
 			auto CommitsList = SpeckleReceiver->FetchListOfCommits();
-			for(auto c : CommitsList)
+			for (auto C : CommitsList)
 			{
-				CommitsCBox->AddOption(c.Message + " [" + c.AuthorName + "]");
+				if(C.BranchName == SelectedBranch)
+				{
+					CommitsCBox->AddOption(C.Message + " [" + C.AuthorName + "]");
+				}
+			}
+		}
+	}
+}
+
+void USpeckleEditorWidget::FetchSpeckleBranches(UActorComponent* SpeckleActorComponent)
+{
+	if(SpeckleActorComponent != nullptr)
+	{
+		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
+		if(SpeckleReceiver)
+		{
+			BranchesCBox->ClearOptions();
+			auto BranchesList = SpeckleReceiver->FetchListOfBranches();
+			for(auto b : BranchesList)
+			{
+				BranchesCBox->AddOption(b.Name);
 			}
 		}
 	}
@@ -91,5 +112,10 @@ void USpeckleEditorWidget::SpeckleManagerSelectionListener(FString SelectedItem,
 	CurrentSpeckleManager = SpeckleManagers[Idx];
 
 	InitUI();
+}
+
+void USpeckleEditorWidget::BranchesBoxSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType)
+{
+	SelectedBranch = SelectedItem;
 }
 

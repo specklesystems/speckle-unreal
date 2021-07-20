@@ -32,6 +32,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
 	virtual TArray<FSpeckleCommit> FetchListOfCommits() override;
 
+	UFUNCTION(BlueprintCallable, Category="Speckle REST")
+	virtual TArray<FSpeckleCommit> FetchListOfStreams() override;
+	
+	UFUNCTION(BlueprintCallable, Category="Speckle REST")
+	virtual TArray<FSpeckleBranch> FetchListOfBranches() override;
+	
 	UPROPERTY()
 	ASpeckleUnrealManager* SpeckleManager;
 };

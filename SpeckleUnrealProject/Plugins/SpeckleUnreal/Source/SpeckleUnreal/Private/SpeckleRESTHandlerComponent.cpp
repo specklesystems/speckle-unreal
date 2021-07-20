@@ -18,9 +18,8 @@ USpeckleRESTHandlerComponent::USpeckleRESTHandlerComponent()
 void USpeckleRESTHandlerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
+	// cache speckleManager for runtime purposes
+	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
 }
 
 
@@ -28,13 +27,15 @@ void USpeckleRESTHandlerComponent::BeginPlay()
 void USpeckleRESTHandlerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 
 void USpeckleRESTHandlerComponent::ImportSpeckleObject(int CurrIndex)
 {
+
+#if WITH_EDITOR
 	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
+#endif
+
 	if(SpeckleManager)
 	{
 		auto Commits = SpeckleManager->ArrayOfCommits;
@@ -54,11 +55,36 @@ void USpeckleRESTHandlerComponent::ImportSpeckleObject(int CurrIndex)
 
 TArray<FSpeckleCommit> USpeckleRESTHandlerComponent::FetchListOfCommits()
 {
+	
+#if WITH_EDITOR
 	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
+#endif
+	
 	if(SpeckleManager)
 	{
-		SpeckleManager->FetchCommits();
+		SpeckleManager->FetchStreamItems(Commit);
 		return SpeckleManager->ArrayOfCommits;
+	}
+	return {};
+}
+
+TArray<FSpeckleCommit> USpeckleRESTHandlerComponent::FetchListOfStreams()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("[SPECKLE: Unimplemented method]")));
+	return {};
+}
+
+TArray<FSpeckleBranch> USpeckleRESTHandlerComponent::FetchListOfBranches()
+{
+	
+#if WITH_EDITOR
+	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
+#endif
+	
+	if(SpeckleManager)
+	{
+		SpeckleManager->FetchStreamItems(Branch);
+		return SpeckleManager->ArrayOfBranches;
 	}
 	return {};
 }

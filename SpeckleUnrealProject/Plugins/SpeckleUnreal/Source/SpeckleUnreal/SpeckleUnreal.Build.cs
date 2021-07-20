@@ -33,8 +33,6 @@ public class SpeckleUnreal : ModuleRules
 				"InputCore",
 				"Slate",
 				"SlateCore",
-				"MainFrame",
-				"EditorStyle"
 			}
 		);
 
@@ -45,9 +43,7 @@ public class SpeckleUnreal : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"Blutility",
-				"UMG",
-				"UMGEditor"
+				"UMG"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

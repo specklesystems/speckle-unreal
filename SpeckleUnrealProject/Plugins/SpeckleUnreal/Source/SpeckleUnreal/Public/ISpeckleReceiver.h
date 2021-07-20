@@ -26,4 +26,6 @@ class SPECKLEUNREAL_API IISpeckleReceiver
 public:
 	virtual void ImportSpeckleObject(int CurrIndex) = 0;
 	virtual TArray<FSpeckleCommit> FetchListOfCommits() = 0;
+	virtual TArray<FSpeckleCommit> FetchListOfStreams() = 0;
+	virtual TArray<FSpeckleBranch> FetchListOfBranches() = 0;
 };

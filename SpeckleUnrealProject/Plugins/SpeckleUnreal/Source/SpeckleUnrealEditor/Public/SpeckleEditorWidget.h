@@ -54,7 +54,15 @@ public:
     void FetchSpeckleCommits(UActorComponent* SpeckleReceiver);
 
 	UFUNCTION(BlueprintCallable)
+    void FetchSpeckleBranches(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
 	void SpeckleManagerSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType);
+
+	FString SelectedBranch;
+	
+	UFUNCTION(BlueprintCallable)
+	void BranchesBoxSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType);
 
 	template<typename T>
 	UFUNCTION(BlueprintCallable)
@@ -74,5 +82,5 @@ public:
 
 	UPROPERTY()
 	TArray<ASpeckleUnrealManager*> SpeckleManagers;
-
+	
 };
