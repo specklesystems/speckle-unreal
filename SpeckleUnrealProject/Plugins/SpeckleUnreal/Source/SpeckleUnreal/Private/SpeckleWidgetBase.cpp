@@ -4,6 +4,7 @@
 #include "SpeckleWidgetBase.h"
 #include "ISpeckleReceiver.h"
 
+
 void USpeckleWidgetBase::ImportSpeckleObject(UActorComponent* SpeckleActorComponent, int CommitIndex)
 {
 	if(SpeckleActorComponent != nullptr)
@@ -16,15 +17,26 @@ void USpeckleWidgetBase::ImportSpeckleObject(UActorComponent* SpeckleActorCompon
 	}
 }
 
-TArray<FSpeckleCommit> USpeckleWidgetBase::FetchSpeckleCommits(UActorComponent* SpeckleActorComponent)
+void USpeckleWidgetBase::FetchSpeckleCommits(UActorComponent* SpeckleActorComponent)
 {
 	if(SpeckleActorComponent != nullptr)
 	{
 		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
 		if(SpeckleReceiver)
 		{
-			return SpeckleReceiver->FetchListOfCommits();
+			SpeckleReceiver->FetchListOfCommits();
 		}
 	}
-	return {};
+}
+
+void USpeckleWidgetBase::FetchSpeckleBranches(UActorComponent* SpeckleActorComponent)
+{
+	if(SpeckleActorComponent != nullptr)
+	{
+		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
+		if(SpeckleReceiver)
+		{
+			SpeckleReceiver->FetchListOfBranches();
+		}
+	}
 }

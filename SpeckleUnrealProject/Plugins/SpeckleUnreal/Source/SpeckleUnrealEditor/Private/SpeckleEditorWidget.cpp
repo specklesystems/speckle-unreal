@@ -6,6 +6,7 @@
 #include "Components/ComboBoxString.h"
 #include "Components/TextBlock.h"
 #include "ObjectEditorUtils.h"
+#include "Async/Async.h"
 #include "SpeckleUnreal/Public/SpeckleUnrealManager.h"
 
 
@@ -39,10 +40,14 @@ void USpeckleEditorWidget::NativeConstruct()
 	{
 		if(GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(1, 8.0f, FColor::Red,
+			GEngine->AddOnScreenDebugMessage(1, 10.0f, FColor::Red,
 				"[SPECKLE LOG]: No available speckle managers in the scene. Place and reopen the window");
 		}
 	}
+
+	//Bind event handlers to fill in the received items.
+	CurrentSpeckleManager->OnBranchesProcessed.AddDynamic(this, &USpeckleEditorWidget::SpeckleBranchesReceived);
+	CurrentSpeckleManager->OnCommitsProcessed.AddDynamic(this, &USpeckleEditorWidget::SpeckleCommitsReceived);
 	
 	InitUI();
 }
@@ -74,17 +79,21 @@ void USpeckleEditorWidget::FetchSpeckleCommits(UActorComponent* SpeckleActorComp
 	{
 		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
 		if(SpeckleReceiver)
+		{			
+			SpeckleReceiver->FetchListOfCommits();
+		}
+	}
+}
+
+void USpeckleEditorWidget::SpeckleCommitsReceived(const TArray<FSpeckleCommit>& CommitsList)
+{
+	CommitsCBox->ClearOptions();
+	for (auto C : CommitsList)
+	{
+		//keep commits only from the selected branch
+		if(C.BranchName == SelectedBranch)
 		{
-			CommitsCBox->ClearOptions();			
-			//keep commits only from the selected branch
-			auto CommitsList = SpeckleReceiver->FetchListOfCommits();
-			for (auto C : CommitsList)
-			{
-				if(C.BranchName == SelectedBranch)
-				{
-					CommitsCBox->AddOption(C.Message + " [" + C.AuthorName + "]");
-				}
-			}
+			CommitsCBox->AddOption(C.Message + " [" + C.AuthorName + "]");
 		}
 	}
 }
@@ -96,14 +105,25 @@ void USpeckleEditorWidget::FetchSpeckleBranches(UActorComponent* SpeckleActorCom
 		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
 		if(SpeckleReceiver)
 		{
-			BranchesCBox->ClearOptions();
-			auto BranchesList = SpeckleReceiver->FetchListOfBranches();
-			for(auto b : BranchesList)
-			{
-				BranchesCBox->AddOption(b.Name);
-			}
+			
+			SpeckleReceiver->FetchListOfBranches();
 		}
 	}
+}
+
+void USpeckleEditorWidget::SpeckleBranchesReceived(const TArray<FSpeckleBranch>& BranchesList)
+{
+	BranchesCBox->ClearOptions();
+	for(auto b : BranchesList)
+	{
+		BranchesCBox->AddOption(b.Name);
+	}
+
+	if(BranchesCBox->GetOptionCount() > 0)
+	{
+		BranchesCBox->SetSelectedOption("main");
+		SelectedBranch = TEXT("main");
+	} 
 }
 
 void USpeckleEditorWidget::SpeckleManagerSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType)
@@ -112,10 +132,5 @@ void USpeckleEditorWidget::SpeckleManagerSelectionListener(FString SelectedItem,
 	CurrentSpeckleManager = SpeckleManagers[Idx];
 
 	InitUI();
-}
-
-void USpeckleEditorWidget::BranchesBoxSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType)
-{
-	SelectedBranch = SelectedItem;
 }
 

@@ -28,9 +28,7 @@ struct FSpeckleCommit
 	UPROPERTY(BlueprintReadWrite)
 	FString BranchName;
 
-	FSpeckleCommit()
-	{
-	}
+	FSpeckleCommit(){};
 
 	FSpeckleCommit(const FString& ReferenceObjectID, const FString& AuthorName, const FString& Message, const FString& BranchName)
         : ReferenceObjectID(ReferenceObjectID),
@@ -50,7 +48,7 @@ struct FSpeckleCommit
 
 /*
 * Struct that holds all the properties required
-* from a speckle commit
+* from a speckle Branch
 * received from GraphQL.
 */
 USTRUCT(BlueprintType)
@@ -67,12 +65,74 @@ struct FSpeckleBranch
 	UPROPERTY(BlueprintReadWrite)
 	FString Description;
 
-	FSpeckleBranch()
-	{
-	}
-
+	FSpeckleBranch(){};
+	
 	FSpeckleBranch(const FString& ID, const FString& Name, const FString& Description):
         ID(ID), Name(Name), Description(Description){}
+};
+
+/*
+* Struct that holds all the properties required
+* from a speckle Branch
+* received from GraphQL.
+*/
+USTRUCT(BlueprintType)
+struct FSpeckleGlobals
+{
+	GENERATED_USTRUCT_BODY()
+	
+    UPROPERTY(BlueprintReadWrite)
+	FString ID;
+
+	UPROPERTY(BlueprintReadWrite)
+	FString Region;
+
+	UPROPERTY(BlueprintReadWrite)
+	float Latitude;
+
+	UPROPERTY(BlueprintReadWrite)
+	float Longitude;
+
+	FSpeckleGlobals(): Latitude(0), Longitude(0)
+	{
+	};
+
+	FSpeckleGlobals(const FString& ID, const FString& Region, float Latitude, float Longitude)
+		: ID(ID),
+		  Region(Region),
+		  Latitude(Latitude),
+		  Longitude(Longitude)
+	{
+	}
+};
+
+
+/*
+* Struct that holds all the properties required
+* from a speckle Branch
+* received from GraphQL.
+*/
+USTRUCT(BlueprintType)
+struct FSpeckleStream
+{
+	GENERATED_USTRUCT_BODY()
+	
+    UPROPERTY(BlueprintReadWrite)
+	FString ID;
+
+	UPROPERTY(BlueprintReadWrite)
+	FString Name;
+
+	UPROPERTY(BlueprintReadWrite)
+	FString Description;
+	
+	UPROPERTY(BlueprintReadWrite)
+	FSpeckleGlobals Globals;
+	
+	FSpeckleStream(){};
+	
+	FSpeckleStream(const FString& ID, const FString& Name, const FString& Description):
+        ID(ID), Name(Name), Description(Description), Globals(Globals){}
 };
 
 UENUM()

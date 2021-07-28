@@ -15,10 +15,13 @@ class SPECKLEUNREAL_API USpeckleWidgetBase : public UUserWidget
 {
 	GENERATED_BODY()
 	
-public:
+public:	
 	UFUNCTION(BlueprintCallable)
 	void ImportSpeckleObject(UActorComponent* SpeckleReceiver, int CommitIndex);
     
     UFUNCTION(BlueprintCallable)
-    TArray<FSpeckleCommit> FetchSpeckleCommits(UActorComponent* SpeckleReceiver);
+    void FetchSpeckleCommits(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
+    void FetchSpeckleBranches(UActorComponent* SpeckleReceiver);
 };

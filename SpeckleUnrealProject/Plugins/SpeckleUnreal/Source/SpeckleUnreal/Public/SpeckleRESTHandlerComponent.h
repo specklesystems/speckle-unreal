@@ -30,13 +30,13 @@ public:
 	virtual void ImportSpeckleObject(int CurrIndex) override;
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
-	virtual TArray<FSpeckleCommit> FetchListOfCommits() override;
+	virtual void FetchListOfCommits() override;
 
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
-	virtual TArray<FSpeckleCommit> FetchListOfStreams() override;
+	virtual void FetchListOfStreams() override;
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
-	virtual TArray<FSpeckleBranch> FetchListOfBranches() override;
+	virtual void FetchListOfBranches() override;
 	
 	UPROPERTY()
 	ASpeckleUnrealManager* SpeckleManager;

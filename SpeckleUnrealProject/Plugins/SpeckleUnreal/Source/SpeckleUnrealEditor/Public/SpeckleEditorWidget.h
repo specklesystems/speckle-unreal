@@ -54,7 +54,13 @@ public:
     void FetchSpeckleCommits(UActorComponent* SpeckleReceiver);
 
 	UFUNCTION(BlueprintCallable)
+    void SpeckleCommitsReceived(const TArray<FSpeckleCommit>& CommitsList);
+
+	UFUNCTION(BlueprintCallable)
     void FetchSpeckleBranches(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
+    void SpeckleBranchesReceived(const TArray<FSpeckleBranch>& BranchesList);
 
 	UFUNCTION(BlueprintCallable)
 	void SpeckleManagerSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType);
@@ -62,7 +68,10 @@ public:
 	FString SelectedBranch;
 	
 	UFUNCTION(BlueprintCallable)
-	void BranchesBoxSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType);
+	void BranchesBoxSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType)
+	{
+		SelectedBranch = SelectedItem;
+	}
 
 	template<typename T>
 	UFUNCTION(BlueprintCallable)

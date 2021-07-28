@@ -19,11 +19,14 @@
 #include "SpeckleUnrealManager.generated.h"
 
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
 	GENERATED_BODY()
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessed, const TArray<FSpeckleBranch>&, BranchesList);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessed, const TArray<FSpeckleCommit>&, CommitsList);	
+	
 public:
 	FHttpModule* Http;
 
@@ -78,9 +81,8 @@ public:
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnStreamBranchesListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
@@ -94,7 +96,12 @@ public:
 	UPROPERTY()
 	TArray<FSpeckleBranch> ArrayOfBranches;
 
-	void FetchStreamItems(ESpeckleItemType ItemType);
+	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
+
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FBranchesRequestProcessed OnBranchesProcessed;
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FCommitsRequestProcessed OnCommitsProcessed;
 	
 protected:
 
@@ -125,7 +132,6 @@ protected:
 			FTCHARToUTF8 Converted(*InString); // Convert to UTF8
 			OutBytes.Append(reinterpret_cast<const uint8*>(Converted.Get()), Converted.Length());
 		}
-
 		return OutBytes;
 	}
 };

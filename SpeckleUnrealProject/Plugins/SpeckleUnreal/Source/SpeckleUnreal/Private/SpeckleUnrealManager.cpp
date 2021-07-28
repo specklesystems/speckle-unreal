@@ -2,6 +2,8 @@
 
 #include <string>
 
+
+#include "HttpManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Dom/JsonObject.h"
 
@@ -331,7 +333,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 	return MeshInstance;
 }
 
-void ASpeckleUnrealManager::OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void ASpeckleUnrealManager::OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
 	{
@@ -376,9 +378,10 @@ void ASpeckleUnrealManager::OnStreamCommitsListResponseReceived(FHttpRequestPtr 
 			}
 		}
 	}
+	OnCommitsProcessed.Broadcast(ArrayOfCommits);
 }
 
-void ASpeckleUnrealManager::OnStreamBranchesListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void ASpeckleUnrealManager::OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
 	{
@@ -422,20 +425,13 @@ void ASpeckleUnrealManager::OnStreamBranchesListResponseReceived(FHttpRequestPtr
 			}
 		}
 	}
+
+	OnBranchesProcessed.Broadcast(ArrayOfBranches);
+	UE_LOG(LogTemp, Warning, TEXT("Called"));
 }
 
-void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void ASpeckleUnrealManager::FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
 {
-	
-}
-
-void ASpeckleUnrealManager::FetchStreamItems(ESpeckleItemType ItemType)
-{
-	if(GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Green, "Fetching commits...");
-	}
-	
 	FString url = ServerUrl + "/graphql";
 
 	FHttpRequestRef Request = Http->CreateRequest();
@@ -446,36 +442,16 @@ void ASpeckleUnrealManager::FetchStreamItems(ESpeckleItemType ItemType)
 	Request->SetHeader("DNT", TEXT("1"));
 	Request->SetHeader("Origin", TEXT("https://speckle.xyz"));
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
-	
-	FString PostPayload;
-	
-	switch (ItemType)
-	{
-		case Commit:
-			PostPayload = "{\"query\": \"query{\\n stream (id: \\\"" + StreamID + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n referencedObject\\n authorName\\n message\\n }\\n }\\n }\\n}\"}";
-			Request->SetContentAsString(PostPayload);
-			Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamCommitsListResponseReceived);
-			break;
-		case Branch:
-			PostPayload = "{\"query\": \"query{\\n stream (id: \\\"" + StreamID + "\\\"){\\n id\\n name\\n branches{\\n totalCount\\n cursor\\n items{\\n id\\n name\\n description\\n}\\n }\\n }\\n}\"}";
-			Request->SetContentAsString(PostPayload);
-			Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamBranchesListResponseReceived);
-			break;
-		default:
-			PostPayload = "{\"query\": \"query{\\n stream (id: \\\"" + StreamID + "\\\"){\\n id\\n name\\n commits{\\n totalCount\\n cursor\\n items{\\n id\\n name\\n description\\n}\\n }\\n }\\n}\"}";
-			Request->SetContentAsString(PostPayload);
-			Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamCommitsListResponseReceived);
-			break;
-	}
+
+	Request->SetContentAsString(PostPayload);
+	Request->OnProcessRequestComplete().BindLambda([=](
+		FHttpRequestPtr request,
+		FHttpResponsePtr response,
+		bool success)
+		{ HandleResponse(request, response, success); });
 
 	Request->SetURL(url);
 	Request->ProcessRequest();
-
-	if(GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green,
-		FString::Printf(TEXT("[SPECKLE]: Retrieved results successfully %s"), *UEnum::GetDisplayValueAsText(ItemType).ToString()));
-	}
 }
 
 void ASpeckleUnrealManager::DeleteObjects()

@@ -25,7 +25,7 @@ class SPECKLEUNREAL_API IISpeckleReceiver
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual void ImportSpeckleObject(int CurrIndex) = 0;
-	virtual TArray<FSpeckleCommit> FetchListOfCommits() = 0;
-	virtual TArray<FSpeckleCommit> FetchListOfStreams() = 0;
-	virtual TArray<FSpeckleBranch> FetchListOfBranches() = 0;
+	virtual void FetchListOfCommits() = 0;
+	virtual void FetchListOfStreams() = 0;
+	virtual void FetchListOfBranches() = 0;
 };

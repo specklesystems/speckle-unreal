@@ -40,7 +40,7 @@ void USpeckleRESTHandlerComponent::ImportSpeckleObject(int CurrIndex)
 	{
 		auto Commits = SpeckleManager->ArrayOfCommits;
 		// check if within bounds and import
-		if(CurrIndex <= Commits.Num() && CurrIndex >= 0)
+		if(Commits.Num() > 0 && (CurrIndex <= Commits.Num() && CurrIndex >= 0))
 		{
 			const auto InputObjectRefID = Commits[CurrIndex].ReferenceObjectID;
 			SpeckleManager->ObjectID = InputObjectRefID;
@@ -53,7 +53,7 @@ void USpeckleRESTHandlerComponent::ImportSpeckleObject(int CurrIndex)
 	}
 }
 
-TArray<FSpeckleCommit> USpeckleRESTHandlerComponent::FetchListOfCommits()
+void USpeckleRESTHandlerComponent::FetchListOfCommits()
 {
 	
 #if WITH_EDITOR
@@ -62,19 +62,20 @@ TArray<FSpeckleCommit> USpeckleRESTHandlerComponent::FetchListOfCommits()
 	
 	if(SpeckleManager)
 	{
-		SpeckleManager->FetchStreamItems(Commit);
-		return SpeckleManager->ArrayOfCommits;
+		FString PostPayload = "{\"query\": \"query{stream (id: \\\"" +SpeckleManager->StreamID + "\\\"){id name commits {totalCount cursor items {id referencedObject authorName message branchName} } }}\"}";
+		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse = [this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		{ SpeckleManager->OnCommitsItemsResponseReceived(Request, Response, bWasSuccessful); };
+
+		SpeckleManager->FetchStreamItems(PostPayload, HandleResponse);
 	}
-	return {};
 }
 
-TArray<FSpeckleCommit> USpeckleRESTHandlerComponent::FetchListOfStreams()
+void USpeckleRESTHandlerComponent::FetchListOfStreams()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("[SPECKLE: Unimplemented method]")));
-	return {};
 }
 
-TArray<FSpeckleBranch> USpeckleRESTHandlerComponent::FetchListOfBranches()
+void USpeckleRESTHandlerComponent::FetchListOfBranches()
 {
 	
 #if WITH_EDITOR
@@ -83,9 +84,11 @@ TArray<FSpeckleBranch> USpeckleRESTHandlerComponent::FetchListOfBranches()
 	
 	if(SpeckleManager)
 	{
-		SpeckleManager->FetchStreamItems(Branch);
-		return SpeckleManager->ArrayOfBranches;
+		FString PostPayload = "{\"query\": \"query{\\n stream (id: \\\"" + SpeckleManager->StreamID + "\\\"){\\n id\\n name\\n branches{\\n totalCount\\n cursor\\n items{\\n id\\n name\\n description\\n}\\n }\\n }\\n}\"}";
+		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse = [this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		{ SpeckleManager->OnBranchesItemsResponseReceived(Request, Response, bWasSuccessful); };
+		
+		SpeckleManager->FetchStreamItems(PostPayload, HandleResponse);
 	}
-	return {};
 }
 
