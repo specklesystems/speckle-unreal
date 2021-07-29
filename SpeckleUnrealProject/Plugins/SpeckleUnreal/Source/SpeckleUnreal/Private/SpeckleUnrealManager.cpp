@@ -1,8 +1,4 @@
 #include "SpeckleUnrealManager.h"
-
-#include <string>
-
-
 #include "HttpManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Dom/JsonObject.h"
