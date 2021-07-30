@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+.idea/
+.vs/
+
 # Compiled Object files
 *.slo
 *.lo
@@ -31,12 +34,15 @@
 *.out
 *.app
 *.umap
+
+# UE file types
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.umap filter=lfs diff=lfs merge=lfs -text
+
 SpeckleUnrealProject/Binaries/
 SpeckleUnrealProject/Intermediate/
 SpeckleUnrealProject/Plugins/SpeckleUnreal/Binaries/
 SpeckleUnrealProject/Plugins/SpeckleUnreal/Intermediate/
 SpeckleUnrealProject/Saved/
 SpeckleUnrealProject/.vs/
-.idea/
-.vs/
 SpeckleUnrealProject/SpeckleUnrealProject.sln.DotSettings.user
