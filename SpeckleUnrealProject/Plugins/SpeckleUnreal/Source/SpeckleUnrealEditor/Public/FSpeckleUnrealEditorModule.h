@@ -19,24 +19,23 @@ class FSpeckleUnrealEditorModule : public IModuleInterface
     TSharedPtr<SWindow> SpeckleEditorWindow;
     FOnWindowClosed OnSpeckleWindowClosed;
     
-    	
-    	void SpeckleButtonListener();
+    void SpeckleButtonListener();
+
+    UFUNCTION()
+    void OnEditorWindowClosed(const TSharedRef<SWindow>&);
     
-    	UFUNCTION()
-    	void OnEditorWindowClosed(const TSharedRef<SWindow>&);
+    void AddToolbarExtension(FToolBarBuilder &builder)
+    {
+    	FSlateIcon IconBrush = FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.ViewOptions", "LevelEditor.ViewOptions.Small");
     	
-    	void AddToolbarExtension(FToolBarBuilder &builder)
-    	{
-    		FSlateIcon IconBrush = FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.ViewOptions", "LevelEditor.ViewOptions.Small");
-    		
-    		builder.AddToolBarButton
-    		(
-    			FSpeckleEditorCommands::Get().SpeckleToolBarBtn,
-    			NAME_None,
-    		    FText::FromString("Speckle Editor"), 
-    		    FText::FromString("Click to open Speckle Window"),
-    		    IconBrush,
-    		    NAME_None
-            );
-    	};
+    	builder.AddToolBarButton
+    	(
+    		FSpeckleEditorCommands::Get().SpeckleToolBarBtn,
+    		NAME_None,
+    	    FText::FromString("Speckle Editor"), 
+    	    FText::FromString("Click to open Speckle Window"),
+    	    IconBrush,
+    	    NAME_None
+        );
+    };
 };

@@ -94,7 +94,6 @@ void FSpeckleUnrealEditorModule::SpeckleButtonListener()
 	{
 		SpeckleEditorWindow->BringToFront();
 	}
-	
 }
 
 void FSpeckleUnrealEditorModule::OnEditorWindowClosed(const TSharedRef<SWindow>&)

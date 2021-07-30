@@ -46,8 +46,11 @@ void USpeckleEditorWidget::NativeConstruct()
 	}
 
 	//Bind event handlers to fill in the received items.
-	CurrentSpeckleManager->OnBranchesProcessed.AddDynamic(this, &USpeckleEditorWidget::SpeckleBranchesReceived);
-	CurrentSpeckleManager->OnCommitsProcessed.AddDynamic(this, &USpeckleEditorWidget::SpeckleCommitsReceived);
+	if(CurrentSpeckleManager != nullptr)
+	{
+		CurrentSpeckleManager->OnBranchesProcessed.AddDynamic(this, &USpeckleEditorWidget::SpeckleBranchesReceived);
+		CurrentSpeckleManager->OnCommitsProcessed.AddDynamic(this, &USpeckleEditorWidget::SpeckleCommitsReceived);
+	}
 	
 	InitUI();
 }
@@ -105,7 +108,6 @@ void USpeckleEditorWidget::FetchSpeckleBranches(UActorComponent* SpeckleActorCom
 		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
 		if(SpeckleReceiver)
 		{
-			
 			SpeckleReceiver->FetchListOfBranches();
 		}
 	}
