@@ -57,6 +57,7 @@ public class SpeckleUnrealEditor : ModuleRules
 				"Slate",
 				"SlateCore",
 				"Blutility",
+				"Projects",
 				"UMG",
 				"UMGEditor"
 				// ... add private dependencies that you statically link with here ...	

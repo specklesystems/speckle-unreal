@@ -8,11 +8,20 @@
 #include "SlateBasics.h"
 #include "Interfaces/IMainFrameModule.h"
 #include "FSpeckleEditorCommands.h"
+#include "SpeckleStyle.h"
 
 class FSpeckleUnrealEditorModule : public IModuleInterface
 {
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
+	// static inline FSpeckleUnrealEditorModule& Get() {
+	// 	return FModuleManager::LoadModuleChecked<FSpeckleUnrealEditorModule>("SpeckleUnrealEditor");
+	// }
+	//
+	// static inline bool IsAvailable() {
+	// 	return FModuleManager::Get().IsModuleLoaded("SpeckleUnrealEditor");
+	// }
 	
 	TSharedPtr<FExtender> ToolbarExtender;
     TSharedPtr<const FExtensionBase> Extension;
@@ -26,7 +35,8 @@ class FSpeckleUnrealEditorModule : public IModuleInterface
     
     void AddToolbarExtension(FToolBarBuilder &builder)
     {
-    	FSlateIcon IconBrush = FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.ViewOptions", "LevelEditor.ViewOptions.Small");
+    	//FSlateIcon IconBrush = FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.ViewOptions", "LevelEditor.ViewOptions.Small");
+		FSlateIcon IconBrush = FSlateIcon(FSpeckleStyle::GetStyleSetName(), "Speckle.MenuIcon");
     	
     	builder.AddToolBarButton
     	(

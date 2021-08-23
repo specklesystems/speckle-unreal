@@ -14,8 +14,7 @@ void FSpeckleEditorCommands::RegisterCommands()
 			"SpeckleBtn",
 			"Speckle Editor Button",
 			EUserInterfaceActionType::Button, 
-			FInputGesture()
-		);
+			FInputGesture());
 	
 	#undef LOCTEXT_NAMESPACE
 }

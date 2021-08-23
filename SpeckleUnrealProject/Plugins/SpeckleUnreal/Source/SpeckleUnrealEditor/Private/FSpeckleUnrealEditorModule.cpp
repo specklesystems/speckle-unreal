@@ -13,6 +13,7 @@ void FSpeckleUnrealEditorModule::StartupModule()
 {
 	FSpeckleEditorCommands::Register();
 	TSharedPtr<FUICommandList> CommandList = MakeShareable(new FUICommandList());
+	FSpeckleStyle::Initialize();
 	
 	//map object to function
 	CommandList->MapAction
@@ -44,6 +45,7 @@ void FSpeckleUnrealEditorModule::ShutdownModule()
 	ToolbarExtender->RemoveExtension(Extension.ToSharedRef());
 	Extension.Reset();
 	ToolbarExtender.Reset();
+	FSpeckleStyle::Shutdown();
 }
 
 void FSpeckleUnrealEditorModule::SpeckleButtonListener()
