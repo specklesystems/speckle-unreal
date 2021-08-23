@@ -42,7 +42,7 @@ class FSpeckleUnrealEditorModule : public IModuleInterface
     	(
     		FSpeckleEditorCommands::Get().SpeckleToolBarBtn,
     		NAME_None,
-    	    FText::FromString("Speckle Editor"), 
+    	    FText::FromString("Speckle"), 
     	    FText::FromString("Click to open Speckle Window"),
     	    IconBrush,
     	    NAME_None

@@ -2,10 +2,7 @@
 #include "Slate/SlateGameResources.h"
 #include "FSpeckleUnrealEditorModule.h"
 #include "Styling/SlateStyleRegistry.h"
-#include "Styling/SlateTypes.h"
-#include "EditorStyleSet.h"
 #include "Interfaces/IPluginManager.h"
-#include "SlateOptMacros.h"
 
 
 #define IMAGE_BRUSH(RelativePath,...) FSlateImageBrush(FSpeckleStyle::InContent(RelativePath,".png"), __VA_ARGS__)
@@ -39,7 +36,8 @@ void FSpeckleStyle::Initialize()
 	const FVector2D Icon24x24(24.0f, 24.0f);
 	const FVector2D Icon40x40(40.0f, 40.0f);
 	const FVector2D Icon48x48(48.0f, 48.0f);
-	
+
+	//set menu/toolbar icon
 	SpeckleStyleSet->Set("Speckle.MenuIcon", new IMAGE_BRUSH(TEXT("speckle_icon_64_64"), Icon40x40));
 
 	FSlateStyleRegistry::RegisterSlateStyle(*SpeckleStyleSet.Get());
