@@ -40,3 +40,15 @@ void USpeckleWidgetBase::FetchSpeckleBranches(UActorComponent* SpeckleActorCompo
 		}
 	}
 }
+
+void USpeckleWidgetBase::FetchSpeckleStreams(UActorComponent* SpeckleActorComponent)
+{
+	if(SpeckleActorComponent != nullptr)
+	{
+		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
+		if(SpeckleReceiver)
+		{
+			SpeckleReceiver->FetchListOfStreams();
+		}
+	}
+}

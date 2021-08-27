@@ -65,7 +65,18 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits()
 
 void USpeckleRESTHandlerComponent::FetchListOfStreams()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("[SPECKLE: Unimplemented method]")));
+#if WITH_EDITOR
+	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
+#endif
+	
+	if(SpeckleManager)
+	{
+		FString PostPayload = "{\"query\": \"query{user {streams(limit:20) {totalCount items {id name description}}}}\"}";
+		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse = [this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		{ SpeckleManager->OnStreamItemsResponseReceived(Request, Response, bWasSuccessful); };
+		
+		SpeckleManager->FetchStreamItems(PostPayload, HandleResponse);
+	}
 }
 
 void USpeckleRESTHandlerComponent::FetchListOfBranches()

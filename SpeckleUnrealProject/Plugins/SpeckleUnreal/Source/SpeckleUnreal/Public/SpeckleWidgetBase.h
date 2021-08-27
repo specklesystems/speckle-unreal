@@ -24,4 +24,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
     void FetchSpeckleBranches(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
+    void FetchSpeckleStreams(UActorComponent* SpeckleReceiver);
 };

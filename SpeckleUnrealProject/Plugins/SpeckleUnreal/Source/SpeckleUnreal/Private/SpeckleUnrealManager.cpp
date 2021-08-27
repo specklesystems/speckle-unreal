@@ -423,7 +423,55 @@ void ASpeckleUnrealManager::OnBranchesItemsResponseReceived(FHttpRequestPtr Requ
 	}
 
 	OnBranchesProcessed.Broadcast(ArrayOfBranches);
-	UE_LOG(LogTemp, Warning, TEXT("Called"));
+}
+
+void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	if (!bWasSuccessful)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Stream Request failed: " + Response->GetContentAsString());
+		return;
+	}
+
+	auto responseCode = Response-> GetResponseCode();
+	if (responseCode != 200)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red,
+        FString::Printf(TEXT("Error response. Response code %d"), responseCode));
+		return;
+	}
+
+	FString response = Response->GetContentAsString();
+	//Create a pointer to hold the json serialized data
+	TSharedPtr<FJsonObject> JsonObject;
+	//Create a reader pointer to read the json data
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
+
+	ArrayOfStreams.Empty();
+	//Deserialize the json data given Reader and the actual object to deserialize
+	if (FJsonSerializer::Deserialize(Reader, JsonObject))
+	{
+		for(const auto& pair:JsonObject->Values)
+		{
+			auto StreamsArr = JsonObject->GetObjectField(TEXT("data"))
+            ->GetObjectField(TEXT("user"))
+            ->GetObjectField(TEXT("streams"))
+			->GetArrayField(TEXT("items"));
+
+			for (auto s : StreamsArr)
+			{
+				auto ID = s->AsObject()->GetStringField("id");
+				auto Name = s->AsObject()->GetStringField("name");
+				auto Description = s->AsObject()->GetStringField("description");
+				auto Stream = FSpeckleStream(ID, Name, Description, FSpeckleGlobals());
+				ArrayOfStreams.Add(Stream);
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *ID);
+			}
+		}
+	}
+
+	OnStreamsProcessed.Broadcast(ArrayOfStreams);
 }
 
 void ASpeckleUnrealManager::FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)

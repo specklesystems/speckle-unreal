@@ -131,7 +131,7 @@ struct FSpeckleStream
 	
 	FSpeckleStream(){};
 	
-	FSpeckleStream(const FString& ID, const FString& Name, const FString& Description):
+	FSpeckleStream(const FString& ID, const FString& Name, const FString& Description, const FSpeckleGlobals& Globals):
         ID(ID), Name(Name), Description(Description), Globals(Globals){}
 };
 
