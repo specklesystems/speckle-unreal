@@ -46,7 +46,7 @@ void USpeckleRESTHandlerComponent::ImportSpeckleObject(int CurrIndex)
 	}
 }
 
-void USpeckleRESTHandlerComponent::FetchListOfCommits()
+void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 {
 	
 #if WITH_EDITOR
@@ -55,7 +55,8 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits()
 	
 	if(SpeckleManager)
 	{
-		FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + SpeckleManager->StreamID + "\\\"){id name commits {totalCount cursor items {id referencedObject authorName message branchName} } }}\"}";
+		//FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + SpeckleManager->StreamID + "\\\"){id name commits {totalCount cursor items {id referencedObject authorName message branchName} } }}\"}";
+		FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + SpeckleManager->StreamID + "\\\"){branch(name: \\\"" + BranchName + "\\\"){commits{items {id referencedObject authorName message branchName} } }}}\"}";
 		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse = [this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 		{ SpeckleManager->OnCommitsItemsResponseReceived(Request, Response, bWasSuccessful); };
 
@@ -91,6 +92,23 @@ void USpeckleRESTHandlerComponent::FetchListOfBranches()
 		FString PostPayload = "{\"query\": \"query{\\n stream (id: \\\"" + SpeckleManager->StreamID + "\\\"){\\n id\\n name\\n branches{\\n totalCount\\n cursor\\n items{\\n id\\n name\\n description\\n}\\n }\\n }\\n}\"}";
 		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse = [this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 		{ SpeckleManager->OnBranchesItemsResponseReceived(Request, Response, bWasSuccessful); };
+		
+		SpeckleManager->FetchStreamItems(PostPayload, HandleResponse);
+	}
+}
+
+void USpeckleRESTHandlerComponent::FetchGlobals()
+{
+#if WITH_EDITOR
+	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
+#endif
+	
+	if(SpeckleManager)
+	{
+		
+		FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + SpeckleManager->StreamID + "\\\"){branch(name:  \\\"" + "globals" + "\\\"){commits{totalCount items{referencedObject}}}}}\"}";
+		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse = [this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		{ SpeckleManager->OnGlobalStreamItemsResponseReceived(Request, Response, bWasSuccessful); };
 		
 		SpeckleManager->FetchStreamItems(PostPayload, HandleResponse);
 	}

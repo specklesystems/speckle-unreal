@@ -28,13 +28,16 @@ public:
 	virtual void ImportSpeckleObject(int CurrIndex) override;
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
-	virtual void FetchListOfCommits() override;
+	virtual void FetchListOfCommits(const FString& BranchName) override;
 
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
 	virtual void FetchListOfStreams() override;
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
 	virtual void FetchListOfBranches() override;
+
+	UFUNCTION(BlueprintCallable, Category="Speckle REST")
+    virtual void FetchGlobals() override;
 	
 	UPROPERTY()
 	ASpeckleUnrealManager* SpeckleManager;

@@ -27,6 +27,7 @@ class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessed, const TArray<FSpeckleBranch>&, BranchesList);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessed, const TArray<FSpeckleCommit>&, CommitsList);	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStreamsRequestProcessed, const TArray<FSpeckleStream>&, StreamsList);	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGlobalsRequestProcessed, const FSpeckleGlobals&, GlobalsObject);	
 	
 public:
 	FHttpModule* Http;
@@ -35,7 +36,7 @@ public:
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void ImportSpeckleObject();
 
-	UFUNCTION(CallInEditor, Category = "Speckle")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Speckle")
 		void DeleteObjects();
 
 
@@ -85,6 +86,7 @@ public:
 	void OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGlobalStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
@@ -109,6 +111,8 @@ public:
 	FCommitsRequestProcessed OnCommitsProcessed;
 	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
 	FStreamsRequestProcessed OnStreamsProcessed;
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FGlobalsRequestProcessed OnGlobalsProcessed;
 	
 protected:
 

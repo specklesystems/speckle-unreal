@@ -83,7 +83,7 @@ void USpeckleEditorWidget::FetchSpeckleCommits(UActorComponent* SpeckleActorComp
 		const auto SpeckleReceiver = Cast<IISpeckleReceiver>(SpeckleActorComponent);
 		if(SpeckleReceiver)
 		{			
-			SpeckleReceiver->FetchListOfCommits();
+			SpeckleReceiver->FetchListOfCommits(SelectedBranch);
 		}
 	}
 }
@@ -93,11 +93,7 @@ void USpeckleEditorWidget::SpeckleCommitsReceived(const TArray<FSpeckleCommit>& 
 	CommitsCBox->ClearOptions();
 	for (auto C : CommitsList)
 	{
-		//keep commits only from the selected branch
-		if(C.BranchName == SelectedBranch)
-		{
-			CommitsCBox->AddOption(C.Message + " [" + C.AuthorName + "]");
-		}
+		CommitsCBox->AddOption(C.Message + " [" + C.AuthorName + "]");
 	}
 }
 
