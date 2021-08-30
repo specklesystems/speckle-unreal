@@ -126,13 +126,10 @@ struct FSpeckleStream
 	UPROPERTY(BlueprintReadWrite)
 	FString Description;
 	
-	UPROPERTY(BlueprintReadWrite)
-	FSpeckleGlobals Globals;
-	
 	FSpeckleStream(){};
 	
-	FSpeckleStream(const FString& ID, const FString& Name, const FString& Description, const FSpeckleGlobals& Globals):
-        ID(ID), Name(Name), Description(Description), Globals(Globals){}
+	FSpeckleStream(const FString& ID, const FString& Name, const FString& Description):
+        ID(ID), Name(Name), Description(Description){}
 };
 
 UENUM()

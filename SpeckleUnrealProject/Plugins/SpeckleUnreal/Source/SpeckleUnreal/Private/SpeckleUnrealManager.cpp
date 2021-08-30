@@ -464,9 +464,8 @@ void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Reques
 				auto ID = s->AsObject()->GetStringField("id");
 				auto Name = s->AsObject()->GetStringField("name");
 				auto Description = s->AsObject()->GetStringField("description");
-				auto Stream = FSpeckleStream(ID, Name, Description, FSpeckleGlobals());
+				auto Stream = FSpeckleStream(ID, Name, Description);
 				ArrayOfStreams.Add(Stream);
-				UE_LOG(LogTemp, Warning, TEXT("%s"), *ID);
 			}
 		}
 	}
