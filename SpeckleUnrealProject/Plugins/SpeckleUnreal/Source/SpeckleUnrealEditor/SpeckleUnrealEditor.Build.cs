@@ -1,10 +1,8 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿using UnrealBuildTool;
 
-using UnrealBuildTool;
-
-public class SpeckleUnreal : ModuleRules
+public class SpeckleUnrealEditor : ModuleRules
 {
-	public SpeckleUnreal(ReadOnlyTargetRules Target) : base(Target)
+	public SpeckleUnrealEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -12,14 +10,14 @@ public class SpeckleUnreal : ModuleRules
 			new string[] {
 				// ... add public include paths required here ...
 			}
-			);
+		);
 				
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
 			}
-			);
+		);
 			
 		
 		PublicDependencyModuleNames.AddRange(
@@ -33,9 +31,24 @@ public class SpeckleUnreal : ModuleRules
 				"InputCore",
 				"Slate",
 				"SlateCore",
+				"MainFrame",
+				"EditorStyle"
 			}
 		);
 
+		if (Target.bBuildEditor)
+		{
+			PublicDependencyModuleNames.AddRange(new string[]
+			{
+				"UnrealEd",
+			});
+		}
+		
+		if (Target.Type == TargetType.Editor) // Is UBT building for Editor ?
+		{
+			PrivateDependencyModuleNames.Add("SpeckleUnreal");
+		}
+		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -43,10 +56,13 @@ public class SpeckleUnreal : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"UMG"
+				"Blutility",
+				"Projects",
+				"UMG",
+				"UMGEditor"
 				// ... add private dependencies that you statically link with here ...	
 			}
-			);
+		);
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(
@@ -54,6 +70,6 @@ public class SpeckleUnreal : ModuleRules
 			{
 				// ... add any modules that your module loads dynamically here ...
 			}
-			);
+		);
 	}
 }

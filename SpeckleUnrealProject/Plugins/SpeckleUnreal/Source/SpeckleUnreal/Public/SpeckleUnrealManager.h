@@ -5,9 +5,9 @@
 
 // json manipulation
 #include "Dom/JsonObject.h"
-#include "Dom/JsonValue.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
+// #include "Dom/JsonValue.h"
+// #include "Serialization/JsonReader.h"
+// #include "Serialization/JsonSerializer.h"
 
 // web requests
 #include "Runtime/Online/HTTP/Public/Http.h"
@@ -15,45 +15,20 @@
 #include "SpeckleUnrealMesh.h"
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
+#include "SpeckleStructs.h"
 #include "SpeckleUnrealManager.generated.h"
 
-/*
- * Struct that holds all the properties required
- * from a speckle commit
- * received from GraphQL.
- */
-USTRUCT()
-struct FSpeckleCommit
-{
-	GENERATED_BODY()
-	
-	UPROPERTY()
-	FString ReferenceObjectID;
 
-	UPROPERTY()
-	FString AuthorName;
-
-	UPROPERTY()
-	FString Message;
-
-	FSpeckleCommit()
-	{
-	}
-
-	FSpeckleCommit(const FString& ReferenceObjectID, const FString& AuthorName, const FString& Message)
-		: ReferenceObjectID(ReferenceObjectID),
-		  AuthorName(AuthorName),
-		  Message(Message)
-	{
-	}
-};
-
-
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
 	GENERATED_BODY()
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessed, const TArray<FSpeckleBranch>&, BranchesList);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessed, const TArray<FSpeckleCommit>&, CommitsList);	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStreamsRequestProcessed, const TArray<FSpeckleStream>&, StreamsList);	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGlobalsRequestProcessed, const FSpeckleGlobals&, GlobalsObject);	
+	
 public:
 	FHttpModule* Http;
 
@@ -61,7 +36,7 @@ public:
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void ImportSpeckleObject();
 
-	UFUNCTION(CallInEditor, Category = "Speckle")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Speckle")
 		void DeleteObjects();
 
 
@@ -77,8 +52,11 @@ public:
 		""
 	};
 
-	UPROPERTY()
-	FString ObjectID;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	FString ObjectID
+	{
+		""
+	};
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
@@ -105,8 +83,10 @@ public:
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	void OnStreamCommitsListResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGlobalStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
@@ -117,10 +97,23 @@ public:
 	UPROPERTY()
 	TArray<FSpeckleCommit> ArrayOfCommits;
 
-	void FetchCommits();
+	UPROPERTY()
+	TArray<FSpeckleBranch> ArrayOfBranches;
 
-	void ImportSpeckleObject(FString RefID);
+	UPROPERTY()
+	TArray<FSpeckleStream> ArrayOfStreams;
 
+	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
+
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FBranchesRequestProcessed OnBranchesProcessed;
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FCommitsRequestProcessed OnCommitsProcessed;
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FStreamsRequestProcessed OnStreamsProcessed;
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FGlobalsRequestProcessed OnGlobalsProcessed;
+	
 protected:
 
 	UWorld* World;
@@ -150,7 +143,6 @@ protected:
 			FTCHARToUTF8 Converted(*InString); // Convert to UTF8
 			OutBytes.Append(reinterpret_cast<const uint8*>(Converted.Get()), Converted.Length());
 		}
-
 		return OutBytes;
 	}
 };

@@ -17,8 +17,13 @@
 	"Modules": [
 		{
 			"Name": "SpeckleUnreal",
-			"Type": "Editor",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "SpeckleUnrealEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
 		}
 	],
 	"Plugins": [

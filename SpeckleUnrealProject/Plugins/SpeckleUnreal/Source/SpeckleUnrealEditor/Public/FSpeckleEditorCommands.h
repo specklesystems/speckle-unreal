@@ -9,14 +9,16 @@
 /**
  * 
  */
-class SPECKLEUNREAL_API FSpeckleEditorCommands : public TCommands<FSpeckleEditorCommands>
+class FSpeckleEditorCommands : public TCommands<FSpeckleEditorCommands>
 {
 public:
-	FSpeckleEditorCommands() :TCommands<FSpeckleEditorCommands>(FName(TEXT("Speckle Commands")), 
-   FText::FromString("Speckle Editor Commands"), NAME_None, 
-   FEditorStyle::GetStyleSetName())
-	{	
-	};
+	FSpeckleEditorCommands() : TCommands<FSpeckleEditorCommands>
+	(
+	FName(TEXT("Speckle Commands")),
+	FText::FromString("Speckle Editor Commands"),
+	NAME_None,
+	FEditorStyle::GetStyleSetName()
+	){};
 	
 	virtual void RegisterCommands() override;
 	

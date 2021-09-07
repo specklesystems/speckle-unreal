@@ -5,15 +5,14 @@
 #include "CoreMinimal.h"
 #include "EditorUtilityWidget.h"
 #include "EngineUtils.h"
+#include "SpeckleUnreal/Public/ISpeckleReceiver.h"
 #include "SpeckleEditorWidget.generated.h"
 
 class ASpeckleUnrealManager;
 
-/**
- * 
- */
+
 UCLASS()
-class SPECKLEUNREAL_API USpeckleEditorWidget : public UEditorUtilityWidget
+class USpeckleEditorWidget : public UEditorUtilityWidget
 {
 	GENERATED_BODY()
 	
@@ -47,15 +46,32 @@ public:
 
 	//FUNCTIONS
 	void InitUI();
-	
-    UFUNCTION(BlueprintCallable)
-    void ImportButtonListener();
 
-    UFUNCTION(BlueprintCallable)
-    void FetchButtonListener();
+	UFUNCTION(BlueprintCallable)
+	void ImportSpeckleObject(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
+    void FetchSpeckleCommits(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
+    void SpeckleCommitsReceived(const TArray<FSpeckleCommit>& CommitsList);
+
+	UFUNCTION(BlueprintCallable)
+    void FetchSpeckleBranches(UActorComponent* SpeckleReceiver);
+
+	UFUNCTION(BlueprintCallable)
+    void SpeckleBranchesReceived(const TArray<FSpeckleBranch>& BranchesList);
 
 	UFUNCTION(BlueprintCallable)
 	void SpeckleManagerSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType);
+
+	FString SelectedBranch;
+	
+	UFUNCTION(BlueprintCallable)
+	void BranchesBoxSelectionListener(FString SelectedItem, ESelectInfo::Type SelectionType)
+	{
+		SelectedBranch = SelectedItem;
+	}
 
 	template<typename T>
 	UFUNCTION(BlueprintCallable)
@@ -70,10 +86,10 @@ public:
     UPROPERTY(EditAnywhere)
     TSubclassOf<ASpeckleUnrealManager> SpeckleManagerClass;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASpeckleUnrealManager* CurrentSpeckleManager;
 
 	UPROPERTY()
 	TArray<ASpeckleUnrealManager*> SpeckleManagers;
-
+	
 };
