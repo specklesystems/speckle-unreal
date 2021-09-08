@@ -44,11 +44,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector> &Vertices, const TArray<i
 
 	ProceduralMesh->CreateMeshSection(0, Vertices, Triangles, Normals, UVs, Colors, Tangents, true);
 
-	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(Material, this);
-	
-	DynMaterial->SetVectorParameterValue("BaseColor", FLinearColor::White);
-
-	ProceduralMesh->SetMaterial(0, DynMaterial);
+	ProceduralMesh->SetMaterial(0, Material);
 }
 
 // Called when the game starts or when spawned

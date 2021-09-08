@@ -1,5 +1,8 @@
 #include "SpeckleUnrealManager.h"
 
+#include "MaterialConverter.h"
+#include "RenderMaterial.h"
+
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
 {
@@ -119,6 +122,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::GetExistingMesh(const FString &object
 	return meshActor;
 }
 
+
 void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObj)
 {
 	if (!speckleObj->HasField("speckle_type"))
@@ -146,9 +150,10 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 
 	if (speckleObj->HasField("@displayMesh"))
 	{
-		UMaterialInterface* explicitMaterial = nullptr;
-		if (speckleObj->HasField("renderMaterial"))
-			explicitMaterial = CreateMaterial(speckleObj->GetObjectField("renderMaterial"));
+		//  -- Remove this for now, not sure it does what is says it does -- 
+		//UMaterialInterface* FallbackMaterial = nullptr;
+		//if (speckleObj->HasField("renderMaterial"))
+		//	FallbackMaterial = CreateMaterial(speckleObj->GetObjectField("renderMaterial"));
 
 		// Check if the @displayMesh is an object or an array
 		const TSharedPtr<FJsonObject> *meshObjPtr;
@@ -160,7 +165,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 
 			ASpeckleUnrealMesh* mesh = GetExistingMesh(objectId);
 			if (!mesh)
-				mesh = CreateMesh(meshObj, explicitMaterial);
+				mesh = CreateMesh(meshObj);//, FallbackMaterial);
 			InProgressSpeckleMeshes.Add(objectId, mesh);
 		}
 		else if (speckleObj->TryGetArrayField("@displayMesh", meshArrayPtr))
@@ -172,7 +177,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 
 				ASpeckleUnrealMesh* mesh = GetExistingMesh(unrealMeshKey);
 				if (!mesh)
-					mesh = CreateMesh(SpeckleObjects[meshId], explicitMaterial);
+					mesh = CreateMesh(SpeckleObjects[meshId]);//, FallbackMaterial);
 				InProgressSpeckleMeshes.Add(unrealMeshKey, mesh);
 			}
 		}
@@ -206,18 +211,25 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 
 }
 
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> obj)
+UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter)
 {
-	if (obj->GetStringField("speckle_type") == "reference")
-		obj = SpeckleObjects[obj->GetStringField("referencedId")];
+	if (RenderMaterialObject->GetStringField("speckle_type") == "reference")
+		RenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
 
-	int opacity;
-	if (obj->TryGetNumberField("opacity", opacity)) {
-		if (opacity < 1) {
-			return DefaultMeshTransparentMaterial;
-		}
-	}
-	return DefaultMeshOpaqueMaterial;
+	//Parse to a URenderMaterial
+	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(RenderMaterialObject);
+
+	//Create Material Instance
+	UMaterialInterface* ExplicitMaterial;
+	if(SpeckleMaterial->Opacity == 0)
+		ExplicitMaterial = DefaultMeshOpaqueMaterial;
+	else
+		ExplicitMaterial = DefaultMeshTransparentMaterial;
+		
+	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(ExplicitMaterial, InOuter, FName(SpeckleMaterial->Name));
+	UMaterialConverter::AssignPropertiesFromSpeckle(DynMaterial, SpeckleMaterial);
+		
+	return DynMaterial;
 }
 
 
@@ -234,7 +246,7 @@ TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray
 }
 
 
-ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> OBJ, UMaterialInterface* ExplicitMaterial)
+ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> OBJ, UMaterialInterface* FallbackMaterial)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Creating mesh for object %s"), *OBJ->GetStringField("id"));
 
@@ -336,15 +348,25 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 		}
 	}
 
-	
-	
-	// Material priority (low to high): DefaultMeshOpaqueMaterial, renderMaterial set on parent, renderMaterial set on mesh
-	if (!ExplicitMaterial)
-		ExplicitMaterial = DefaultMeshOpaqueMaterial;
-	if (OBJ->HasField("renderMaterial"))
-		ExplicitMaterial = CreateMaterial(OBJ->GetObjectField("renderMaterial"));
 
-	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, ExplicitMaterial, FLinearColor::White);
+	// Material priority (low to high): DefaultMeshOpaqueMaterial, FallbackMaterial (RenderMaterial set on parent), RenderMaterial set on mesh
+	UMaterialInterface* Material;
+
+	if (OBJ->HasField("renderMaterial"))
+	{
+		const auto RenderMatObj = OBJ->GetObjectField("renderMaterial");
+		Material = CreateMaterial(RenderMatObj, MeshInstance);
+	}
+	else
+	{
+		if (FallbackMaterial)
+			Material = FallbackMaterial;
+		else
+			Material = DefaultMeshOpaqueMaterial;
+	}
+	
+	
+	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, Material, FLinearColor::White);
 
 	// UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVerticies.Num(), ParsedTriangles.Num());
 

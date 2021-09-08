@@ -92,8 +92,8 @@ protected:
 
 	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject);
 
-	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
-	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, UMaterialInterface *ExplicitMaterial = nullptr);
+	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter);
+	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, UMaterialInterface *FallbackMaterial = nullptr);
 
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
 };
