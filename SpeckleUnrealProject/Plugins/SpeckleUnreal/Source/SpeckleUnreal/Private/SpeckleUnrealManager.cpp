@@ -221,7 +221,7 @@ UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject
 
 	//Create Material Instance
 	UMaterialInterface* ExplicitMaterial;
-	if(SpeckleMaterial->Opacity == 0)
+	if(SpeckleMaterial->Opacity >= 1)
 		ExplicitMaterial = DefaultMeshOpaqueMaterial;
 	else
 		ExplicitMaterial = DefaultMeshTransparentMaterial;

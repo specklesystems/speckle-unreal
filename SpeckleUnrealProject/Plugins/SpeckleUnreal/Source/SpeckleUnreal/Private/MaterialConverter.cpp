@@ -9,8 +9,8 @@ void UMaterialConverter::AssignPropertiesFromSpeckle(UMaterialInstanceDynamic* M
 	Material->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
 	Material->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
 	Material->SetScalarParameterValue("Roughness", SpeckleMaterial->Roughness);
-	Material->SetVectorParameterValue("Base Color", SpeckleMaterial->Diffuse);
-	Material->SetVectorParameterValue("Emissive Color", SpeckleMaterial->Emissive);
+	Material->SetVectorParameterValue("BaseColor", SpeckleMaterial->Diffuse);
+	Material->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
 }
 
 URenderMaterial* UMaterialConverter::ParseRenderMaterial(const TSharedPtr<FJsonObject> obj)
@@ -21,9 +21,13 @@ URenderMaterial* UMaterialConverter::ParseRenderMaterial(const TSharedPtr<FJsonO
 	obj->TryGetNumberField("opacity", RenderMaterial->Opacity);
 	obj->TryGetNumberField("metalness", RenderMaterial->Metalness);
 	obj->TryGetNumberField("roughness", RenderMaterial->Roughness);
-	uint32 ARGB;
-	if(obj->TryGetNumberField("diffuse", ARGB)) RenderMaterial->Diffuse = FColor(ARGB);
-	if(obj->TryGetNumberField("emissive", ARGB)) RenderMaterial->Emissive = FColor(ARGB);
+	
+	int32 ARGB;
+	obj->TryGetNumberField("diffuse", ARGB);
+		RenderMaterial->Diffuse = FColor(ARGB);
+		
+	if(obj->TryGetNumberField("emissive", ARGB))
+		RenderMaterial->Emissive = FColor(ARGB);
 	
 	return RenderMaterial;
 }

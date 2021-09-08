@@ -21,5 +21,4 @@ class SPECKLEUNREAL_API UMaterialConverter : public UObject
 
 		static URenderMaterial* ParseRenderMaterial(const TSharedPtr<FJsonObject> obj);
 
-	
 };
