@@ -58,14 +58,19 @@ public:
 		ASpeckleUnrealMesh::StaticClass()
 	};
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
 		UMaterialInterface* DefaultMeshOpaqueMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
 		UMaterialInterface* DefaultMeshTransparentMaterial;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
+		TMap<FString, UMaterialInterface*> MaterialOverrides;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		bool ImportAtRuntime;
+
+
 
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
@@ -92,7 +97,7 @@ protected:
 
 	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject);
 
-	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter);
+	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter, bool AcceptMaterialOverride = true);
 	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, UMaterialInterface *FallbackMaterial = nullptr);
 
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);

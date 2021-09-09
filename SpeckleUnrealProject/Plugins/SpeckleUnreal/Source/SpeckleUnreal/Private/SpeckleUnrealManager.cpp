@@ -150,7 +150,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 
 	if (speckleObj->HasField("@displayMesh"))
 	{
-		//  -- Remove this for now, not sure it does what is says it does -- 
+		// -- Remove this for now, until I figure out which object should parent to the materials.
 		//UMaterialInterface* FallbackMaterial = nullptr;
 		//if (speckleObj->HasField("renderMaterial"))
 		//	FallbackMaterial = CreateMaterial(speckleObj->GetObjectField("renderMaterial"));
@@ -211,7 +211,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 
 }
 
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter)
+UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter, bool AcceptMaterialOverride)
 {
 	if (RenderMaterialObject->GetStringField("speckle_type") == "reference")
 		RenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
@@ -219,6 +219,12 @@ UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject
 	//Parse to a URenderMaterial
 	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(RenderMaterialObject);
 
+	//Check MaterialOverrides
+	if(AcceptMaterialOverride && MaterialOverrides.Contains(SpeckleMaterial->Name))
+	{
+		return MaterialOverrides[SpeckleMaterial->Name];
+	}
+	
 	//Create Material Instance
 	UMaterialInterface* ExplicitMaterial;
 	if(SpeckleMaterial->Opacity >= 1)
@@ -349,8 +355,10 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	}
 
 
-	// Material priority (low to high): DefaultMeshOpaqueMaterial, FallbackMaterial (RenderMaterial set on parent), RenderMaterial set on mesh
+	// Material priority (low to high): DefaultMeshOpaqueMaterial, FallbackMaterial (RenderMaterial set on parent), RenderMaterial set on mesh, MaterialOverride match
 	UMaterialInterface* Material;
+
+
 
 	if (OBJ->HasField("renderMaterial"))
 	{
