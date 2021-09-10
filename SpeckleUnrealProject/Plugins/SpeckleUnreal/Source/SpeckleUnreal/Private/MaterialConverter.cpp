@@ -23,7 +23,7 @@ URenderMaterial* UMaterialConverter::ParseRenderMaterial(const TSharedPtr<FJsonO
 	obj->TryGetNumberField("roughness", RenderMaterial->Roughness);
 	
 	int32 ARGB;
-	obj->TryGetNumberField("diffuse", ARGB);
+	if(obj->TryGetNumberField("diffuse", ARGB))
 		RenderMaterial->Diffuse = FColor(ARGB);
 		
 	if(obj->TryGetNumberField("emissive", ARGB))

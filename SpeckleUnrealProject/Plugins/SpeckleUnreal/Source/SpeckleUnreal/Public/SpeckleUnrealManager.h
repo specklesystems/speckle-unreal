@@ -58,12 +58,19 @@ public:
 		ASpeckleUnrealMesh::StaticClass()
 	};
 
+	/** Material to be applied to meshes when no RenderMaterial can be converted */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
-		UMaterialInterface* DefaultMeshOpaqueMaterial;
+		UMaterialInterface* DefaultMeshMaterial;
 
+	/** Material Parent for converted opaque materials*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
-		UMaterialInterface* DefaultMeshTransparentMaterial;
-	
+		UMaterialInterface* BaseMeshOpaqueMaterial;
+
+	/** Material Parent for converted materials with an opacity less than one */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
+		UMaterialInterface* BaseMeshTransparentMaterial;
+
+	/** When generating meshes, materials in this TMap will be used instead of converted ones if the key matches the name of the Object's RenderMaterial. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
 		TMap<FString, UMaterialInterface*> MaterialOverrides;
 	
@@ -95,10 +102,11 @@ protected:
 
 	ASpeckleUnrealMesh* GetExistingMesh(const FString &objectId);
 
-	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject);
+	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject, const class URenderMaterial* FallbackMaterial = nullptr);
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter, bool AcceptMaterialOverride = true);
-	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, UMaterialInterface *FallbackMaterial = nullptr);
+	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, UObject* InOuter, bool AcceptMaterialOverride = true);
+	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, const URenderMaterial* FallbackMaterial = nullptr);
 
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
 };
