@@ -24,10 +24,13 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 void ASpeckleUnrealManager::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	World = GetWorld();
+	ConvertedMaterials.Empty();
+	
 	if (ImportAtRuntime)
 		ImportSpeckleObject();
+	
 }
 
 /*Import the Speckle object*/
@@ -213,7 +216,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 
 }
 
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, UObject* InOuter, bool AcceptMaterialOverride)
+UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride)
 {
 	if (RenderMaterialObject->GetStringField("speckle_type") == "reference")
 		RenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
@@ -221,27 +224,47 @@ UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject
 	//Parse to a URenderMaterial
 	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(RenderMaterialObject);
 
-	return CreateMaterial(SpeckleMaterial, InOuter, AcceptMaterialOverride);
+	return CreateMaterial(SpeckleMaterial, AcceptMaterialOverride);
 }
 
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const URenderMaterial* SpeckleMaterial, UObject* InOuter, bool AcceptMaterialOverride)
+UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride)
 {
-	//Check MaterialOverrides
-	if(AcceptMaterialOverride && MaterialOverrides.Contains(SpeckleMaterial->Name))
+	const auto materialID = SpeckleMaterial->ObjectID;
+
+	
+	if(AcceptMaterialOverride)
 	{
-		return MaterialOverrides[SpeckleMaterial->Name];
+		//Override by id
+		if(MaterialOverridesById.Contains(materialID))
+		{
+			return MaterialOverridesById[materialID];
+		}
+		//Override by name
+		const FString Name = SpeckleMaterial->Name;
+		for (UMaterialInterface* Mat : MaterialOverridesByName)
+		{
+			if(Mat->GetName() == Name) return Mat;
+		}
+	}
+
+
+	if(ConvertedMaterials.Contains(materialID))
+	{
+		return ConvertedMaterials[materialID];
 	}
 	
-	//Create Material Instance
+	//Create Convert Material Instance
 	UMaterialInterface* ExplicitMaterial;
 	if(SpeckleMaterial->Opacity >= 1)
 		ExplicitMaterial = BaseMeshOpaqueMaterial;
 	else
 		ExplicitMaterial = BaseMeshTransparentMaterial;
 		
-	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(ExplicitMaterial, InOuter, FName(SpeckleMaterial->Name));
+	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(ExplicitMaterial, this, FName(SpeckleMaterial->Name));
 	UMaterialConverter::AssignPropertiesFromSpeckle(DynMaterial, SpeckleMaterial);
-		
+
+	ConvertedMaterials.Add(materialID, DynMaterial);
+	
 	return DynMaterial;
 }
 
@@ -374,12 +397,12 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	if (Obj->HasField("renderMaterial"))
 	{
 		const auto RenderMatObj = Obj->GetObjectField("renderMaterial");
-		Material = CreateMaterial(RenderMatObj, MeshInstance);
+		Material = CreateMaterial(RenderMatObj);
 	}
 	else
 	{
 		if (FallbackMaterial)
-			Material = CreateMaterial(FallbackMaterial, MeshInstance);
+			Material = CreateMaterial(FallbackMaterial);
 		else
 			Material = DefaultMeshMaterial;
 	}
@@ -393,6 +416,8 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 
 void ASpeckleUnrealManager::DeleteObjects()
 {
+
+	ConvertedMaterials.Empty();
 	for (auto& m : CreatedSpeckleMeshes)
 	{
 		if (m.Value->Scene)

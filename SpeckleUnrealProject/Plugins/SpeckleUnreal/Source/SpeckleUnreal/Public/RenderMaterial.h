@@ -15,6 +15,10 @@ class SPECKLEUNREAL_API URenderMaterial : public UObject
 	GENERATED_BODY()
 
 	public:
+
+		UPROPERTY()
+		FString ObjectID;
+	
 		UPROPERTY()
 		FString Name;
 		

@@ -17,6 +17,7 @@ URenderMaterial* UMaterialConverter::ParseRenderMaterial(const TSharedPtr<FJsonO
 {
 	URenderMaterial* RenderMaterial = NewObject<URenderMaterial>();;
 	
+	obj->TryGetStringField("id", RenderMaterial->ObjectID);
 	obj->TryGetStringField("name", RenderMaterial->Name);
 	obj->TryGetNumberField("opacity", RenderMaterial->Opacity);
 	obj->TryGetNumberField("metalness", RenderMaterial->Metalness);
