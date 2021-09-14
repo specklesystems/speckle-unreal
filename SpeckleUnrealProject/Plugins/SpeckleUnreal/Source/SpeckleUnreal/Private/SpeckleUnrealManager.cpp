@@ -220,11 +220,25 @@ UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject
 	return DefaultMeshOpaqueMaterial;
 }
 
-ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> obj, UMaterialInterface* explicitMaterial)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Creating mesh for object %s"), *obj->GetStringField("id"));
 
-	FString Units = obj->GetStringField("units");
+TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray<TSharedPtr<FJsonValue>>* ArrayField)
+{
+	TArray<TSharedPtr<FJsonValue>> ObjectPoints;
+	for(int i = 0; i < ArrayField->Num(); i++)
+	{
+		const FString Index = ArrayField->operator[](i)->AsObject()->GetStringField("referencedId");
+		const auto Chunk = SpeckleObjects[Index]->GetArrayField("data");
+		ObjectPoints.Append(Chunk);
+	}
+	return ObjectPoints;
+}
+
+
+ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> OBJ, UMaterialInterface* ExplicitMaterial)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Creating mesh for object %s"), *OBJ->GetStringField("id"));
+
+	FString Units = OBJ->GetStringField("units");
 	// unreal engine units are in cm by default but the conversion is editable by users so
 	// this needs to be accounted for later.
 	ScaleFactor = 1;
@@ -248,15 +262,10 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 
 	// The following line can be used to debug large objects
 	// ScaleFactor = ScaleFactor * 0.1;
-
-	FString verticesId = obj->GetArrayField("vertices")[0]->AsObject()->GetStringField("referencedId");
-	FString facesId = obj->GetArrayField("faces")[0]->AsObject()->GetStringField("referencedId");
-
-	TArray<TSharedPtr<FJsonValue>> ObjectVertices = SpeckleObjects[verticesId]->GetArrayField("data");
-	TArray<TSharedPtr<FJsonValue>> ObjectFaces = SpeckleObjects[facesId]->GetArrayField("data");
+	
 
 	AActor* ActorInstance = World->SpawnActor(MeshActor);
-	ASpeckleUnrealMesh* MeshInstance = (ASpeckleUnrealMesh*)ActorInstance;
+	ASpeckleUnrealMesh* MeshInstance = static_cast<ASpeckleUnrealMesh*>(ActorInstance);
 
 //Currently not needed since meshes are placed under this actor.
 // #if WITH_EDITOR
@@ -270,54 +279,72 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(TSharedPtr<FJsonObject> ob
 		MeshInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 		MeshInstance->SetOwner(this);
 	}
+
+
+	//Parse Vertices
+	TArray<FVector> ParsedVertices;
+	{
+		TArray<TSharedPtr<FJsonValue>> ObjectVertices = CombineChunks(&OBJ->GetArrayField("vertices"));
+		const auto NumberOfVertices = ObjectVertices.Num() / 3;
+		
+		ParsedVertices.SetNum(NumberOfVertices);
+
+		for (size_t i = 0, j = 0; i < NumberOfVertices; i++, j += 3)
+		{
+			ParsedVertices[i] = FVector
+			(
+				ObjectVertices[j].Get()->AsNumber() * -1,
+				ObjectVertices[j + 1].Get()->AsNumber(),
+				ObjectVertices[j + 2].Get()->AsNumber()
+			) * ScaleFactor;
+			
+		}
+	}
+
+
 	
-	TArray<FVector> ParsedVerticies;
-
-	for (size_t j = 0; j < ObjectVertices.Num(); j += 3)
-	{
-		ParsedVerticies.Add(FVector
-		(
-			(float)(ObjectVertices[j].Get()->AsNumber()) * -1,
-			(float)(ObjectVertices[j + 1].Get()->AsNumber()),
-			(float)(ObjectVertices[j + 2].Get()->AsNumber())
-		) * ScaleFactor);
-	}
-
-	//convert mesh faces into triangle array regardless of whether or not they are quads
+	//Parse Triangles
 	TArray<int32> ParsedTriangles;
-	int32 j = 0;
-	while (j < ObjectFaces.Num())
 	{
-		if (ObjectFaces[j].Get()->AsNumber() == 0)
-		{
-			//Triangles
-			ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-			ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-			ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-			j += 4;
-		}
-		else
-		{
-			//Quads to triangles
-			ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-			ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-			ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+		TArray<TSharedPtr<FJsonValue>> ObjectFaces = CombineChunks(&OBJ->GetArrayField("faces"));
+		//convert mesh faces into triangle array regardless of whether or not they are quads
 
-			ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-			ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-			ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
+		int32 j = 0;
+		while (j < ObjectFaces.Num())
+		{
+			if (ObjectFaces[j].Get()->AsNumber() == 0)
+			{
+				//Triangles
+				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+				j += 4;
+			}
+			else
+			{
+				//Quads to triangles
+				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
 
-			j += 5;
+				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
+
+				j += 5;
+			}
 		}
 	}
 
+	
+	
 	// Material priority (low to high): DefaultMeshOpaqueMaterial, renderMaterial set on parent, renderMaterial set on mesh
-	if (!explicitMaterial)
-		explicitMaterial = DefaultMeshOpaqueMaterial;
-	if (obj->HasField("renderMaterial"))
-		explicitMaterial = CreateMaterial(obj->GetObjectField("renderMaterial"));
+	if (!ExplicitMaterial)
+		ExplicitMaterial = DefaultMeshOpaqueMaterial;
+	if (OBJ->HasField("renderMaterial"))
+		ExplicitMaterial = CreateMaterial(OBJ->GetObjectField("renderMaterial"));
 
-	MeshInstance->SetMesh(ParsedVerticies, ParsedTriangles, explicitMaterial, FLinearColor::White);
+	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, ExplicitMaterial, FLinearColor::White);
 
 	// UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVerticies.Num(), ParsedTriangles.Num());
 
