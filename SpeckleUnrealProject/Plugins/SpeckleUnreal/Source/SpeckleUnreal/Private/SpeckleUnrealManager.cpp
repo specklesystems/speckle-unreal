@@ -314,25 +314,15 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	// The following line can be used to debug large objects
 	// ScaleFactor = ScaleFactor * 0.1;
 	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	ASpeckleUnrealMesh* MeshInstance = World->SpawnActor<ASpeckleUnrealMesh>(MeshActor, SpawnParams);
 
-	AActor* ActorInstance = World->SpawnActor(MeshActor);
-	ASpeckleUnrealMesh* MeshInstance = static_cast<ASpeckleUnrealMesh*>(ActorInstance);
+    // attaches each speckleMesh under this actor (SpeckleManager)
+	MeshInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+	MeshInstance->SetOwner(this);
 	
-	//MeshInstance->Rename(*ObjId, Parent, REN_None);
-	//if(Parent) MeshInstance->AttachToActor(Parent, FAttachmentTransformRules::KeepWorldTransform);
-	
-	//Currently not needed since meshes are placed under this actor.
-	// #if WITH_EDITOR
-	// 	MeshInstance->SetFolderPath(FName(GetActorLabel() + FString(TEXT("_")) + StreamID));
-	// #endif
-
-	
-	// attaches each speckleMesh under this actor (SpeckleManager)
-	if(MeshInstance != nullptr)
-	{
-		MeshInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-		MeshInstance->SetOwner(this);
-	}
+	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *ASpeckleUnrealMesh::StaticClass()->GetName(), *ObjId));
 
 
 	//Parse Vertices
@@ -391,7 +381,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	}
 
 
-	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverride match
+	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
 	UMaterialInterface* Material;
 	
 	if (Obj->HasField("renderMaterial"))
