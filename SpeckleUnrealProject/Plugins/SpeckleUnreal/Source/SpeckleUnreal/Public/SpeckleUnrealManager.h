@@ -59,13 +59,32 @@ public:
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		UMaterialInterface* DefaultMeshOpaqueMaterial;
+	bool ImportAtRuntime;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		UMaterialInterface* DefaultMeshTransparentMaterial;
+	
+	/** Material to be applied to meshes when no RenderMaterial can be converted */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
+		UMaterialInterface* DefaultMeshMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		bool ImportAtRuntime;
+	/** Material Parent for converted opaque materials*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
+		UMaterialInterface* BaseMeshOpaqueMaterial;
+
+	/** Material Parent for converted materials with an opacity less than one */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
+		UMaterialInterface* BaseMeshTransparentMaterial;
+	
+	/** When generating meshes, materials in this TMap will be used instead of converted ones if the key matches the ID of the Object's RenderMaterial. (Takes priority over name matching)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials|Overrides", DisplayName = "By Speckle ID")
+	TMap<FString, UMaterialInterface*> MaterialOverridesById;
+
+	/** When generating meshes, materials in this TSet will be used instead of converted ones if the material name matches the name of the Object's RenderMaterial. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials|Overrides", DisplayName = "By Name")
+	TSet<UMaterialInterface*> MaterialOverridesByName;
+
+	/** Materials converted from stream RenderMaterial objects */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Speckle|Materials")
+	TMap<FString, UMaterialInterface*> ConvertedMaterials;
 
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
@@ -90,10 +109,11 @@ protected:
 
 	ASpeckleUnrealMesh* GetExistingMesh(const FString &objectId);
 
-	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject);
+	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject, const class URenderMaterial* FallbackMaterial = nullptr);
 
-	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject>);
-	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, UMaterialInterface *ExplicitMaterial = nullptr);
+	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
+	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
+	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, const URenderMaterial* FallbackMaterial = nullptr);
 
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
 };
