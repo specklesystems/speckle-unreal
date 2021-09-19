@@ -6,8 +6,6 @@
 // json manipulation
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
 
 // web requests
 #include "Runtime/Online/HTTP/Public/Http.h"
@@ -99,21 +97,22 @@ public:
 protected:
 
 	UWorld* World;
-
-	float ScaleFactor;
+	
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
 
-	TMap<FString, ASpeckleUnrealMesh*> CreatedSpeckleMeshes;
-	TMap<FString, ASpeckleUnrealMesh*> InProgressSpeckleMeshes;
+	TMap<FString, UObject*> CreatedObjects;
+	TMap<FString, UObject*> InProgressObjects;
+	
+	bool TryGetExistingNative(const FString &ObjectId, UObject*& OutObject);
 
-	ASpeckleUnrealMesh* GetExistingMesh(const FString &objectId);
-
-	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject, const class URenderMaterial* FallbackMaterial = nullptr);
+	void ImportObjectFromCache(const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObj = nullptr);
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
 	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
-	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, const URenderMaterial* FallbackMaterial = nullptr);
-
+	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
+	
+	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
+	static float ParseScaleFactor(const FString& Units);
 };
