@@ -117,9 +117,13 @@ void ASpeckleUnrealManager::DeleteObjects()
 {
 
 	ConvertedMaterials.Empty();
-	for (auto& m : CreatedObjects)
+	for (const auto& m : CreatedObjects)
 	{
-		m.Value->ConditionalBeginDestroy();
+		if(AActor* a = Cast<AActor>(m.Value))
+			a->Destroy();
+		else
+			m.Value->ConditionalBeginDestroy();
+		
 	}
 
 	CreatedObjects.Empty();

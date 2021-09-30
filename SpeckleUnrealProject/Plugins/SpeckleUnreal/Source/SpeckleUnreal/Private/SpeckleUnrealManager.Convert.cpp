@@ -63,8 +63,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 	}
 
 	//Object has no native conversion, go through each of its properties and try convert that
-
-	// Go recursively into all object fields (except @displayMesh)
+	
 	for (const auto& Kv : SpeckleObj->Values)
 	{
 
@@ -78,7 +77,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 		const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
 		if (Kv.Value->TryGetArray(SubArrayPtr))
 		{
-			for (auto& ArrayElement : *SubArrayPtr)
+			for (const auto& ArrayElement : *SubArrayPtr)
 			{
 				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
 				if (!ArrayElement->TryGetObject(ArraySubObjPtr))
@@ -188,9 +187,6 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
 
 	const FString Units = Obj->GetStringField("units");
-	// unreal engine units are in cm by default but the conversion is editable by users so
-	// this needs to be accounted for later.
-	
 	const float ScaleFactor = ParseScaleFactor(Units);
 
 	// The following line can be used to debug large objects
@@ -209,9 +205,10 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 
 	//Parse Vertices
 	TArray<FVector> ParsedVertices;
+	int32 NumberOfVertices;
 	{
 		TArray<TSharedPtr<FJsonValue>> ObjectVertices = CombineChunks(&Obj->GetArrayField("vertices"));
-		const auto NumberOfVertices = ObjectVertices.Num() / 3;
+		NumberOfVertices = ObjectVertices.Num() / 3;
 	
 		ParsedVertices.SetNum(NumberOfVertices);
 
@@ -262,6 +259,27 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 		}
 	}
 
+	//Parse Texture Coordinates
+	TArray<FVector2D> ParsedTextureCoords;
+	{
+		TArray<TSharedPtr<FJsonValue>> TexCoords = CombineChunks(&Obj->GetArrayField("textureCoordinates"));
+		
+		ParsedTextureCoords.SetNum(NumberOfVertices);
+		
+		const auto NumberOfTexCoords = TexCoords.Num() / 2;
+		for (size_t i = 0, j = 0; i < NumberOfTexCoords; i++, j += 2)
+		{
+			ParsedTextureCoords[i] = FVector2D
+			(
+				TexCoords[j].Get()->AsNumber(),
+				TexCoords[j + 1].Get()->AsNumber()
+			);
+		}
+		
+		//TODO create UV for missing TexCoords
+	}
+	
+
 
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
 	UMaterialInterface* Material;
@@ -277,7 +295,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	else
 		Material = DefaultMeshMaterial;
 
-	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, Material, FLinearColor::White);
+	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, ParsedTextureCoords, Material);
 
 	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
 
