@@ -111,7 +111,7 @@ protected:
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
 	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
 	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
-	
+	ASpeckleUnrealMesh* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
 	static float ParseScaleFactor(const FString& Units);

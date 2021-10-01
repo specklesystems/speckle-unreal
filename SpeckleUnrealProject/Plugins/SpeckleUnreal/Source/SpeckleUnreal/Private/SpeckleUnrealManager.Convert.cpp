@@ -37,27 +37,27 @@ void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> 
 	const FString ObjectId = SpeckleObj->GetStringField("id");
 	const FString SpeckleType = SpeckleObj->GetStringField("speckle_type");
 	
-	UObject* Native;
-	if(SpeckleType == "Objects.Geometry.Mesh")
+	UObject* Native = nullptr;
+	
+	//if(!TryGetExistingNative(ObjectId, Native))
 	{
-		if(!TryGetExistingNative(ObjectId, Native))
+		if(SpeckleType == "Objects.Geometry.Mesh")
 		{
 			Native = CreateMesh(SpeckleObj, ParentObj);
 		}
-	}
-	//else if(SpeckleType == "Objects.Geometry.PointCloud")
-	//{
-	//	if(!TryGetExistingNative(ObjectId, Native))
-	//	{
-	//		Native = CreatePointCloud(SpeckleObj);
-	//	}
-	//}
-	else
-	{
-		Native = nullptr ;
+		//else if(SpeckleType == "Objects.Geometry.PointCloud")
+		//{
+		//    Native = CreatePointCloud(SpeckleObj);
+		//}
+		if(SpeckleType == "Objects.Other.BlockInstance")
+		{
+			Native = CreateBlockInstance(SpeckleObj, ParentObj);
+			return; //Important not to convert children
+		}
 	}
 	
-	if(Native)
+	
+	if(IsValid(Native))
 	{
 		InProgressObjects.Add(ObjectId, Native);
 	}
@@ -159,24 +159,25 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units)
 	// unreal engine units are in cm by default but the conversion is editable by users so
 	// this needs to be accounted for later.
 	const FString LUnits = Units.ToLower();
-	if (LUnits == "meters" || LUnits == "metres" || LUnits == "m")
+	
+	if (LUnits == "kilometers" || LUnits == "kilometres" || LUnits == "km")
+		return 100000;
+	if (LUnits == "meters" || LUnits == "meter" || LUnits == "metres" || LUnits == "metre" || LUnits == "m")
 		return 100;
-
-	if (LUnits == "centimeters" || LUnits == "centimetres" || LUnits == "cm")
+	if (LUnits == "centimeters" || LUnits == "centimeter" ||LUnits == "centimetres" || LUnits == "centimetre" || LUnits == "cm")
 		return 1;
-
-	if (LUnits == "millimeters" || LUnits == "millimetres" || LUnits == "mm")
+	if (LUnits == "millimeters" || LUnits == "millimeter" || LUnits == "millimetres" || LUnits == "millimetre" || LUnits == "mm")
 		return 0.1;
 
-	if (LUnits == "yards" || LUnits == "yd")
-		return 91.4402757;
-
-	if (LUnits == "feet" || LUnits == "ft")
-		return 30.4799990;
-
-	if (LUnits == "inches" || LUnits == "in")
-		return 2.5399986;
-
+	if (LUnits == "miles" || LUnits == "mile" || LUnits == "mi")
+		return 160934.4;
+	if (LUnits == "yards" || LUnits == "yard"|| LUnits == "yd")
+		return 91.44;
+	if (LUnits == "feet" || LUnits == "foot" || LUnits == "ft")
+		return 30.48;
+	if (LUnits == "inches" || LUnits == "inch" || LUnits == "in")
+		return 2.54;
+	
 	return 1;
 }
 
@@ -301,3 +302,39 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 
 	return MeshInstance;
 }
+
+ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
+{
+
+	const TSharedPtr<FJsonObject>* BlockDefinitionReference;
+	if(!Obj->TryGetObjectField("blockDefinition", BlockDefinitionReference)) return nullptr;
+	
+	const FString RefID = BlockDefinitionReference->operator->()->GetStringField("referencedId");
+	
+	const TSharedPtr<FJsonObject> BlockDefinition = SpeckleObjects[RefID];
+
+	const FString Units = Obj->GetStringField("units");
+	const float ScaleFactor = ParseScaleFactor(Units);
+	
+	const TArray<TSharedPtr<FJsonValue>>* TransformData;
+	if(!Obj->TryGetArrayField("transform", TransformData)) return nullptr;
+	
+	FMatrix TransformMatrix;
+	for(int32 Row = 0; Row < 4; Row++)
+	for(int32 Col = 0; Col < 4; Col++)
+	{
+		TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
+	}
+	TransformMatrix = TransformMatrix.GetTransposed();
+	TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
+	
+	const TSharedPtr<FJsonObject> MeshReference = BlockDefinition->GetArrayField("geometry")[0]->AsObject();
+	const FString MeshID = MeshReference->GetStringField("referencedId");
+	
+	//For now just recreate mesh, eventually we should use instanced static mesh
+	const auto mesh = CreateMesh(SpeckleObjects[MeshID], Obj);
+	mesh->SetActorTransform(FTransform(TransformMatrix));
+	
+	return mesh;
+}
+
