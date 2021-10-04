@@ -106,12 +106,12 @@ protected:
 	
 	bool TryGetExistingNative(const FString &ObjectId, UObject*& OutObject);
 
-	void ImportObjectFromCache(const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObj = nullptr);
+	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
 	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
 	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
-	ASpeckleUnrealMesh* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
+	AActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
 	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
 	static float ParseScaleFactor(const FString& Units);

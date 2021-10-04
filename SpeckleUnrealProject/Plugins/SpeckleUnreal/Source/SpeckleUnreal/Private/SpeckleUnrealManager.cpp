@@ -12,6 +12,7 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	Http = &FHttpModule::Get();
 
 	World = GetWorld();
+	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
@@ -94,7 +95,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
 
-	ImportObjectFromCache(SpeckleObjects[ObjectID]);
+	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
 	for (auto& m : CreatedObjects)
 	{
