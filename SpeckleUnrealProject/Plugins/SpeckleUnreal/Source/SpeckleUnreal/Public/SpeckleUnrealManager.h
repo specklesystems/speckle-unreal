@@ -113,6 +113,6 @@ protected:
 	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	AActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
 	
-	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
+	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField);
 	static float ParseScaleFactor(const FString& Units);
 };
