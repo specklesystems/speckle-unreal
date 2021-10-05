@@ -254,21 +254,21 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 			if (ObjectFaces[j].Get()->AsNumber() == 0)
 			{
 				//Triangles
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
 				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
 				j += 4;
 			}
 			else
 			{
 				//Quads to triangles
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
 				ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
+
+				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
+				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
 
 				j += 5;
 			}
@@ -345,7 +345,6 @@ AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject>
 
 	AActor* BlockInstance = World->SpawnActor<ASpeckleUnrealMesh>(); //TODO for now, we shall reuse ASpeckleUnrealMesh because it has a root component defined in its constructor that we can use to attach the actor's parent
 	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
-
 
 	
 	BlockInstance->SetActorTransform(FTransform(TransformMatrix));
