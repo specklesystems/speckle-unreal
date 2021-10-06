@@ -6,11 +6,11 @@
 
 bool ASpeckleUnrealManager::TryGetExistingNative(const FString &ObjectId, UObject*& OutObject)
 {
-	if (InProgressObjects.Contains(ObjectId))
-	{
-		OutObject = InProgressObjects[ObjectId];
-		return true;
-	}
+	//if (InProgressObjectsCache.Contains(ObjectId))
+	//{
+	//	OutObject = InProgressObjectsCache[ObjectId];
+	//	return true;
+	//}
 	
 	//if(!CreatedObjects.Contains(ObjectId))
 		return false;
@@ -36,10 +36,18 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	
 	const FString ObjectId = SpeckleObject->GetStringField("id");
 	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
+
+	//Owner's id is included in identifier to allow for BlockInstances sharing meshes with the same ID
+	//const ASpeckleUnrealActor* SOwner = dynamic_cast<ASpeckleUnrealActor*>(AOwner);
+	//FString NativeId = SOwner? FString::Printf(TEXT("%s-%s"), *SOwner->NativeID, *ObjectId) : ObjectId;
+
+	//if(SOwner)
+	//	UE_LOG(LogTemp, Warning, TEXT("Parent ID = %s"), *SOwner->NativeID);
 	
 	AActor* Native = nullptr;
-	
-	//if(!TryGetExistingNative(ObjectId, Native)) //TODO disabled for the minute due to block instance (multiple instances with same ID)
+
+	//if( !(CreatedObjectsCache.Contains(NativeId)
+	//	&& IsValid(Native = dynamic_cast<AActor*>(CreatedObjectsCache[NativeId]))) )
 	{
 		if(SpeckleType == "Objects.Geometry.Mesh")
 		{
@@ -69,18 +77,35 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 
 	if(IsValid(Native))
 	{
-		//if(!AOwner->HasValidRootComponent()) AOwner->SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
-		
-		Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
-		Native->SetOwner(AOwner);
-		
-		InProgressObjects.Add(ObjectId, Native);
+		//if(InProgressObjectsCache.Contains(NativeId))
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("Native ID {%s} allready exists in cache, object will be destroyed"), *NativeId);
+		//	Native->Destroy();
+		//	Native = AOwner;
+		//}
+		//else
+		{
+		//	ASpeckleUnrealActor* SNative = dynamic_cast<ASpeckleUnrealActor*>(Native);
+		//	if(SNative)
+		//	{
+		//		SNative->NativeID = NativeId;
+		//		UE_LOG(LogTemp, Warning, TEXT("Native ID = %s"), *SNative->NativeID);
+		//	}
+
+			//if(!AOwner->HasValidRootComponent()) AOwner->SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
+			
+			Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
+			Native->SetOwner(AOwner);
+
+			InProgressObjectsCache.Add(Native);
+		//	InProgressObjectsCache.Add(NativeId, Native);
+		}
 	}
 	else
 	{
 		Native = AOwner;
 	}
-
+	
 	
 	//Convert Children
 	for (const auto& Kv : SpeckleObject->Values)
@@ -201,7 +226,7 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units)
 }
 
 
-ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
+ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
 {
 	const FString ObjId = Obj->GetStringField("id");
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
@@ -213,7 +238,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 
 
 	
-	ASpeckleUnrealMesh* MeshInstance = World->SpawnActor<ASpeckleUnrealMesh>(MeshActor);
+	ASpeckleUnrealActor* MeshInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
 	
 	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
 
@@ -322,7 +347,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	return MeshInstance;
 }
 
-AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
+ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
 {
 	//Transform
     const FString Units = Obj->GetStringField("units");
@@ -343,7 +368,7 @@ AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject>
 	//Block Instance
 	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
 
-	AActor* BlockInstance = World->SpawnActor<ASpeckleUnrealMesh>(); //TODO for now, we shall reuse ASpeckleUnrealMesh because it has a root component defined in its constructor that we can use to attach the actor's parent
+	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(); //TODO for now, we shall reuse ASpeckleUnrealActor because it has a root component defined in its constructor that we can use to attach the actor's parent
 	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
 
 	
@@ -364,6 +389,8 @@ AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject>
 	{
 		const TSharedPtr<FJsonObject> MeshReference = Child->AsObject();
 		const FString MeshID = MeshReference->GetStringField("referencedId");
+		
+		//It is important that ParentObject is the BlockInstance not the BlockDefinition to keep NativeIDs of meshes unique between Block Instances
 		ImportObjectFromCache(BlockInstance, SpeckleObjects[MeshID], Obj);
 	}
 	

@@ -10,7 +10,7 @@
 // web requests
 #include "Runtime/Online/HTTP/Public/Http.h"
 
-#include "SpeckleUnrealMesh.h"
+#include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
@@ -52,8 +52,8 @@ public:
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		TSubclassOf<ASpeckleUnrealMesh> MeshActor {
-		ASpeckleUnrealMesh::StaticClass()
+		TSubclassOf<ASpeckleUnrealActor> MeshActor {
+		ASpeckleUnrealActor::StaticClass()
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
@@ -100,9 +100,12 @@ protected:
 	
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
-
-	TMap<FString, UObject*> CreatedObjects;
-	TMap<FString, UObject*> InProgressObjects;
+	
+	//TMap<FString, UObject*> CreatedObjectsCache;
+	//TMap<FString, UObject*> InProgressObjectsCache;
+	TArray<UObject*> CreatedObjectsCache;
+	TArray<UObject*> InProgressObjectsCache;
+	
 	
 	bool TryGetExistingNative(const FString &ObjectId, UObject*& OutObject);
 
@@ -110,8 +113,8 @@ protected:
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
 	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
-	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
-	AActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
+	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
+	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
 	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField);
 	static float ParseScaleFactor(const FString& Units);

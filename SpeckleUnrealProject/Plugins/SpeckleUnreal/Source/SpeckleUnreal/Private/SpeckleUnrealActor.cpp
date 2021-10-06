@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SpeckleUnrealMesh.h"
+#include "SpeckleUnrealActor.h"
 
 #include "StaticMeshDescription.h"
 
 // Sets default values
-ASpeckleUnrealMesh::ASpeckleUnrealMesh()
+ASpeckleUnrealActor::ASpeckleUnrealActor()
 {
 	Scene = CreateDefaultSubobject<USceneComponent>("Root");
 	RootComponent = Scene;
@@ -61,7 +61,7 @@ ASpeckleUnrealMesh::ASpeckleUnrealMesh()
 // }
 
 
-void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<int32>& Triangles, TArray<FVector2D>& UV0, UMaterialInterface* Material)
+void ASpeckleUnrealActor::SetMesh(const TArray<FVector>& Vertices, const TArray<int32>& Triangles, TArray<FVector2D>& UV0, UMaterialInterface* Material)
 {
 	ProceduralMesh->ClearAllMeshSections();
 
@@ -98,24 +98,24 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<i
 }
 
 // Called when the game starts or when spawned
-void ASpeckleUnrealMesh::BeginPlay()
+void ASpeckleUnrealActor::BeginPlay()
 {
 	Super::BeginPlay();
 
 }
 
-void ASpeckleUnrealMesh::Destroyed()
+void ASpeckleUnrealActor::Destroyed()
 {
-	for (AActor* Child : this->Children)
-	{
-		Child->Destroy();
-	}
+	// for (AActor* Child : this->Children)
+	// {
+	// 	Child->Destroy();
+	// }
 	
 	Super::Destroyed();
 }
 
 // Called every frame
-void ASpeckleUnrealMesh::Tick(float DeltaTime)
+void ASpeckleUnrealActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 

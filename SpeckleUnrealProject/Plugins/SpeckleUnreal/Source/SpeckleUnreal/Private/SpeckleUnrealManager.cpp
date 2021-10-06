@@ -98,18 +98,21 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
-	for (auto& m : CreatedObjects)
+	for (auto& m : CreatedObjectsCache)
 	{
-		if (InProgressObjects.Contains(m.Key) && InProgressObjects[m.Key] == m.Value)
-			continue;
+		//if (InProgressObjectsCache.Contains(m.Key) && InProgressObjectsCache[m.Key] == m.Value)
+		//	continue;
 
-		m.Value->ConditionalBeginDestroy();
+		if(AActor* a = Cast<AActor>(m))
+			a->Destroy();
+		else
+			m->ConditionalBeginDestroy();
 	}
 
-	CreatedObjects = InProgressObjects;
-	InProgressObjects.Empty();
+	CreatedObjectsCache = InProgressObjectsCache;
+	InProgressObjectsCache.Empty();
 	
-	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedObjects.Num()));
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedObjectsCache.Num()));
 
 }
 
@@ -119,15 +122,15 @@ void ASpeckleUnrealManager::DeleteObjects()
 {
 
 	ConvertedMaterials.Empty();
-	for (const auto& m : CreatedObjects)
+	for (const auto& m : CreatedObjectsCache)
 	{
-		if(AActor* a = Cast<AActor>(m.Value))
+		if(AActor* a = Cast<AActor>(m))
 			a->Destroy();
 		else
-			m.Value->ConditionalBeginDestroy();
+			m->ConditionalBeginDestroy();
 		
 	}
 
-	CreatedObjects.Empty();
-	InProgressObjects.Empty();
+	CreatedObjectsCache.Empty();
+	InProgressObjectsCache.Empty();
 }
