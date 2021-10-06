@@ -4,22 +4,6 @@
 
 
 
-bool ASpeckleUnrealManager::TryGetExistingNative(const FString &ObjectId, UObject*& OutObject)
-{
-	//if (InProgressObjectsCache.Contains(ObjectId))
-	//{
-	//	OutObject = InProgressObjectsCache[ObjectId];
-	//	return true;
-	//}
-	
-	//if(!CreatedObjects.Contains(ObjectId))
-		return false;
-	//
-	//OutObject = CreatedObjects[ObjectId];
-	//return OutObject->IsValidLowLevelFast();
-}
-
-
 void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject)
 {
 	if (!SpeckleObject->HasField("speckle_type"))
@@ -36,70 +20,34 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	
 	const FString ObjectId = SpeckleObject->GetStringField("id");
 	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
-
-	//Owner's id is included in identifier to allow for BlockInstances sharing meshes with the same ID
-	//const ASpeckleUnrealActor* SOwner = dynamic_cast<ASpeckleUnrealActor*>(AOwner);
-	//FString NativeId = SOwner? FString::Printf(TEXT("%s-%s"), *SOwner->NativeID, *ObjectId) : ObjectId;
-
-	//if(SOwner)
-	//	UE_LOG(LogTemp, Warning, TEXT("Parent ID = %s"), *SOwner->NativeID);
 	
 	AActor* Native = nullptr;
 
-	//if( !(CreatedObjectsCache.Contains(NativeId)
-	//	&& IsValid(Native = dynamic_cast<AActor*>(CreatedObjectsCache[NativeId]))) )
+
+	if(SpeckleType == "Objects.Geometry.Mesh")
 	{
-		if(SpeckleType == "Objects.Geometry.Mesh")
-		{
-			Native = CreateMesh(SpeckleObject, ParentObject);
-		}
-		//else if(SpeckleType == "Objects.Geometry.PointCloud")
-		//{
-		//    Native = CreatePointCloud(SpeckleObj);
-		//}
-		else if(SpeckleType == "Objects.Other.BlockInstance")
-		{
-			Native = CreateBlockInstance(SpeckleObject);
-		}
-		else if(SpeckleType == "Objects.Other.BlockDefinition")
-		{
-			return; //Ignore block definitions, Block instances will create geometry instead.
-		}
+		Native = CreateMesh(SpeckleObject, ParentObject);
 	}
-	
-
-	//if(!IsValid(Native)) //TODO disabled because it creates many empty objects
+	//else if(SpeckleType == "Objects.Geometry.PointCloud")
 	//{
-	//	//Create Empty actor (to preserve Hierarchy)
-	//	Native = World->SpawnActor<AActor>();
-	//	Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
+	//    Native = CreatePointCloud(SpeckleObj);
 	//}
+	else if(SpeckleType == "Objects.Other.BlockInstance")
+	{
+		Native = CreateBlockInstance(SpeckleObject);
+	}
+	else if(SpeckleType == "Objects.Other.BlockDefinition")
+	{
+		return; //Ignore block definitions, Block instances will create geometry instead.
+	}
 
+	
 	if(IsValid(Native))
 	{
-		//if(InProgressObjectsCache.Contains(NativeId))
-		//{
-		//	UE_LOG(LogTemp, Warning, TEXT("Native ID {%s} allready exists in cache, object will be destroyed"), *NativeId);
-		//	Native->Destroy();
-		//	Native = AOwner;
-		//}
-		//else
-		{
-		//	ASpeckleUnrealActor* SNative = dynamic_cast<ASpeckleUnrealActor*>(Native);
-		//	if(SNative)
-		//	{
-		//		SNative->NativeID = NativeId;
-		//		UE_LOG(LogTemp, Warning, TEXT("Native ID = %s"), *SNative->NativeID);
-		//	}
+        Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
+        Native->SetOwner(AOwner);
 
-			//if(!AOwner->HasValidRootComponent()) AOwner->SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
-			
-			Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
-			Native->SetOwner(AOwner);
-
-			InProgressObjectsCache.Add(Native);
-		//	InProgressObjectsCache.Add(NativeId, Native);
-		}
+        InProgressObjectsCache.Add(Native);
 	}
 	else
 	{
@@ -198,31 +146,32 @@ TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray
 	return ObjectPoints;
 }
 
-float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units)
+float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 {
-	// unreal engine units are in cm by default but the conversion is editable by users so
-	// this needs to be accounted for later.
-	const FString LUnits = Units.ToLower();
-	
-	if (LUnits == "kilometers" || LUnits == "kilometres" || LUnits == "km")
-		return 100000;
-	if (LUnits == "meters" || LUnits == "meter" || LUnits == "metres" || LUnits == "metre" || LUnits == "m")
-		return 100;
-	if (LUnits == "centimeters" || LUnits == "centimeter" ||LUnits == "centimetres" || LUnits == "centimetre" || LUnits == "cm")
-		return 1;
-	if (LUnits == "millimeters" || LUnits == "millimeter" || LUnits == "millimetres" || LUnits == "millimetre" || LUnits == "mm")
-		return 0.1;
+	static const auto ParseUnits = [](const FString& LUnits) -> float
+	{
+		if (LUnits == "millimeters" || LUnits == "millimeter" || LUnits == "millimetres" || LUnits == "millimetre" || LUnits == "mm")
+			return 0.1;
+		if (LUnits == "centimeters" || LUnits == "centimeter" ||LUnits == "centimetres" || LUnits == "centimetre" || LUnits == "cm")
+			return 1;
+		if (LUnits == "meters" || LUnits == "meter" || LUnits == "metres" || LUnits == "metre" || LUnits == "m")
+			return 100;
+		if (LUnits == "kilometers" || LUnits == "kilometres" || LUnits == "km")
+			return 100000;
 
-	if (LUnits == "miles" || LUnits == "mile" || LUnits == "mi")
-		return 160934.4;
-	if (LUnits == "yards" || LUnits == "yard"|| LUnits == "yd")
-		return 91.44;
-	if (LUnits == "feet" || LUnits == "foot" || LUnits == "ft")
-		return 30.48;
-	if (LUnits == "inches" || LUnits == "inch" || LUnits == "in")
-		return 2.54;
-	
-	return 1;
+		if (LUnits == "inches" || LUnits == "inch" || LUnits == "in")
+			return 2.54;
+		if (LUnits == "feet" || LUnits == "foot" || LUnits == "ft")
+			return 30.48;
+		if (LUnits == "yards" || LUnits == "yard"|| LUnits == "yd")
+			return 91.44;
+		if (LUnits == "miles" || LUnits == "mile" || LUnits == "mi")
+			return 160934.4;
+
+		return 1;
+	};
+
+	return ParseUnits(Units.ToLower()) * WorldToCentimeters;
 }
 
 

@@ -12,6 +12,8 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	Http = &FHttpModule::Get();
 
 	World = GetWorld();
+	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
+	
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
 
@@ -26,7 +28,7 @@ void ASpeckleUnrealManager::BeginPlay()
 	Super::BeginPlay();
 	
 	World = GetWorld();
-	ConvertedMaterials.Empty();
+	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
 	
 	if (ImportAtRuntime)
 		ImportSpeckleObject();
@@ -100,9 +102,6 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	
 	for (auto& m : CreatedObjectsCache)
 	{
-		//if (InProgressObjectsCache.Contains(m.Key) && InProgressObjectsCache[m.Key] == m.Value)
-		//	continue;
-
 		if(AActor* a = Cast<AActor>(m))
 			a->Destroy();
 		else
@@ -120,8 +119,8 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 void ASpeckleUnrealManager::DeleteObjects()
 {
-
 	ConvertedMaterials.Empty();
+	
 	for (const auto& m : CreatedObjectsCache)
 	{
 		if(AActor* a = Cast<AActor>(m))
@@ -132,5 +131,4 @@ void ASpeckleUnrealManager::DeleteObjects()
 	}
 
 	CreatedObjectsCache.Empty();
-	InProgressObjectsCache.Empty();
 }

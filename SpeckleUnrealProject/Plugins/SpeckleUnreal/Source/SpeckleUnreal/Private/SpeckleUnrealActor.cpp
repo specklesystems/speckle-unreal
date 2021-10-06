@@ -104,16 +104,6 @@ void ASpeckleUnrealActor::BeginPlay()
 
 }
 
-void ASpeckleUnrealActor::Destroyed()
-{
-	// for (AActor* Child : this->Children)
-	// {
-	// 	Child->Destroy();
-	// }
-	
-	Super::Destroyed();
-}
-
 // Called every frame
 void ASpeckleUnrealActor::Tick(float DeltaTime)
 {

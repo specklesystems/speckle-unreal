@@ -98,6 +98,8 @@ protected:
 
 	UWorld* World;
 	
+	float WorldToCentimeters;
+	
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
 	
@@ -107,8 +109,6 @@ protected:
 	TArray<UObject*> InProgressObjectsCache;
 	
 	
-	bool TryGetExistingNative(const FString &ObjectId, UObject*& OutObject);
-
 	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
@@ -117,5 +117,5 @@ protected:
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
 	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField);
-	static float ParseScaleFactor(const FString& Units);
+	float ParseScaleFactor(const FString& Units) const;
 };
