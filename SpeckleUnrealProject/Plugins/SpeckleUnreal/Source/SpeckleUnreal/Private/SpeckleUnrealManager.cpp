@@ -10,13 +10,12 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 
 	//When the object is constructed, Get the HTTP module
 	Http = &FHttpModule::Get();
-
-	World = GetWorld();
-	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
 	
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
 
+	World = GetWorld();
+	
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
 	BaseMeshTransparentMaterial = SpeckleGlassMaterial.Object;
@@ -26,9 +25,7 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 void ASpeckleUnrealManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	World = GetWorld();
-	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
 	
 	if (ImportAtRuntime)
 		ImportSpeckleObject();
@@ -98,6 +95,8 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
 
+	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
+	
 	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
 	for (auto& m : CreatedObjectsCache)
