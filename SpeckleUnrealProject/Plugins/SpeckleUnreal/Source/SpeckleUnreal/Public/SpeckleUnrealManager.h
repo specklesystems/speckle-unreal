@@ -6,13 +6,11 @@
 // json manipulation
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
 
 // web requests
 #include "Runtime/Online/HTTP/Public/Http.h"
 
-#include "SpeckleUnrealMesh.h"
+#include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
@@ -54,8 +52,8 @@ public:
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		TSubclassOf<ASpeckleUnrealMesh> MeshActor {
-		ASpeckleUnrealMesh::StaticClass()
+		TSubclassOf<ASpeckleUnrealActor> MeshActor {
+		ASpeckleUnrealActor::StaticClass()
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
@@ -99,21 +97,25 @@ public:
 protected:
 
 	UWorld* World;
-
-	float ScaleFactor;
+	
+	float WorldToCentimeters;
+	
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
-
-	TMap<FString, ASpeckleUnrealMesh*> CreatedSpeckleMeshes;
-	TMap<FString, ASpeckleUnrealMesh*> InProgressSpeckleMeshes;
-
-	ASpeckleUnrealMesh* GetExistingMesh(const FString &objectId);
-
-	void ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObject, const class URenderMaterial* FallbackMaterial = nullptr);
+	
+	//TMap<FString, UObject*> CreatedObjectsCache;
+	//TMap<FString, UObject*> InProgressObjectsCache;
+	TArray<UObject*> CreatedObjectsCache;
+	TArray<UObject*> InProgressObjectsCache;
+	
+	
+	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
 
 	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
 	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
-	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject>, const URenderMaterial* FallbackMaterial = nullptr);
-
-	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>> * const ArrayField);
+	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
+	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
+	
+	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField);
+	float ParseScaleFactor(const FString& Units) const;
 };

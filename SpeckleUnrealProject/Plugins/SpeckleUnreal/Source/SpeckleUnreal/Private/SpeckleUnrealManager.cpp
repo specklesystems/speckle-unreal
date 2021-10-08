@@ -1,7 +1,6 @@
 #include "SpeckleUnrealManager.h"
 
 #include "MaterialConverter.h"
-#include "RenderMaterial.h"
 
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
@@ -11,10 +10,12 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 
 	//When the object is constructed, Get the HTTP module
 	Http = &FHttpModule::Get();
-	// default conversion is millimeters to centimeters because streams tend to be in ml and unreal is in cm by defaults
-	ScaleFactor = 0.1;
-	World = GetWorld();
+	
+	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
+	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
 
+	World = GetWorld();
+	
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
 	BaseMeshTransparentMaterial = SpeckleGlassMaterial.Object;
@@ -24,9 +25,7 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 void ASpeckleUnrealManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	World = GetWorld();
-	ConvertedMaterials.Empty();
 	
 	if (ImportAtRuntime)
 		ImportSpeckleObject();
@@ -80,7 +79,8 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Parsing %d downloaded objects..."), lineCount));
 
-	for (auto& line : lines)
+
+	for (const auto& line : lines)
 	{
 		FString objectId, objectJson;
 		if (!line.Split("\t", &objectId, &objectJson))
@@ -95,325 +95,39 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
 
-	ImportObjectFromCache(SpeckleObjects[ObjectID]);
+	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
 	
-	for (auto& m : CreatedSpeckleMeshes)
+	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
+	
+	for (auto& m : CreatedObjectsCache)
 	{
-		if (InProgressSpeckleMeshes.Contains(m.Key) && InProgressSpeckleMeshes[m.Key] == m.Value)
-			continue;
-		if (m.Value->Scene) // actors removed by the user in the editor have the Scene set to nullptr
-			m.Value->Destroy();
-	}
-
-	CreatedSpeckleMeshes = InProgressSpeckleMeshes;
-	InProgressSpeckleMeshes.Empty();
-	
-	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedSpeckleMeshes.Num()));
-
-}
-
-ASpeckleUnrealMesh* ASpeckleUnrealManager::GetExistingMesh(const FString &objectId)
-{
-	if (InProgressSpeckleMeshes.Contains(objectId))
-		return InProgressSpeckleMeshes[objectId];
-
-	if(!CreatedSpeckleMeshes.Contains(objectId))
-		return nullptr;
-	ASpeckleUnrealMesh* meshActor = CreatedSpeckleMeshes[objectId];
-	// Check if actor has been deleted by the user
-	if (!meshActor || !meshActor->Scene)
-		return nullptr;
-	return meshActor;
-}
-
-
-void ASpeckleUnrealManager::ImportObjectFromCache(const TSharedPtr<FJsonObject> speckleObj, const URenderMaterial* FallbackMaterial)
-{
-	if (!speckleObj->HasField("speckle_type"))
-		return;
-	if (speckleObj->GetStringField("speckle_type") == "reference" && speckleObj->HasField("referencedId")) {
-		TSharedPtr<FJsonObject> referencedObj;
-		if (SpeckleObjects.Contains(speckleObj->GetStringField("referencedId")))
-			ImportObjectFromCache(SpeckleObjects[speckleObj->GetStringField("referencedId")], FallbackMaterial);		
-		return;
-	}
-	if (!speckleObj->HasField("id"))
-		return;
-	FString objectId = speckleObj->GetStringField("id");
-	FString speckleType = speckleObj->GetStringField("speckle_type");
-	
-	// UE_LOG(LogTemp, Warning, TEXT("Importing object %s (type %s)"), *objectId, *speckleType);
-	
-	//Set a fallback material, in-case children doesn't have a material
-	if (speckleObj->HasField("renderMaterial"))
-		FallbackMaterial = UMaterialConverter::ParseRenderMaterial(speckleObj->GetObjectField("renderMaterial"));
-
-	
-	if (speckleObj->GetStringField("speckle_type") == "Objects.Geometry.Mesh") {
-		ASpeckleUnrealMesh* mesh = GetExistingMesh(objectId);
-		if (!mesh)
-			mesh = CreateMesh(speckleObj, FallbackMaterial);
-		InProgressSpeckleMeshes.Add(objectId, mesh);
-		return;
-	}
-
-	if (speckleObj->HasField("@displayMesh"))
-	{
-
-		// Check if the @displayMesh is an object or an array
-		const TSharedPtr<FJsonObject> *meshObjPtr;
-		const TArray<TSharedPtr<FJsonValue>> *meshArrayPtr;
-
-		if (speckleObj->TryGetObjectField("@displayMesh", meshObjPtr))
-		{
-			TSharedPtr<FJsonObject> meshObj = SpeckleObjects[(*meshObjPtr)->GetStringField("referencedId")];
-
-			ASpeckleUnrealMesh* mesh = GetExistingMesh(objectId);
-			if (!mesh)
-				mesh = CreateMesh(meshObj, FallbackMaterial);
-			InProgressSpeckleMeshes.Add(objectId, mesh);
-		}
-		else if (speckleObj->TryGetArrayField("@displayMesh", meshArrayPtr))
-		{
-			for (auto& meshObjValue : *meshArrayPtr)
-			{
-				FString meshId = meshObjValue->AsObject()->GetStringField("referencedId");
-				FString unrealMeshKey = objectId + meshId;
-
-				ASpeckleUnrealMesh* mesh = GetExistingMesh(unrealMeshKey);
-				if (!mesh)
-					mesh = CreateMesh(SpeckleObjects[meshId], FallbackMaterial);
-				InProgressSpeckleMeshes.Add(unrealMeshKey, mesh);
-			}
-		}
-	}
-
-	// Go recursively into all object fields (except @displayMesh)
-	for (auto& kv : speckleObj->Values)
-	{
-		if (kv.Key == "@displayMesh")
-			continue;
-
-		const TSharedPtr< FJsonObject > *subObjectPtr;
-		if (kv.Value->TryGetObject(subObjectPtr))
-		{
-			ImportObjectFromCache(*subObjectPtr, FallbackMaterial);
-			continue;
-		}
-
-		const TArray<TSharedPtr<FJsonValue>> *subArrayPtr;
-		if (kv.Value->TryGetArray(subArrayPtr))
-		{
-			for (auto& arrayElement : *subArrayPtr)
-			{
-				const TSharedPtr<FJsonObject> *arraySubObjPtr;
-				if (!arrayElement->TryGetObject(arraySubObjPtr))
-					continue;
-				ImportObjectFromCache(*arraySubObjPtr, FallbackMaterial);
-			}
-		}
-	}
-
-}
-
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride)
-{
-	if (RenderMaterialObject->GetStringField("speckle_type") == "reference")
-		RenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
-
-	//Parse to a URenderMaterial
-	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(RenderMaterialObject);
-
-	return CreateMaterial(SpeckleMaterial, AcceptMaterialOverride);
-}
-
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride)
-{
-	const auto materialID = SpeckleMaterial->ObjectID;
-
-	
-	if(AcceptMaterialOverride)
-	{
-		//Override by id
-		if(MaterialOverridesById.Contains(materialID))
-		{
-			return MaterialOverridesById[materialID];
-		}
-		//Override by name
-		const FString Name = SpeckleMaterial->Name;
-		for (UMaterialInterface* Mat : MaterialOverridesByName)
-		{
-			if(Mat->GetName() == Name) return Mat;
-		}
-	}
-
-
-	if(ConvertedMaterials.Contains(materialID))
-	{
-		return ConvertedMaterials[materialID];
-	}
-	
-	//Create Convert Material Instance
-	UMaterialInterface* ExplicitMaterial;
-	if(SpeckleMaterial->Opacity >= 1)
-		ExplicitMaterial = BaseMeshOpaqueMaterial;
-	else
-		ExplicitMaterial = BaseMeshTransparentMaterial;
-		
-	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(ExplicitMaterial, this, FName(SpeckleMaterial->Name));
-	UMaterialConverter::AssignPropertiesFromSpeckle(DynMaterial, SpeckleMaterial);
-
-	ConvertedMaterials.Add(materialID, DynMaterial);
-	
-	return DynMaterial;
-}
-
-
-
-TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray<TSharedPtr<FJsonValue>>* ArrayField)
-{
-	TArray<TSharedPtr<FJsonValue>> ObjectPoints;
-	for(int i = 0; i < ArrayField->Num(); i++)
-	{
-		const FString Index = ArrayField->operator[](i)->AsObject()->GetStringField("referencedId");
-		const auto Chunk = SpeckleObjects[Index]->GetArrayField("data");
-		ObjectPoints.Append(Chunk);
-	}
-	return ObjectPoints;
-}
-
-
-ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const URenderMaterial* FallbackMaterial)
-{
-	const FString ObjId = Obj->GetStringField("id");
-	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
-
-	FString Units = Obj->GetStringField("units");
-	// unreal engine units are in cm by default but the conversion is editable by users so
-	// this needs to be accounted for later.
-		
-	ScaleFactor = 1;
-	if (Units == "meters" || Units == "metres" || Units == "m")
-		ScaleFactor = 100;
-
-	if (Units == "centimeters" || Units == "centimetres" || Units == "cm")
-		ScaleFactor = 1;
-
-	if (Units == "millimeters" || Units == "millimetres" || Units == "mm")
-		ScaleFactor = 0.1;
-
-	if (Units == "yards" || Units == "yd")
-		ScaleFactor = 91.4402757;
-
-	if (Units == "feet" || Units == "ft")
-		ScaleFactor = 30.4799990;
-
-	if (Units == "inches" || Units == "in")
-		ScaleFactor = 2.5399986;
-
-	// The following line can be used to debug large objects
-	// ScaleFactor = ScaleFactor * 0.1;
-	
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	ASpeckleUnrealMesh* MeshInstance = World->SpawnActor<ASpeckleUnrealMesh>(MeshActor, SpawnParams);
-
-    // attaches each speckleMesh under this actor (SpeckleManager)
-	MeshInstance->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-	MeshInstance->SetOwner(this);
-	
-	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *ASpeckleUnrealMesh::StaticClass()->GetName(), *ObjId));
-
-
-	//Parse Vertices
-	TArray<FVector> ParsedVertices;
-	{
-		TArray<TSharedPtr<FJsonValue>> ObjectVertices = CombineChunks(&Obj->GetArrayField("vertices"));
-		const auto NumberOfVertices = ObjectVertices.Num() / 3;
-		
-		ParsedVertices.SetNum(NumberOfVertices);
-
-		for (size_t i = 0, j = 0; i < NumberOfVertices; i++, j += 3)
-		{
-			ParsedVertices[i] = FVector
-			(
-				ObjectVertices[j].Get()->AsNumber() * -1,
-				ObjectVertices[j + 1].Get()->AsNumber(),
-				ObjectVertices[j + 2].Get()->AsNumber()
-			) * ScaleFactor;
-			
-		}
-	}
-
-
-	
-	//Parse Triangles
-	TArray<int32> ParsedTriangles;
-	{
-		TArray<TSharedPtr<FJsonValue>> ObjectFaces = CombineChunks(&Obj->GetArrayField("faces"));
-		//convert mesh faces into triangle array regardless of whether or not they are quads
-
-		int32 j = 0;
-		while (j < ObjectFaces.Num())
-		{
-			if (ObjectFaces[j].Get()->AsNumber() == 0)
-			{
-				//Triangles
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				j += 4;
-			}
-			else
-			{
-				//Quads to triangles
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
-
-				j += 5;
-			}
-		}
-	}
-
-
-	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
-	UMaterialInterface* Material;
-	
-	if (Obj->HasField("renderMaterial"))
-	{
-		const auto RenderMatObj = Obj->GetObjectField("renderMaterial");
-		Material = CreateMaterial(RenderMatObj);
-	}
-	else
-	{
-		if (FallbackMaterial)
-			Material = CreateMaterial(FallbackMaterial);
+		if(AActor* a = Cast<AActor>(m))
+			a->Destroy();
 		else
-			Material = DefaultMeshMaterial;
+			m->ConditionalBeginDestroy();
 	}
+
+	CreatedObjectsCache = InProgressObjectsCache;
+	InProgressObjectsCache.Empty();
 	
-	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, Material, FLinearColor::White);
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedObjectsCache.Num()));
 
-	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
-
-	return MeshInstance;
 }
+
+
 
 void ASpeckleUnrealManager::DeleteObjects()
 {
-
 	ConvertedMaterials.Empty();
-	for (auto& m : CreatedSpeckleMeshes)
+	
+	for (const auto& m : CreatedObjectsCache)
 	{
-		if (m.Value->Scene)
-			m.Value->Destroy();
+		if(AActor* a = Cast<AActor>(m))
+			a->Destroy();
+		else
+			m->ConditionalBeginDestroy();
+		
 	}
 
-	CreatedSpeckleMeshes.Empty();
-	InProgressSpeckleMeshes.Empty();
+	CreatedObjectsCache.Empty();
 }
