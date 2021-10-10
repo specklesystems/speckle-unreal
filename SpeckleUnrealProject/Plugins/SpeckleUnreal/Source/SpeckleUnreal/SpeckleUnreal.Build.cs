@@ -29,7 +29,9 @@ public class SpeckleUnreal : ModuleRules
 				"Http", 
 				"Json", 
 				"JsonUtilities", 
-				"ProceduralMeshComponent"
+				"ProceduralMeshComponent",
+				"MeshDescription",
+				"StaticMeshDescription",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

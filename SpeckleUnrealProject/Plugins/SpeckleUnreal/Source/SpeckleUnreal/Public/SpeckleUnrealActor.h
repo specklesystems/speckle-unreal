@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ProceduralMeshComponent.h"
 #include "SpeckleUnrealActor.generated.h"
+
+class UMeshDescriptionBase;
 
 UCLASS(BlueprintType)
 class SPECKLEUNREAL_API ASpeckleUnrealActor : public AActor
@@ -17,13 +18,14 @@ public:
 		USceneComponent* Scene;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-		UProceduralMeshComponent* ProceduralMesh;
+		UStaticMeshComponent* MeshComponent;
 	
 	FString NativeID;
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealActor();
-
+	
+    
 	virtual void SetMesh(const TArray<FVector> &Vertices, const TArray<int32> &Triangles, TArray<FVector2D>& UV0, UMaterialInterface* Material);
 
 protected:
