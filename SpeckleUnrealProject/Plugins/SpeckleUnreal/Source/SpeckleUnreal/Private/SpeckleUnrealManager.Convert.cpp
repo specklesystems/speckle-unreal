@@ -1,7 +1,7 @@
 #include "SpeckleUnrealManager.h"
 
 #include "MaterialConverter.h"
-
+#include "SpeckleUnrealMesh.h"
 
 
 void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject)
@@ -175,7 +175,7 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 }
 
 
-ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
+ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
 {
 	const FString ObjId = Obj->GetStringField("id");
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
@@ -187,7 +187,7 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 
 
 	
-	ASpeckleUnrealActor* MeshInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
+	ASpeckleUnrealMesh* MeshInstance = World->SpawnActor<ASpeckleUnrealMesh>(MeshActor);
 	
 	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
 
@@ -200,16 +200,16 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 		TArray<TSharedPtr<FJsonValue>> ObjectVertices = CombineChunks(Obj->GetArrayField("vertices"));
 		NumberOfVertices = ObjectVertices.Num() / 3;
 	
-		ParsedVertices.SetNum(NumberOfVertices);
+		ParsedVertices.Reserve(NumberOfVertices);
 
 		for (size_t i = 0, j = 0; i < NumberOfVertices; i++, j += 3)
 		{
-			ParsedVertices[i] = FVector
+			ParsedVertices.Add(FVector
 			(
 				ObjectVertices[j].Get()->AsNumber(),
 				ObjectVertices[j + 1].Get()->AsNumber(),
 				ObjectVertices[j + 2].Get()->AsNumber()
-			) * ScaleFactor;
+			) * ScaleFactor);
 		
 		}
 	} 
@@ -257,16 +257,16 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 		{
 			TArray<TSharedPtr<FJsonValue>> TexCoords = CombineChunks(*TextCoordArray);
 			
-			ParsedTextureCoords.SetNum(NumberOfVertices);
+			ParsedTextureCoords.Reserve(NumberOfVertices);
 			
 			const auto NumberOfTexCoords = TexCoords.Num() / 2;
 			for (size_t i = 0, j = 0; i < NumberOfTexCoords; i++, j += 2)
 			{
-				ParsedTextureCoords[i] = FVector2D
+				ParsedTextureCoords.Add(FVector2D
 				(
 					TexCoords[j].Get()->AsNumber(),
 					TexCoords[j + 1].Get()->AsNumber()
-				);
+				));
 			}
 			
 			//TODO create UV for missing TexCoords
@@ -317,7 +317,7 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	//Block Instance
 	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
 
-	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(); //TODO for now, we shall reuse ASpeckleUnrealActor because it has a root component defined in its constructor that we can use to attach the actor's parent
+	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>();
 	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
 
 	

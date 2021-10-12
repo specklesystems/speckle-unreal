@@ -13,7 +13,8 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
-
+    RootComponent->SetMobility(EComponentMobility::Static); 
+    
 	World = GetWorld();
 	
 	DefaultMeshMaterial = SpeckleMaterial.Object;
