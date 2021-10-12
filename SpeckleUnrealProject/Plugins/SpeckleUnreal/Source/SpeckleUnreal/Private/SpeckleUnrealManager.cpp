@@ -1,6 +1,7 @@
 #include "SpeckleUnrealManager.h"
 
 #include "MaterialConverter.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
@@ -35,10 +36,58 @@ void ASpeckleUnrealManager::BeginPlay()
 /*Import the Speckle object*/
 void ASpeckleUnrealManager::ImportSpeckleObject()
 {
-	FString url = ServerUrl + "/objects/" + StreamID + "/" + ObjectID;
-	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "[Speckle] Downloading: " + url);
+	const FString UserAgent = FString::Printf(TEXT("Unreal Engine (%s) / %d.%d.%d"), *UGameplayStatics::GetPlatformName(), ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION, ENGINE_PATCH_VERSION);
 
-	FHttpRequestRef Request = Http->CreateRequest();
+#if !SUPPRESS_SPECKLE_ANALYTICS
+	
+
+	const FString HostApplication = "Unreal%20Engine%20" + ENGINE_MAJOR_VERSION;
+	const FString Action = "receive/manual";
+	FString SpeckleUserID;
+	if(!FFileHelper::LoadFileToString(SpeckleUserID, TEXT("%appdata%/Speckle/suid"))) SpeckleUserID = "No%20SUID";
+	 
+	//Track page view
+	const FString ViewURL = FString::Printf(
+		TEXT("https://jm-cloud.matomo.cloud/matomo.php?idsite=1&rec=1&apiv=1&uid=%s&action_name=%s&url=http://connectors/%s/%s&urlref=http://connectors/%s/%s&_cvar=%%7B%%22hostApplication%%22:%%20%%22%s%%22%%7D"),
+		*SpeckleUserID,
+		*Action,
+		*HostApplication,
+		*Action,
+		*HostApplication,
+		*Action,
+		*HostApplication
+	);
+		
+	const FHttpRequestRef ViewTrackingRequest = Http->CreateRequest();
+	ViewTrackingRequest->SetVerb("POST");
+	ViewTrackingRequest->SetURL(ViewURL);
+	ViewTrackingRequest->SetHeader("User-Agent", UserAgent);
+	
+	ViewTrackingRequest->ProcessRequest();
+	
+	//Track receive action
+	const FString EventURL = FString::Printf(
+		TEXT("https://jm-cloud.matomo.cloud/matomo.php?idsite=1&rec=1&apiv=1&uid=%s&_cvar=%%7B%%22hostApplication%%22:%%20%%22%s%%22%%7D&e_c=%s&e_a=%s"),
+			*SpeckleUserID,
+			*HostApplication,
+			*HostApplication,
+			*Action
+		);
+	
+	const FHttpRequestRef EventTrackingRequest = Http->CreateRequest();
+	EventTrackingRequest->SetVerb("POST");
+	EventTrackingRequest->SetURL(EventURL);
+	EventTrackingRequest->SetHeader("User-Agent", UserAgent);
+	
+	EventTrackingRequest->ProcessRequest();
+	
+#endif
+
+	
+	const FString url = ServerUrl + "/objects/" + StreamID + "/" + ObjectID;
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, "[Speckle] Downloading: " + url);
+	
+	const FHttpRequestRef Request = Http->CreateRequest();
 	
 	Request->SetVerb("GET");
 	Request->SetHeader("Accept", TEXT("text/plain"));
@@ -46,6 +95,7 @@ void ASpeckleUnrealManager::ImportSpeckleObject()
 
 	Request->OnProcessRequestComplete().BindUObject(this, &ASpeckleUnrealManager::OnStreamTextResponseReceived);
 	Request->SetURL(url);
+	Request->SetHeader("User-Agent", UserAgent);
 	Request->ProcessRequest();
 }
 
