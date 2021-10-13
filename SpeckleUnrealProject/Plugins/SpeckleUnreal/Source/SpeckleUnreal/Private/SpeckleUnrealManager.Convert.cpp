@@ -214,6 +214,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 		}
 	} 
 	
+	bool UseVertexIndexForTexCoordinate = false;
 	//Parse Texture Coordinates
 	TArray<FVector2D> ParsedTextureCoords;
 	{
@@ -232,7 +233,8 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 					TexCoords[i + 1].Get()->AsNumber()
 				));
 			}
-
+			
+			UseVertexIndexForTexCoordinate = ParsedTextureCoords.Num() == NumberOfVertices;
 		}
 	}
 
@@ -255,9 +257,12 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 			
 			for(int i = n - 1; i >= 0; i--)
 			{
+				int32 VertexIndex = FaceVertices[NIndex + i + 1].Get()->AsNumber();
+				int32 TexCoordIndex = UseVertexIndexForTexCoordinate? VertexIndex : TIndex + i; //Some connectors (like sketchup) index texture coordinates using vertex index rather than sequentially (like blender)
+				
 				Polygon.Add(TTuple<int32,int32>(
-					FaceVertices[NIndex + i + 1].Get()->AsNumber(),
-					TIndex + i)
+					VertexIndex,
+					TexCoordIndex)
 					);
 			}
 			NIndex += n + 1;
