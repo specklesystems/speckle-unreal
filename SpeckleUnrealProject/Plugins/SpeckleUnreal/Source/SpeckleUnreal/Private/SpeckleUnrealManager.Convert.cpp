@@ -213,42 +213,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 		
 		}
 	} 
-
-
-
-	//Parse Triangles
-	TArray<int32> ParsedTriangles;
-	{
-		TArray<TSharedPtr<FJsonValue>> ObjectFaces = CombineChunks(Obj->GetArrayField("faces"));
-		//convert mesh faces into triangle array regardless of whether or not they are quads
-
-		int32 j = 0;
-		while (j < ObjectFaces.Num())
-		{
-			if (ObjectFaces[j].Get()->AsNumber() == 0)
-			{
-				//Triangles
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				j += 4;
-			}
-			else
-			{
-				//Quads to triangles
-				ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-
-				j += 5;
-			}
-		}
-	}
-
+	
 	//Parse Texture Coordinates
 	TArray<FVector2D> ParsedTextureCoords;
 	{
@@ -257,20 +222,51 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 		{
 			TArray<TSharedPtr<FJsonValue>> TexCoords = CombineChunks(*TextCoordArray);
 			
-			ParsedTextureCoords.Reserve(NumberOfVertices);
+			ParsedTextureCoords.Reserve(TexCoords.Num() / 2);
 			
-			const auto NumberOfTexCoords = TexCoords.Num() / 2;
-			for (size_t i = 0, j = 0; i < NumberOfTexCoords; i++, j += 2)
+			for (size_t i = 0; i < TexCoords.Num() - 1; i += 2)
 			{
 				ParsedTextureCoords.Add(FVector2D
 				(
-					TexCoords[j].Get()->AsNumber(),
-					TexCoords[j + 1].Get()->AsNumber()
+					TexCoords[i].Get()->AsNumber(),
+					TexCoords[i + 1].Get()->AsNumber()
 				));
 			}
-			
-			//TODO create UV for missing TexCoords
+
 		}
+	}
+
+	//Array of Faces (Tuple of Vertex index, TexCoord index)
+	TArray<TArray<TTuple<int32,int32>>> ParsedPolygons;
+	
+	{
+		TArray<TSharedPtr<FJsonValue>> FaceVertices = CombineChunks(Obj->GetArrayField("faces"));
+		ParsedPolygons.Reserve(FaceVertices.Num() / 3); //Reserve space assuming faces will all be triangles
+		
+		int32 NIndex = 0, TIndex = 0;
+		while (NIndex < FaceVertices.Num()) //TODO some sort of check that there are N more vertices
+		{			
+			//Number of vertices in polygon
+			int n = FaceVertices[NIndex].Get()->AsNumber();
+			if(n < 3) n += 3; // 0 -> 3, 1 -> 4
+
+			TArray<TTuple<int32,int32>> Polygon;
+			Polygon.Reserve(n);
+			
+			for(int i = 0; i < n; i++)
+			{
+				Polygon.Add(TTuple<int32,int32>(
+					FaceVertices[NIndex + i + 1].Get()->AsNumber(),
+					TIndex + i)
+					);
+			}
+			NIndex += n + 1;
+			TIndex += n;
+			ParsedPolygons.Add(Polygon);
+		}
+
+		//Fill missing tex coords with default values
+		ParsedTextureCoords.SetNum(TIndex);
 	}
 	
 
@@ -289,7 +285,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	else
 		Material = DefaultMeshMaterial;
 
-	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, ParsedTextureCoords, Material);
+	MeshInstance->SetMesh(ParsedVertices, ParsedPolygons, ParsedTextureCoords, Material);
 
 	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
 

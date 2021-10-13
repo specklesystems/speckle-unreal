@@ -18,7 +18,7 @@ ASpeckleUnrealMesh::ASpeckleUnrealMesh() : ASpeckleUnrealActor()
     MeshComponent->SetupAttachment(RootComponent);
 }
 
-void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<int32>& Triangles, TArray<FVector2D>& UV0, UMaterialInterface* Material)
+void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<TArray<TTuple<int32,int32>>>& Polygons, TArray<FVector2D>& TextureCoordinates, UMaterialInterface* Material)
 {
 	UStaticMesh* Mesh = NewObject<UStaticMesh>(MeshComponent, "Mesh", RF_Public);
 	Mesh->InitResources();
@@ -33,8 +33,6 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<i
 	
 	{
 		const size_t NumberOfVertices = Vertices.Num();
-		UV0.SetNum(NumberOfVertices); //Fill missing UVs with zeroed vectors.
-		
 		StaticMeshDescription->ReserveNewVertices(NumberOfVertices);
 		
 		TMap<int32, FVertexID> VertexMap;
@@ -59,26 +57,27 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<i
 		
 		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 1, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
 
-		const int32 NumberOfTriangles = Triangles.Num() / 3;
-		StaticMeshDescription->ReserveNewTriangles(NumberOfTriangles);
-		StaticMeshDescription->ReserveNewPolygons(NumberOfTriangles);
-		StaticMeshDescription->ReserveNewVertexInstances(NumberOfTriangles * 3);
-		
-		for(int32 i = 0; i < (Triangles.Num() - 2); i += 3)
-		{
-			TArray<FVertexInstanceID> VertexInstances
-			{
-				StaticMeshDescription->CreateVertexInstance(VertexMap[Triangles[i]]),
-				StaticMeshDescription->CreateVertexInstance(VertexMap[Triangles[i+1]]),
-				StaticMeshDescription->CreateVertexInstance(VertexMap[Triangles[i+2]])
-			};
 
-			StaticMeshDescription->SetVertexInstanceUV(VertexInstances[0], UV0[Triangles[i]]);
-			StaticMeshDescription->SetVertexInstanceUV(VertexInstances[1], UV0[Triangles[i+1]]);
-			StaticMeshDescription->SetVertexInstanceUV(VertexInstances[2], UV0[Triangles[i+2]]);
+		StaticMeshDescription->ReserveNewTriangles(Polygons.Num() * 3); //Reserve space assuming faces will all be triangles
+		StaticMeshDescription->ReserveNewPolygons(Polygons.Num());
+		StaticMeshDescription->ReserveNewVertexInstances(Polygons.Num() * 3); //Reserve space assuming faces will all be triangles
+
+		for(int32 i = 0; i < Polygons.Num(); i ++)
+		{
+			TArray<TTuple<int32,int32>> ParsedPolygon = Polygons[i];
+			TArray<FVertexInstanceID> VertexInstances;
+			VertexInstances.Reserve(ParsedPolygon.Num());
+			
+			for(const auto v : ParsedPolygon)
+			{
+				FVertexInstanceID VertexInstance = StaticMeshDescription->CreateVertexInstance(VertexMap[v.Key]);
+				VertexInstances.Add(VertexInstance);
+				
+				StaticMeshDescription->SetVertexInstanceUV(VertexInstance, TextureCoordinates[v.Value]);
+			};
 			
 			TArray<FEdgeID> Edges;
-			Edges.Reserve(3);
+			Edges.Reserve(ParsedPolygon.Num());
 			
 			const FPolygonID PolygonID = StaticMeshDescription->CreatePolygon(PolygonGroupID, VertexInstances, Edges);
 
@@ -87,7 +86,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<i
 				StaticMeshDescription->GetEdgeHardnesses()[EdgeID] = true;
 			}
 			
-			StaticMeshDescription->ComputePolygonTriangulation(PolygonID); //TODO might be a more efficient way to do this (since we are already a triangle)
+			StaticMeshDescription->ComputePolygonTriangulation(PolygonID);
 		}
 		
 		
