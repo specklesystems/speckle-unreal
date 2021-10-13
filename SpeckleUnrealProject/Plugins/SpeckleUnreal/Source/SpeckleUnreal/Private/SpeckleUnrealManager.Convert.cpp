@@ -253,7 +253,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 			TArray<TTuple<int32,int32>> Polygon;
 			Polygon.Reserve(n);
 			
-			for(int i = 0; i < n; i++)
+			for(int i = n - 1; i >= 0; i--)
 			{
 				Polygon.Add(TTuple<int32,int32>(
 					FaceVertices[NIndex + i + 1].Get()->AsNumber(),
