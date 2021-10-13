@@ -41,14 +41,20 @@ void ASpeckleUnrealManager::ImportSpeckleObject()
 #if !SUPPRESS_SPECKLE_ANALYTICS
 	
 
-	const FString HostApplication = "Unreal%20Engine%20" + ENGINE_MAJOR_VERSION;
+	const FString HostApplication = FString::Printf(TEXT("Unreal%%20Engine%%20%d"), ENGINE_MAJOR_VERSION);
 	const FString Action = "receive/manual";
-	FString SpeckleUserID;
-	if(!FFileHelper::LoadFileToString(SpeckleUserID, TEXT("%appdata%/Speckle/suid"))) SpeckleUserID = "No%20SUID";
-	 
+	FString SpeckleUserID = "No%20SUID";
+	
+#if PLATFORM_WINDOWS
+	const FString UserPath = UKismetSystemLibrary::GetPlatformUserDir().LeftChop(10); //remove "Documents/"
+	const FString Dir = FString::Printf(TEXT("%sAppData/Roaming/Speckle/suuid"), *UserPath);
+	FFileHelper::LoadFileToString(SpeckleUserID, *Dir);
+#endif	
+	//TODO MACOS
+	
 	//Track page view
 	const FString ViewURL = FString::Printf(
-		TEXT("https://jm-cloud.matomo.cloud/matomo.php?idsite=1&rec=1&apiv=1&uid=%s&action_name=%s&url=http://connectors/%s/%s&urlref=http://connectors/%s/%s&_cvar=%%7B%%22hostApplication%%22:%%20%%22%s%%22%%7D"),
+		TEXT("https://speckle.matomo.cloud/matomo.php?idsite=2&rec=1&apiv=1&uid=%s&action_name=%s&url=http://connectors/%s/%s&urlref=http://connectors/%s/%s&_cvar=%%7B%%22hostApplication%%22:%%20%%22%s%%22%%7D"),
 		*SpeckleUserID,
 		*Action,
 		*HostApplication,
@@ -57,17 +63,16 @@ void ASpeckleUnrealManager::ImportSpeckleObject()
 		*Action,
 		*HostApplication
 	);
-		
+
 	const FHttpRequestRef ViewTrackingRequest = Http->CreateRequest();
 	ViewTrackingRequest->SetVerb("POST");
 	ViewTrackingRequest->SetURL(ViewURL);
 	ViewTrackingRequest->SetHeader("User-Agent", UserAgent);
-	
 	ViewTrackingRequest->ProcessRequest();
 	
 	//Track receive action
 	const FString EventURL = FString::Printf(
-		TEXT("https://jm-cloud.matomo.cloud/matomo.php?idsite=1&rec=1&apiv=1&uid=%s&_cvar=%%7B%%22hostApplication%%22:%%20%%22%s%%22%%7D&e_c=%s&e_a=%s"),
+		TEXT("https://speckle.matomo.cloud/matomo.php?idsite=2&rec=1&apiv=1&uid=%s&_cvar=%%7B%%22hostApplication%%22:%%20%%22%s%%22%%7D&e_c=%s&e_a=%s"),
 			*SpeckleUserID,
 			*HostApplication,
 			*HostApplication,
