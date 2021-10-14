@@ -24,6 +24,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	AActor* Native = nullptr;
 
 
+	
 	if(SpeckleType == "Objects.Geometry.Mesh")
 	{
 		Native = CreateMesh(SpeckleObject, ParentObject);
@@ -134,14 +135,22 @@ UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const URenderMaterial*
 
 
 
-TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField)
+TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const
 {
 	TArray<TSharedPtr<FJsonValue>> ObjectPoints;
-	for(int i = 0; i < ArrayField.Num(); i++)
+		
+	for(int32 i = 0; i < ArrayField.Num(); i++)
 	{
-		const FString Index = ArrayField[i]->AsObject()->GetStringField("referencedId");
-		const auto Chunk = SpeckleObjects[Index]->GetArrayField("data");
-		ObjectPoints.Append(Chunk);
+		FString Index;
+		if(ArrayField[i]->AsObject()->TryGetStringField("referencedId", Index))
+		{
+			const auto Chunk = SpeckleObjects[Index]->GetArrayField("data");
+			ObjectPoints.Append(Chunk);
+		}
+		else
+		{
+			return ArrayField; //Array was never chunked to begin with
+		}
 	}
 	return ObjectPoints;
 }
@@ -225,7 +234,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 			
 			ParsedTextureCoords.Reserve(TexCoords.Num() / 2);
 			
-			for (size_t i = 0; i < TexCoords.Num() - 1; i += 2)
+			for (int32 i = 0; i + 1 < TexCoords.Num(); i += 2)
 			{
 				ParsedTextureCoords.Add(FVector2D
 				(
@@ -246,7 +255,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 		ParsedPolygons.Reserve(FaceVertices.Num() / 3); //Reserve space assuming faces will all be triangles
 		
 		int32 NIndex = 0, TIndex = 0;
-		while (NIndex < FaceVertices.Num()) //TODO some sort of check that there are N more vertices
+		while (NIndex < FaceVertices.Num()) //TODO some sort of assertion that there are indeed N more vertices
 		{			
 			//Number of vertices in polygon
 			int n = FaceVertices[NIndex].Get()->AsNumber();
@@ -255,7 +264,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 			TArray<TTuple<int32,int32>> Polygon;
 			Polygon.Reserve(n);
 			
-			for(int i = n - 1; i >= 0; i--)
+			for(int32 i = n - 1; i >= 0; i--)
 			{
 				int32 VertexIndex = FaceVertices[NIndex + i + 1].Get()->AsNumber();
 				int32 TexCoordIndex = UseVertexIndexForTexCoordinate? VertexIndex : TIndex + i; //Some connectors (like sketchup) index texture coordinates using vertex index rather than sequentially (like blender)

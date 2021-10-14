@@ -14,7 +14,7 @@ ASpeckleUnrealMesh::ASpeckleUnrealMesh() : ASpeckleUnrealActor()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 
     MeshComponent = NewObject<UStaticMeshComponent>(RootComponent);
-    MeshComponent->SetMobility(EComponentMobility::Static);
+    MeshComponent->SetMobility(EComponentMobility::Stationary);
     MeshComponent->SetupAttachment(RootComponent);
 }
 
@@ -55,7 +55,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 
 		StaticMeshDescription->SetPolygonGroupMaterialSlotName(PolygonGroupID, MaterialSlotName);
 		
-		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 1, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
+		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
 
 
 		StaticMeshDescription->ReserveNewTriangles(Polygons.Num() * 3); //Reserve space assuming faces will all be triangles
@@ -112,6 +112,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 	
 	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription});
 	Mesh->CommitMeshDescription(0);
+	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	MeshComponent->SetMaterialByName(MaterialSlotName, Material);

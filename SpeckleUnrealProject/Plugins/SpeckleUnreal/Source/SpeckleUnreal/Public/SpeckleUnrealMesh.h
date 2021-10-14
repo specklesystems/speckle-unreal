@@ -18,6 +18,6 @@ public:
 	
 	// Sets default values for this actor's properties
 	ASpeckleUnrealMesh();
-
+	
 	virtual void SetMesh(const TArray<FVector>& Vertices, const TArray<TArray<TTuple<int32,int32>>>& Polygons, TArray<FVector2D>& TextureCoordinates, UMaterialInterface* Material);
 };
