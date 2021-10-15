@@ -55,7 +55,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 
 		StaticMeshDescription->SetPolygonGroupMaterialSlotName(PolygonGroupID, MaterialSlotName);
 		
-		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
+		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 1, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
 
 
 		StaticMeshDescription->ReserveNewTriangles(Polygons.Num() * 3); //Reserve space assuming faces will all be triangles
@@ -67,14 +67,36 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 			TArray<TTuple<int32,int32>> ParsedPolygon = Polygons[i];
 			TArray<FVertexInstanceID> VertexInstances;
 			VertexInstances.Reserve(ParsedPolygon.Num());
+
+			
+			TSet<FVertexID> Verts;
+			Verts.Reserve(ParsedPolygon.Num());
 			
 			for(const auto v : ParsedPolygon)
 			{
-				FVertexInstanceID VertexInstance = StaticMeshDescription->CreateVertexInstance(VertexMap[v.Key]);
+				FVertexID Vert = VertexMap[v.Key];
+				bool AlreadyInSet;
+				Verts.Add(Vert, &AlreadyInSet);
+
+				if(AlreadyInSet)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Invalid Polygon while creating mesh - vertex appears more than once in a face, duplicates will be ignored"));
+					continue;
+				}
+
+				FVertexInstanceID VertexInstance = StaticMeshDescription->CreateVertexInstance(Vert);
+				
 				VertexInstances.Add(VertexInstance);
 				
 				StaticMeshDescription->SetVertexInstanceUV(VertexInstance, TextureCoordinates[v.Value]);
 			};
+
+
+			if(VertexInstances.Num() < 3)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Invalid Polygon while creating mesh - face has fewer than 3 verts, this face will be ignored"));
+				continue;
+			}
 			
 			TArray<FEdgeID> Edges;
 			Edges.Reserve(ParsedPolygon.Num());
@@ -107,12 +129,12 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 	SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
 	SrcModel.BuildSettings.bGenerateLightmapUVs = true;
 	SrcModel.BuildSettings.SrcLightmapIndex = 0;
-	SrcModel.BuildSettings.DstLightmapIndex = 1;
+	SrcModel.BuildSettings.DstLightmapIndex = 0;
 	
 	
+	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
 	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription});
 	Mesh->CommitMeshDescription(0);
-	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	MeshComponent->SetMaterialByName(MaterialSlotName, Material);
