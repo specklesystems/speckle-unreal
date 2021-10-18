@@ -6,6 +6,7 @@
 #include "StaticMeshDescription.h"
 #include "MeshTypes.h"
 #include "StaticMeshOperations.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 
 
 // Sets default values
@@ -20,10 +21,14 @@ ASpeckleUnrealMesh::ASpeckleUnrealMesh() : ASpeckleUnrealActor()
 
 void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<TArray<TTuple<int32,int32>>>& Polygons, TArray<FVector2D>& TextureCoordinates, UMaterialInterface* Material)
 {
-	UStaticMesh* Mesh = NewObject<UStaticMesh>(MeshComponent, "Mesh", RF_Public);
+	FString ObjectName = FGuid::NewGuid().ToString();
+	
+	//UPackage* Package = CreatePackage(TEXT("/Game/Speckle/"));
+	//UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(ObjectName), RF_Public);
+	
+	UStaticMesh* Mesh = NewObject<UStaticMesh>(RootComponent, FName(TEXT("SpeckleMesh")), RF_Public);
 	Mesh->InitResources();
-
-	Mesh->LightingGuid = FGuid::NewGuid();
+	Mesh->SetLightingGuid();
 	
 	UStaticMeshDescription* StaticMeshDescription = Mesh->CreateStaticMeshDescription(RootComponent);
 	FMeshDescription& BaseMeshDescription = StaticMeshDescription->GetMeshDescription();
@@ -134,7 +139,10 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 	
 	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
 	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription});
+	Mesh->PostEditChange();
 	Mesh->CommitMeshDescription(0);
+
+	//FAssetRegistryModule::AssetCreated(Mesh);
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	MeshComponent->SetMaterialByName(MaterialSlotName, Material);
