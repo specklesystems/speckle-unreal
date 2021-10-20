@@ -23,10 +23,9 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 {
 	FString ObjectName = FGuid::NewGuid().ToString();
 	
-	//UPackage* Package = CreatePackage(TEXT("/Game/Speckle/"));
-	//UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(ObjectName), RF_Public);
+	UPackage* Package = CreatePackage(TEXT("/Game/Speckle/"));
+	UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(ObjectName), RF_Public | RF_Transient);
 	
-	UStaticMesh* Mesh = NewObject<UStaticMesh>(RootComponent, FName(TEXT("SpeckleMesh")), RF_Public);
 	Mesh->InitResources();
 	Mesh->SetLightingGuid();
 	
@@ -139,10 +138,10 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 	
 	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
 	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription});
-	Mesh->PostEditChange();
+	//Mesh->PostEditChange(); //This doubles conversion time and doesn't appear to be necessary 
 	Mesh->CommitMeshDescription(0);
 
-	//FAssetRegistryModule::AssetCreated(Mesh);
+	FAssetRegistryModule::AssetCreated(Mesh);
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	MeshComponent->SetMaterialByName(MaterialSlotName, Material);
