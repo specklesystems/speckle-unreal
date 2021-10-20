@@ -13,8 +13,7 @@
 ASpeckleUnrealMesh::ASpeckleUnrealMesh() : ASpeckleUnrealActor()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-
-    MeshComponent = NewObject<UStaticMeshComponent>(RootComponent);
+    MeshComponent = NewObject<UStaticMeshComponent>(RootComponent, FName("SpeckleMeshComponent"), RF_Public);
     MeshComponent->SetMobility(EComponentMobility::Stationary);
     MeshComponent->SetupAttachment(RootComponent);
 }

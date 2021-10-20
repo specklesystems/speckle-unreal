@@ -151,7 +151,16 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
 
-	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
+	//World Units setup
+	WorldToCentimeters = 1; //Default value of 1uu = 1cm
+
+	AWorldSettings* WorldSettings;
+	if( ( IsValid(World) || IsValid(World = GetWorld()) )
+		&& IsValid(WorldSettings = World->GetWorldSettings()) )
+	{
+		WorldToCentimeters = WorldSettings->WorldToMeters / 100;
+	}
+	
 	
 	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
