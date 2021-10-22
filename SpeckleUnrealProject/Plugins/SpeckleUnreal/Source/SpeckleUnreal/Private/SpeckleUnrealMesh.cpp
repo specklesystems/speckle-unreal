@@ -12,13 +12,12 @@
 // Sets default values
 ASpeckleUnrealMesh::ASpeckleUnrealMesh() : ASpeckleUnrealActor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     MeshComponent = NewObject<UStaticMeshComponent>(RootComponent, FName("SpeckleMeshComponent"), RF_Public);
     MeshComponent->SetMobility(EComponentMobility::Stationary);
     MeshComponent->SetupAttachment(RootComponent);
 }
 
-void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<TArray<TTuple<int32,int32>>>& Polygons, TArray<FVector2D>& TextureCoordinates, UMaterialInterface* Material)
+void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<TArray<TTuple<int32,int32>>>& Polygons, TArray<FVector2D>& TextureCoordinates, UMaterialInterface* Material, bool BuildSimpleCollision, bool UseFullBuild)
 {
 	FString ObjectName = FGuid::NewGuid().ToString();
 	
@@ -58,7 +57,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 
 		StaticMeshDescription->SetPolygonGroupMaterialSlotName(PolygonGroupID, MaterialSlotName);
 		
-		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 1, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
+		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
 
 
 		StaticMeshDescription->ReserveNewTriangles(Polygons.Num() * 3); //Reserve space assuming faces will all be triangles
@@ -132,14 +131,17 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 	SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
 	SrcModel.BuildSettings.bGenerateLightmapUVs = true;
 	SrcModel.BuildSettings.SrcLightmapIndex = 0;
-	SrcModel.BuildSettings.DstLightmapIndex = 0;
+	SrcModel.BuildSettings.DstLightmapIndex = 1;
 	
 	
 	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
-	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription});
-	//Mesh->PostEditChange(); //This doubles conversion time and doesn't appear to be necessary 
+	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription}, BuildSimpleCollision);
+	//Mesh->PostEditChange(); //This doubles conversion time and doesn't appear to be necessary.
+	
 	Mesh->CommitMeshDescription(0);
-
+	
+	if(UseFullBuild) Mesh->Build(true); //This makes conversion time 5x slower, but is needed for generating lightmap UVs
+	
 	FAssetRegistryModule::AssetCreated(Mesh);
 	
 	MeshComponent->SetStaticMesh(Mesh);

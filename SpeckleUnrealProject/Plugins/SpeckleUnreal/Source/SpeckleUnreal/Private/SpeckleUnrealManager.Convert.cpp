@@ -258,7 +258,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 		while (NIndex < FaceVertices.Num()) //TODO some sort of assertion that there are indeed N more vertices
 		{			
 			//Number of vertices in polygon
-			int n = FaceVertices[NIndex].Get()->AsNumber();
+			int32 n = FaceVertices[NIndex].Get()->AsNumber();
 			if(n < 3) n += 3; // 0 -> 3, 1 -> 4
 
 			TArray<TTuple<int32,int32>> Polygon;
@@ -299,7 +299,12 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	else
 		Material = DefaultMeshMaterial;
 
-	MeshInstance->SetMesh(ParsedVertices, ParsedPolygons, ParsedTextureCoords, Material);
+	
+#if !WITH_EDITOR
+	constexpr bool UseFullBuildProcess = false;
+#endif
+	
+	MeshInstance->SetMesh(ParsedVertices, ParsedPolygons, ParsedTextureCoords, Material, BuildSimpleCollisions, UseFullBuildProcess);
 
 	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
 

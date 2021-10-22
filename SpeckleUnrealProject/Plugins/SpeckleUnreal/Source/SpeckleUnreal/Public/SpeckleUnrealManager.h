@@ -27,7 +27,7 @@ public:
 
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void DeleteObjects();
-
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
@@ -44,18 +44,32 @@ public:
 		""
 	};
 
+	/** A Personal Access Token can be created from your Speckle Profile page (Treat tokens like passwords, do not share publicly) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString AuthToken {
 		""
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	bool ImportAtRuntime;
+	
+
+	/** You may specify a custom class inheriting from AASpeckleUnrealMesh */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Mesh")
 		TSubclassOf<ASpeckleUnrealMesh> MeshActor {
 		ASpeckleUnrealMesh::StaticClass()
 	};
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-	bool ImportAtRuntime;
+	/** If true, simple collision will be calculated when creating static meshes */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Mesh")
+	bool BuildSimpleCollisions = false;
+
+#if WITH_EDITOR
+	/** If true, generated static meshes will be use the full editor-only build process, this has a dramatic effect on conversion times*/
+	UPROPERTY(EditAnywhere, Category = "Speckle|Mesh")
+	bool UseFullBuildProcess = false;
+#endif
+	
 
 	
 	/** Material to be applied to meshes when no RenderMaterial can be converted */
