@@ -115,15 +115,13 @@ protected:
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
 	
-	//TMap<FString, UObject*> CreatedObjectsCache;
-	//TMap<FString, UObject*> InProgressObjectsCache;
 	TArray<UObject*> CreatedObjectsCache;
 	TArray<UObject*> InProgressObjectsCache;
 	
 	
 	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
 
-	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
+	UMaterialInterface* CreateMaterial(const TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
 	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
 	ASpeckleUnrealMesh* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);

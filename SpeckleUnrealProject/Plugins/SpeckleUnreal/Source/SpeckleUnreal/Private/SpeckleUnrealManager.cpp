@@ -15,8 +15,6 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
     RootComponent->SetMobility(EComponentMobility::Static); 
-    
-	World = GetWorld();
 	
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
@@ -27,7 +25,6 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 void ASpeckleUnrealManager::BeginPlay()
 {
 	Super::BeginPlay();
-	World = GetWorld();
 	
 	if (ImportAtRuntime)
 		ImportSpeckleObject();
@@ -155,7 +152,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	WorldToCentimeters = 1; //Default value of 1uu = 1cm
 
 	AWorldSettings* WorldSettings;
-	if( ( IsValid(World) || IsValid(World = GetWorld()) )
+	if(IsValid(World = GetWorld() )
 		&& IsValid(WorldSettings = World->GetWorldSettings()) )
 	{
 		WorldToCentimeters = WorldSettings->WorldToMeters / 100;
@@ -164,7 +161,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	
 	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
-	for (auto& m : CreatedObjectsCache)
+	for (const auto& m : CreatedObjectsCache)
 	{
 		if(AActor* a = Cast<AActor>(m))
 			a->Destroy();

@@ -136,11 +136,11 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 	
 	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
 	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription}, BuildSimpleCollision);
-	//Mesh->PostEditChange(); //This doubles conversion time and doesn't appear to be necessary.
+	//Mesh->PostEditChange(); //This increases conversion time and doesn't appear to be necessary.
 	
 	Mesh->CommitMeshDescription(0);
 	
-	if(UseFullBuild) Mesh->Build(true); //This makes conversion time 5x slower, but is needed for generating lightmap UVs
+	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
 	
 	FAssetRegistryModule::AssetCreated(Mesh);
 	

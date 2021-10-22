@@ -81,13 +81,15 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	}
 }
 
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, const bool AcceptMaterialOverride)
+UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const TSharedPtr<FJsonObject> RenderMaterialObject, const bool AcceptMaterialOverride)
 {
+	TSharedPtr<FJsonObject> ActualRenderMaterialObject = RenderMaterialObject;
+	
 	if (RenderMaterialObject->GetStringField("speckle_type") == "reference")
-		RenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
+		ActualRenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
 
 	//Parse to a URenderMaterial
-	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(RenderMaterialObject);
+	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(ActualRenderMaterialObject);
 
 	return CreateMaterial(SpeckleMaterial, AcceptMaterialOverride);
 }
@@ -200,6 +202,23 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	
 	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
 
+	//Parse optional Transform
+	FMatrix TransformMatrix = FMatrix::Identity;
+	
+	const TArray<TSharedPtr<FJsonValue>>* TransformData = nullptr;
+	if(Obj->HasField("properties") && Obj->GetObjectField("properties")->TryGetArrayField("transform", TransformData))
+	{
+		for(int32 Row = 0; Row < 4; Row++)
+			for(int32 Col = 0; Col < 4; Col++)
+			{
+				TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
+			}
+		TransformMatrix = TransformMatrix.GetTransposed();
+		TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
+		
+		MeshInstance->SetActorTransform(FTransform(TransformMatrix));
+	}
+
 
 
 	//Parse Vertices
@@ -213,12 +232,12 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 
 		for (size_t i = 0, j = 0; i < NumberOfVertices; i++, j += 3)
 		{
-			ParsedVertices.Add(FVector
+			ParsedVertices.Add(MeshInstance->GetTransform().InverseTransformPosition(FVector
 			(
 				ObjectVertices[j].Get()->AsNumber(),
 				ObjectVertices[j + 1].Get()->AsNumber(),
 				ObjectVertices[j + 2].Get()->AsNumber()
-			) * ScaleFactor);
+			) * ScaleFactor ));
 		
 		}
 	} 
@@ -311,6 +330,7 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	return MeshInstance;
 }
 
+
 ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
 {
 	//Transform
@@ -319,6 +339,7 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	
 	const TArray<TSharedPtr<FJsonValue>>* TransformData;
 	if(!Obj->TryGetArrayField("transform", TransformData)) return nullptr;
+	
 	
 	FMatrix TransformMatrix;
 	for(int32 Row = 0; Row < 4; Row++)
