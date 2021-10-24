@@ -307,15 +307,15 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
 	UMaterialInterface* Material;
 
-	if (Obj->HasField("renderMaterial"))
-	{
-		Material = CreateMaterial(Obj->GetObjectField("renderMaterial"));
-	}
-	else if (Parent && Parent->HasField("renderMaterial"))
-	{
-		Material = CreateMaterial(Parent->GetObjectField("renderMaterial"));
-	}
-	else
+	// if (Obj->HasField("renderMaterial"))
+	// {
+	// 	//Material = CreateMaterial(Obj->GetObjectField("renderMaterial"));
+	// }
+	// else if (Parent && Parent->HasField("renderMaterial"))
+	// {
+	// 	//Material = CreateMaterial(Parent->GetObjectField("renderMaterial"));
+	// }
+	// else
 		Material = DefaultMeshMaterial;
 
 	

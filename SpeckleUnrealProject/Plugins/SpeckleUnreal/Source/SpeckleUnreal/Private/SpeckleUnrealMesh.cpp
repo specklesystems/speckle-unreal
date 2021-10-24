@@ -21,8 +21,8 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 {
 	FString ObjectName = FGuid::NewGuid().ToString();
 	
-	UPackage* Package = CreatePackage(TEXT("/Game/Speckle/"));
-	UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(ObjectName), RF_Public | RF_Transient);
+	UPackage* Package = CreatePackage(TEXT("/Game/Speckle/Meshes"));
+	UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(ObjectName), RF_Public | RF_Standalone);//| RF_Transient);
 	
 	Mesh->InitResources();
 	Mesh->SetLightingGuid();
@@ -57,7 +57,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 
 		StaticMeshDescription->SetPolygonGroupMaterialSlotName(PolygonGroupID, MaterialSlotName);
 		
-		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::Transient);
+		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::None);
 
 
 		StaticMeshDescription->ReserveNewTriangles(Polygons.Num() * 3); //Reserve space assuming faces will all be triangles
@@ -136,7 +136,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 	
 	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
 	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription}, BuildSimpleCollision);
-	//Mesh->PostEditChange(); //This increases conversion time and doesn't appear to be necessary.
+	Mesh->PostEditChange(); //This increases conversion time and but allows level to reloaded
 	
 	Mesh->CommitMeshDescription(0);
 	
