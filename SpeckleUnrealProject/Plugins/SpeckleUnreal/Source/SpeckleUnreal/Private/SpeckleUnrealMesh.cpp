@@ -17,22 +17,42 @@ ASpeckleUnrealMesh::ASpeckleUnrealMesh() : ASpeckleUnrealActor()
     MeshComponent->SetupAttachment(RootComponent);
 }
 
-void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<TArray<TTuple<int32,int32>>>& Polygons, TArray<FVector2D>& TextureCoordinates, UMaterialInterface* Material, bool BuildSimpleCollision, bool UseFullBuild)
+void ASpeckleUnrealMesh::SetMesh(const FString& StreamID, const FString& ObjectID, const TArray<FVector>& Vertices, const TArray<TArray<TTuple<int32,int32>>>& Polygons, TArray<FVector2D>& TextureCoordinates, UMaterialInterface* Material, bool BuildSimpleCollision, bool UseFullBuild)
 {
-	FString ObjectName = FGuid::NewGuid().ToString();
+	//Create Mesh Asset
+	FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle/Meshes"), StreamID, ObjectID);
+	UPackage* Package = CreatePackage(*PackagePath);
 	
-	UPackage* Package = CreatePackage(TEXT("/Game/Speckle/Meshes"));
-	UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(ObjectName), RF_Public | RF_Standalone);//| RF_Transient);
+	
+	UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(ObjectID), RF_Public);
 	
 	Mesh->InitResources();
 	Mesh->SetLightingGuid();
-	
+
 	UStaticMeshDescription* StaticMeshDescription = Mesh->CreateStaticMeshDescription(RootComponent);
 	FMeshDescription& BaseMeshDescription = StaticMeshDescription->GetMeshDescription();
+
+	//Build Settings
+	FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
+	SrcModel.BuildSettings.bRecomputeNormals = false;
+	SrcModel.BuildSettings.bRecomputeTangents = false;
+	SrcModel.BuildSettings.bRemoveDegenerates = false;
+	SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
+	SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
+	SrcModel.BuildSettings.bGenerateLightmapUVs = true;
+	SrcModel.BuildSettings.SrcLightmapIndex = 0;
+	SrcModel.BuildSettings.DstLightmapIndex = 1;
+
+	UStaticMesh::FBuildMeshDescriptionsParams MeshParams;
+	MeshParams.bBuildSimpleCollision = BuildSimpleCollision;
+	MeshParams.bCommitMeshDescription = true;
+	MeshParams.bMarkPackageDirty = true;
+	MeshParams.bUseHashAsGuid = false;
+
+	//Set Mesh Data
 	
-	const FName MaterialSlotName = Mesh->AddMaterial(Material);;
-	BaseMeshDescription.PolygonGroupAttributes().RegisterAttribute<FName>(MeshAttribute::PolygonGroup::ImportedMaterialSlotName, 1, MaterialSlotName,  EMeshAttributeFlags::Transient);
-	
+	//const FName MaterialSlotName = Mesh->AddMaterial(Material);;
+	//BaseMeshDescription.PolygonGroupAttributes().RegisterAttribute<FName>(MeshAttribute::PolygonGroup::ImportedMaterialSlotName, 1, MaterialSlotName,  EMeshAttributeFlags::Transient);
 	{
 		const size_t NumberOfVertices = Vertices.Num();
 		StaticMeshDescription->ReserveNewVertices(NumberOfVertices);
@@ -55,7 +75,7 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 		//Convert Faces
 		const FPolygonGroupID PolygonGroupID = StaticMeshDescription->CreatePolygonGroup();
 
-		StaticMeshDescription->SetPolygonGroupMaterialSlotName(PolygonGroupID, MaterialSlotName);
+		//StaticMeshDescription->SetPolygonGroupMaterialSlotName(PolygonGroupID, MaterialSlotName);
 		
 		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::None);
 
@@ -123,27 +143,20 @@ void ASpeckleUnrealMesh::SetMesh(const TArray<FVector>& Vertices, const TArray<T
 		FStaticMeshOperations::ComputeTangentsAndNormals(BaseMeshDescription, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
 	}
 	
-	FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
-	SrcModel.BuildSettings.bRecomputeNormals = false;
-	SrcModel.BuildSettings.bRecomputeTangents = false;
-	SrcModel.BuildSettings.bRemoveDegenerates = false;
-	SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
-	SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
-	SrcModel.BuildSettings.bGenerateLightmapUVs = true;
-	SrcModel.BuildSettings.SrcLightmapIndex = 0;
-	SrcModel.BuildSettings.DstLightmapIndex = 1;
+
 	
-	
+	//Mesh->PreEditChange(nullptr);
+			
 	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
-	Mesh->BuildFromStaticMeshDescriptions(TArray<UStaticMeshDescription*>{StaticMeshDescription}, BuildSimpleCollision);
-	Mesh->PostEditChange(); //This increases conversion time and but allows level to reloaded
-	
-	Mesh->CommitMeshDescription(0);
-	
+	Mesh->BuildFromMeshDescriptions(TArray<const FMeshDescription*>{&BaseMeshDescription}, MeshParams);
+		
 	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
+	//Mesh->PostEditChange(); //This doesn't seem to be required
+
 	
 	FAssetRegistryModule::AssetCreated(Mesh);
 	
 	MeshComponent->SetStaticMesh(Mesh);
-	MeshComponent->SetMaterialByName(MaterialSlotName, Material);
+
+	//MeshComponent->SetMaterialByName(MaterialSlotName, Material);
 }

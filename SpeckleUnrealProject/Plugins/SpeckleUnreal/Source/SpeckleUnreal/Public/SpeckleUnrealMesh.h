@@ -20,6 +20,8 @@ public:
 	ASpeckleUnrealMesh();
 	
 	virtual void SetMesh(
+		const FString& StreamID,
+		const FString& ObjectID,
 		const TArray<FVector>& Vertices,
 		const TArray<TArray<TTuple<int32,int32>>>& Polygons,
 		TArray<FVector2D>& TextureCoordinates,

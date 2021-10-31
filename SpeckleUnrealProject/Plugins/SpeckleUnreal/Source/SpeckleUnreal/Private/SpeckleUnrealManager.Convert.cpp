@@ -196,30 +196,29 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 
 	const FString SpeckleType = Obj->GetStringField("speckle_type");
 
-
 	
 	ASpeckleUnrealMesh* MeshInstance = World->SpawnActor<ASpeckleUnrealMesh>(MeshActor);
 	
 	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
 
 	//Parse optional Transform
-	FMatrix TransformMatrix = FMatrix::Identity;
-	
-	const TArray<TSharedPtr<FJsonValue>>* TransformData = nullptr;
-	if(Obj->HasField("properties") && Obj->GetObjectField("properties")->TryGetArrayField("transform", TransformData))
 	{
-		for(int32 Row = 0; Row < 4; Row++)
-			for(int32 Col = 0; Col < 4; Col++)
-			{
-				TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
-			}
-		TransformMatrix = TransformMatrix.GetTransposed();
-		TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
+		FMatrix TransformMatrix = FMatrix::Identity;
+	
+		const TArray<TSharedPtr<FJsonValue>>* TransformData = nullptr;
+		if(Obj->HasField("properties") && Obj->GetObjectField("properties")->TryGetArrayField("transform", TransformData))
+		{
+			for(int32 Row = 0; Row < 4; Row++)
+				for(int32 Col = 0; Col < 4; Col++)
+				{
+					TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
+				}
+			TransformMatrix = TransformMatrix.GetTransposed();
+			TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
 		
-		MeshInstance->SetActorTransform(FTransform(TransformMatrix));
+			MeshInstance->SetActorTransform(FTransform(TransformMatrix));
+		}
 	}
-
-
 
 	//Parse Vertices
 	TArray<FVector> ParsedVertices;
@@ -268,7 +267,6 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 
 	//Array of Faces (Tuple of Vertex index, TexCoord index)
 	TArray<TArray<TTuple<int32,int32>>> ParsedPolygons;
-	
 	{
 		TArray<TSharedPtr<FJsonValue>> FaceVertices = CombineChunks(Obj->GetArrayField("faces"));
 		ParsedPolygons.Reserve(FaceVertices.Num() / 3); //Reserve space assuming faces will all be triangles
@@ -303,7 +301,6 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	}
 	
 
-
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
 	UMaterialInterface* Material;
 
@@ -323,7 +320,16 @@ ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObje
 	constexpr bool UseFullBuildProcess = false;
 #endif
 	
-	MeshInstance->SetMesh(ParsedVertices, ParsedPolygons, ParsedTextureCoords, Material, BuildSimpleCollisions, UseFullBuildProcess);
+	MeshInstance->SetMesh(
+		StreamID,
+		ObjId,
+		ParsedVertices,
+		ParsedPolygons,
+		ParsedTextureCoords,
+		Material,
+		BuildSimpleCollisions,
+		UseFullBuildProcess
+		);
 
 	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
 

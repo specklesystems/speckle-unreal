@@ -68,6 +68,7 @@ public:
 	/** If true, generated static meshes will be use the full editor-only build process, this has a dramatic effect on conversion times*/
 	UPROPERTY(EditAnywhere, Category = "Speckle|Mesh")
 	bool UseFullBuildProcess = false;
+
 #endif
 	
 
