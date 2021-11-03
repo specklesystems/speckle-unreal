@@ -189,8 +189,9 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	
 	ASpeckleUnrealActor* MeshInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
 	
+#if WITH_EDITOR
 	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
-
+#endif
 
 
 	//Parse Vertices
@@ -318,8 +319,10 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
 
 	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(); //TODO for now, we shall reuse ASpeckleUnrealActor because it has a root component defined in its constructor that we can use to attach the actor's parent
-	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
 
+#if WITH_EDITOR
+	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
+#endif
 	
 	BlockInstance->SetActorTransform(FTransform(TransformMatrix));
 	
