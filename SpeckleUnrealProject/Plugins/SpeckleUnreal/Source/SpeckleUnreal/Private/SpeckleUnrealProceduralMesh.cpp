@@ -65,8 +65,6 @@ void ASpeckleUnrealProceduralMesh::SetMesh_Implementation(const UMesh* SpeckleMe
         true);
     
     MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
-
-    this->SetActorTransform(FTransform(SpeckleMesh->Transform));
 }
 
 UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)

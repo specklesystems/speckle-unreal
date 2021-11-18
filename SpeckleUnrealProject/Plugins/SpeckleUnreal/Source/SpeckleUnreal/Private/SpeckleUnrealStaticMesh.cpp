@@ -41,15 +41,19 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
 	FMeshDescription& BaseMeshDescription = StaticMeshDescription->GetMeshDescription();
 
 	//Build Settings
-	FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
-	SrcModel.BuildSettings.bRecomputeNormals = false;
-	SrcModel.BuildSettings.bRecomputeTangents = false;
-	SrcModel.BuildSettings.bRemoveDegenerates = false;
-	SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
-	SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
-	SrcModel.BuildSettings.bGenerateLightmapUVs = true;
-	SrcModel.BuildSettings.SrcLightmapIndex = 0;
-	SrcModel.BuildSettings.DstLightmapIndex = 1;
+#if WITH_EDITOR
+	{
+		FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
+		SrcModel.BuildSettings.bRecomputeNormals = false;
+		SrcModel.BuildSettings.bRecomputeTangents = false;
+		SrcModel.BuildSettings.bRemoveDegenerates = false;
+		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
+		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
+		SrcModel.BuildSettings.bGenerateLightmapUVs = true;
+		SrcModel.BuildSettings.SrcLightmapIndex = 0;
+		SrcModel.BuildSettings.DstLightmapIndex = 1;
+	}
+#endif
 
 	UStaticMesh::FBuildMeshDescriptionsParams MeshParams;
 	MeshParams.bBuildSimpleCollision = BuildSimpleCollision;
@@ -155,10 +159,13 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
 	
 	//Mesh->PreEditChange(nullptr);
 			
-	Mesh->LightMapCoordinateIndex = SrcModel.BuildSettings.DstLightmapIndex;
+	Mesh->LightMapCoordinateIndex = 1;
 	Mesh->BuildFromMeshDescriptions(TArray<const FMeshDescription*>{&BaseMeshDescription}, MeshParams);
-		
+
+#if WITH_EDITOR
 	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
+#endif
+	
 	//Mesh->PostEditChange(); //This doesn't seem to be required
 	
 	
@@ -167,8 +174,6 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
 	MeshComponent->SetStaticMesh(Mesh);
 	
 	MeshComponent->SetMaterialByName(MaterialSlotName, Material);
-
-	this->SetActorTransform(FTransform(SpeckleMesh->Transform));
 }
 
 

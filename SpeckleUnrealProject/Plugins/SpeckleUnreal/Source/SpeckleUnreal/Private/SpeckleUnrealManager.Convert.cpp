@@ -171,14 +171,16 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
 	
 	const FString SpeckleType = Obj->GetStringField("speckle_type");
-	
-		
-	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
-	ActorInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
+
 	
 	UMesh* Mesh = NewObject<UMesh>();
 	Mesh->Parse(Obj, this);
-
+		
+	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor, FTransform(Mesh->Transform));
+#if WITH_EDITOR
+	ActorInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
+#endif
+	
 
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
 	URenderMaterial* Material = NewObject<URenderMaterial>();
@@ -230,11 +232,10 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	//Block Instance
 	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
 
-	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>();
+	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(ASpeckleUnrealActor::StaticClass(), FTransform(TransformMatrix));
+#if WITH_EDITOR
 	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
-
-	
-	BlockInstance->SetActorTransform(FTransform(TransformMatrix));
+#endif
 	
 	//Block Definition
 	const TSharedPtr<FJsonObject>* BlockDefinitionReference;
