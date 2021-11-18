@@ -17,38 +17,37 @@ ASpeckleUnrealProceduralMesh::ASpeckleUnrealProceduralMesh() : ASpeckleUnrealAct
 void ASpeckleUnrealProceduralMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
 {
     MeshComponent->ClearAllMeshSections();
-
-    UE_LOG(LogTemp, Warning, TEXT("TESTESTESTESTST!!!"));
+    
     TArray<int32> Faces;
 
-    int32 j = 0;
-    while (j < SpeckleMesh->Faces.Num())
+    int32 i = 0;
+    while (i < SpeckleMesh->Faces.Num())
     {
-        int32 n = SpeckleMesh->Faces[j];
-        if(n < 3) n += 3;
+        int32 n = SpeckleMesh->Faces[i];
+        if(n < 3) n += 3; // 0 -> 3, 1 -> 4
         
         if (n == 3) //Triangles
         {
-            Faces.Add(SpeckleMesh->Faces[j + 3]);
-            Faces.Add(SpeckleMesh->Faces[j + 2]);
-            Faces.Add(SpeckleMesh->Faces[j + 1]);
+            Faces.Add(SpeckleMesh->Faces[i + 3]);
+            Faces.Add(SpeckleMesh->Faces[i + 2]);
+            Faces.Add(SpeckleMesh->Faces[i + 1]);
         }
         else if(n == 4) // Quads
         {
-            Faces.Add(SpeckleMesh->Faces[j + 4]);
-            Faces.Add(SpeckleMesh->Faces[j + 3]);
-            Faces.Add(SpeckleMesh->Faces[j + 1]);
+            Faces.Add(SpeckleMesh->Faces[i + 4]);
+            Faces.Add(SpeckleMesh->Faces[i + 3]);
+            Faces.Add(SpeckleMesh->Faces[i + 1]);
 
-            Faces.Add(SpeckleMesh->Faces[j + 3]);
-            Faces.Add(SpeckleMesh->Faces[j + 2]);
-            Faces.Add(SpeckleMesh->Faces[j + 1]);
+            Faces.Add(SpeckleMesh->Faces[i + 3]);
+            Faces.Add(SpeckleMesh->Faces[i + 2]);
+            Faces.Add(SpeckleMesh->Faces[i + 1]);
         }
         else
         {
             // n-gons shall be ignored
         }
         
-        j += n;
+        i += n + 1;
     }
     
     const TArray<FVector> Normals;

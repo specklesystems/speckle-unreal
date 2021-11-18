@@ -173,8 +173,7 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	const FString SpeckleType = Obj->GetStringField("speckle_type");
 	
 		
-	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
-	
+	ASpeckleUnrealProceduralMesh* ActorInstance = World->SpawnActor<ASpeckleUnrealProceduralMesh>(MeshActor);
 	ActorInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
 	
 	UMesh* Mesh = NewObject<UMesh>();
@@ -194,11 +193,21 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	}
 	
 	Mesh->RenderMaterial = Material;
+
+	if(ActorInstance->GetClass()->ImplementsInterface(USpeckleMesh::StaticClass()))
+	{
+		bool Previous = GAllowActorScriptExecutionInEditor;
+		GAllowActorScriptExecutionInEditor = true;
+		
+		ISpeckleMesh::Execute_SetMesh(ActorInstance, Mesh, this);
+
+		GAllowActorScriptExecutionInEditor = Previous;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s does not implement $s interface"), MeshActor , USpeckleMesh::StaticClass());
+	}
 	
-	ISpeckleMesh::Execute_SetMesh(ActorInstance, Mesh, this);
-
-	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
-
 	return ActorInstance;
 }
 

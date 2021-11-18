@@ -8,7 +8,7 @@
 #include "SpeckleMesh.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(Blueprintable)
+UINTERFACE()//meta=(CannotImplementInterfaceInBlueprint))
 class USpeckleMesh : public UInterface
 {
 	GENERATED_BODY()
