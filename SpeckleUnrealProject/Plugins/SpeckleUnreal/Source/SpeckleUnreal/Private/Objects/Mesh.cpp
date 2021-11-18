@@ -5,9 +5,9 @@
 
 #include "SpeckleUnrealManager.h"
 
-void UMesh::Deserialize(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
 {
-	Super::Deserialize(Obj, Manager);
+	Super::Parse(Obj, Manager);
 
 	const float ScaleFactor = Manager->ParseScaleFactor(Units);
 
@@ -75,5 +75,70 @@ void UMesh::Deserialize(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 			}
 		}
 	}
+
+	//Parse VertexColors
+	{
+		const TArray<TSharedPtr<FJsonValue>>* ColorArray;
+		if(Obj->TryGetArrayField("colors", ColorArray))
+		{
+			TArray<TSharedPtr<FJsonValue>> Colors = Manager->CombineChunks(*ColorArray);
+	
+			VertexColors.Reserve(Colors.Num());
+	
+			for (int32 i = 0; i + 1 < Colors.Num(); i ++)
+			{
+				VertexColors.Add(FColor(Colors[i].Get()->AsNumber()));
+			}
+		}
+	}
+	
+	AlignVerticesWithTexCoordsByIndex();
+}
+
+
+/**
+ * If not already so, this method will align vertices
+ * such that a vertex and its corresponding texture coordinates have the same index.
+ * See "https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Geometry/Mesh.cs"
+ */
+void UMesh::AlignVerticesWithTexCoordsByIndex()
+{
+	if(TextureCoordinates.Num() == 0) return;
+	if(TextureCoordinates.Num() == Vertices.Num()) return; //Tex-coords already aligned as expected
+
+	TArray<int> FacesUnique;
+	FacesUnique.Reserve(Faces.Num());
+	TArray<FVector> VerticesUnique;
+	VerticesUnique.Reserve(TextureCoordinates.Num());
+	const bool HasColor = VertexColors.Num() > 0;
+	TArray<FColor> ColorsUnique;
+	if(HasColor) ColorsUnique.Reserve(TextureCoordinates.Num());
+
+	int32 NIndex = 0;
+	while(NIndex < Faces.Num())
+	{
+		int32 n = Faces[NIndex];
+		if (n < 3) n += 3; // 0 -> 3, 1 -> 4
+
+		if (NIndex + n >= Faces.Num()) break; //Malformed face list
+
+		FacesUnique.Add(n);
+
+		for (int32 i = 1; i <= n; i++)
+		{
+			const int32 VertIndex = Faces[NIndex + i];
+			const int32 NewVertIndex = VerticesUnique.Num();
+			
+			VerticesUnique.Add(Vertices[VertIndex]);
+
+			if(HasColor) ColorsUnique.Add(VertexColors[NewVertIndex]);
+			FacesUnique.Add(NewVertIndex);
+		}
+		NIndex += n + 1;
+	}
+	
+	Vertices = VerticesUnique;
+	VertexColors = ColorsUnique;
+	Faces = FacesUnique;
 	
 }

@@ -56,7 +56,7 @@ public:
 	
 
 	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Mesh", meta = (MustImplement = "SpeckleMesh"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", meta = (MustImplement = "SpeckleMesh"))
 		TSubclassOf<ASpeckleUnrealActor> MeshActor {
 		ASpeckleUnrealProceduralMesh::StaticClass()
 	};
@@ -100,6 +100,8 @@ public:
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const;
 	float ParseScaleFactor(const FString& Units) const;
 	
+	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
+	                    UMaterialInterface*& OutMaterial);
 protected:
 
 	UWorld* World;
@@ -114,8 +116,6 @@ protected:
 	
 	
 	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
-	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
-	                    UMaterialInterface*& OutMaterial);
 	
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);

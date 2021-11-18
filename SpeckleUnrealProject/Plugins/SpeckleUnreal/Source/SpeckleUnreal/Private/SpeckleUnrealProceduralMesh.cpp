@@ -4,6 +4,7 @@
 
 #include "StaticMeshDescription.h"
 #include "SpeckleUnrealManager.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Objects/RenderMaterial.h"
 
 
@@ -63,20 +64,27 @@ void ASpeckleUnrealProceduralMesh::SetMesh_Implementation(const UMesh* SpeckleMe
         Tangents,
         true);
     
-    MeshComponent->SetMaterial(0, CreateMaterial(Manager, SpeckleMesh->RenderMaterial));
+    MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
 
     this->SetActorTransform(FTransform(SpeckleMesh->Transform));
 }
 
-UMaterialInterface* ASpeckleUnrealProceduralMesh::CreateMaterial(ASpeckleUnrealManager* Manager, const URenderMaterial* SpeckleMaterial)
+UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
 {
-    UMaterialInterface* ExplicitMaterial;
-    if(SpeckleMaterial->Opacity >= 1)
-        ExplicitMaterial = Manager->BaseMeshOpaqueMaterial;
-    else
-        ExplicitMaterial = Manager->BaseMeshTransparentMaterial;
+    UMaterialInterface* ExistingMaterial;
+    if(Manager->TryGetMaterial(SpeckleMaterial, true, ExistingMaterial))
+        return ExistingMaterial; //Return existing material
 		
-    UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(ExplicitMaterial, Manager, FName(SpeckleMaterial->Name));
+    UMaterialInterface* MaterialBase = SpeckleMaterial->Opacity >= 1
+        ? Manager->BaseMeshOpaqueMaterial
+        : Manager->BaseMeshTransparentMaterial;
+
+    const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Materials"), SpeckleMaterial->Id);
+    UPackage* Package = CreatePackage(*PackagePath);
+	
+    UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Package, FName(SpeckleMaterial->Name));
+    
+    DynMaterial->SetFlags(RF_Public | RF_Transient);
 	
     DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
     DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
@@ -86,6 +94,8 @@ UMaterialInterface* ASpeckleUnrealProceduralMesh::CreateMaterial(ASpeckleUnrealM
 	
     Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
 	
+    FAssetRegistryModule::AssetCreated(DynMaterial);
+		
     return DynMaterial;
 	
 }

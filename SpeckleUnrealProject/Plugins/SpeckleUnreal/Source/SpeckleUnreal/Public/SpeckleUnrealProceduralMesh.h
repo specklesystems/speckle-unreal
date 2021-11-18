@@ -24,11 +24,8 @@ public:
 	// Sets default values for this actor's properties
 	ASpeckleUnrealProceduralMesh();
 	
-	//UFUNCTION(BlueprintNativeEvent)
-	//void SetMesh(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager);
-
 	virtual void SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager) override;
-
+	
 	UFUNCTION(BlueprintCallable)
-	virtual UMaterialInterface* CreateMaterial(ASpeckleUnrealManager* Manager, const URenderMaterial* SpeckleMaterial);
+	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager);
 };

@@ -36,5 +36,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	URenderMaterial* RenderMaterial;
 	
-	virtual void Deserialize(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override;
+	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override;
+
+protected:
+	virtual void AlignVerticesWithTexCoordsByIndex();
 };

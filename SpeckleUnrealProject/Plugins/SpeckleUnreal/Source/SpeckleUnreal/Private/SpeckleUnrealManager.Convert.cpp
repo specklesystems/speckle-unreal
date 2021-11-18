@@ -173,11 +173,11 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	const FString SpeckleType = Obj->GetStringField("speckle_type");
 	
 		
-	ASpeckleUnrealProceduralMesh* ActorInstance = World->SpawnActor<ASpeckleUnrealProceduralMesh>(MeshActor);
+	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
 	ActorInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
 	
 	UMesh* Mesh = NewObject<UMesh>();
-	Mesh->Deserialize(Obj, this);
+	Mesh->Parse(Obj, this);
 
 
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
@@ -185,11 +185,11 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 
 	if (Obj->HasField("renderMaterial"))
 	{
-		Material->Deserialize(Obj->GetObjectField("renderMaterial"), this);
+		Material->Parse(Obj->GetObjectField("renderMaterial"), this);
 	}
 	else if (Parent && Parent->HasField("renderMaterial"))
 	{
-		Material->Deserialize(Parent->GetObjectField("renderMaterial"), this);
+		Material->Parse(Parent->GetObjectField("renderMaterial"), this);
 	}
 	
 	Mesh->RenderMaterial = Material;

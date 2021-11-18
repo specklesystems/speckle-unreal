@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MeshAttributeArray.h"
 #include "SpeckleMesh.h"
 #include "SpeckleUnrealActor.h"
 
@@ -15,31 +16,26 @@ UCLASS()
 class SPECKLEUNREAL_API ASpeckleUnrealStaticMesh : public ASpeckleUnrealActor, public ISpeckleMesh
 {
 	GENERATED_BODY()
-
-protected:
-
-	virtual UMaterialInterface* CreateMaterial(ASpeckleUnrealManager* Manager, const URenderMaterial& Material);
 	
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* MeshComponent;
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool UseFullBuild;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool BuildSimpleCollision;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool Transient;
+		
 	// Sets default values for this actor's properties
 	ASpeckleUnrealStaticMesh();
-
-
+	
 	virtual void SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager) override;
 	
-	
-	virtual void SetMesh(
-		const FString& StreamID,
-		const FString& ObjectID,
-		const TArray<FVector>& Vertices,
-		const TArray<TArray<TTuple<int32,int32>>>& Polygons,
-		TArray<FVector2D>& TextureCoordinates,
-		UMaterialInterface* Material,
-		bool BuildSimpleCollision = false,
-		bool UseFullBuild = false
-		);
+	UFUNCTION(BlueprintCallable)
+	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager);
 };

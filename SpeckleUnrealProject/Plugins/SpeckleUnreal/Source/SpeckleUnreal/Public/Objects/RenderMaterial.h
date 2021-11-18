@@ -35,10 +35,9 @@ public:
 	UPROPERTY()
 	FLinearColor Emissive = FLinearColor::Black;
 
-	virtual void Deserialize(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override
+	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override
 	{
-		Super::Deserialize(Obj, Manager);
-
+		Super::Parse(Obj, Manager);
 	
 		Obj->TryGetStringField("name", Name);
 		Obj->TryGetNumberField("opacity", Opacity);

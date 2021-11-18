@@ -31,7 +31,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FString SpeckleType;
 	
-	virtual void Deserialize(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* _)
+	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* _)
 	{
 		Obj->TryGetStringField("id", Id);
 		Obj->TryGetStringField("units", Units);
