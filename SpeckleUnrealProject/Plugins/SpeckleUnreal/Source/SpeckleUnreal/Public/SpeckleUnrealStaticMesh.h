@@ -3,21 +3,34 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SpeckleMesh.h"
 #include "SpeckleUnrealActor.h"
-#include "SpeckleUnrealMesh.generated.h"
 
+#include "SpeckleUnrealStaticMesh.generated.h"
+
+/**
+ * 
+ */
 UCLASS()
-class SPECKLEUNREAL_API ASpeckleUnrealMesh : public ASpeckleUnrealActor
+class SPECKLEUNREAL_API ASpeckleUnrealStaticMesh : public ASpeckleUnrealActor, public ISpeckleMesh
 {
 	GENERATED_BODY()
 
+protected:
+
+	virtual UMaterialInterface* CreateMaterial(ASpeckleUnrealManager* Manager, const URenderMaterial& Material);
+	
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* MeshComponent;
 	
 	// Sets default values for this actor's properties
-	ASpeckleUnrealMesh();
+	ASpeckleUnrealStaticMesh();
+
+
+	virtual void SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager) override;
+	
 	
 	virtual void SetMesh(
 		const FString& StreamID,

@@ -1,6 +1,5 @@
 #include "SpeckleUnrealManager.h"
 
-#include "MaterialConverter.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values

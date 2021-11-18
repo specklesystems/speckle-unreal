@@ -1,7 +1,6 @@
 #include "SpeckleUnrealManager.h"
 
-#include "MaterialConverter.h"
-#include "SpeckleUnrealMesh.h"
+#include "Objects/RenderMaterial.h"
 
 
 void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject)
@@ -81,58 +80,38 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	}
 }
 
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const TSharedPtr<FJsonObject> RenderMaterialObject, const bool AcceptMaterialOverride)
+bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride, UMaterialInterface*& OutMaterial)
 {
-	TSharedPtr<FJsonObject> ActualRenderMaterialObject = RenderMaterialObject;
-	
-	if (RenderMaterialObject->GetStringField("speckle_type") == "reference")
-		ActualRenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
-
-	//Parse to a URenderMaterial
-	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(ActualRenderMaterialObject);
-
-	return CreateMaterial(SpeckleMaterial, AcceptMaterialOverride);
-}
-
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride)
-{
-	const auto MaterialID = SpeckleMaterial->ObjectID;
-
+	const auto MaterialID = SpeckleMaterial->Id;
 	
 	if(AcceptMaterialOverride)
 	{
 		//Override by id
 		if(MaterialOverridesById.Contains(MaterialID))
 		{
-			return MaterialOverridesById[MaterialID];
+			OutMaterial = MaterialOverridesById[MaterialID];
+			return true;
 		}
 		//Override by name
 		const FString Name = SpeckleMaterial->Name;
-		for (UMaterialInterface* Mat : MaterialOverridesByName)
+		for (const UMaterialInterface* Mat : MaterialOverridesByName)
 		{
-			if(Mat->GetName() == Name) return Mat;
+			if(Mat->GetName() == Name)
+			{
+				OutMaterial = MaterialOverridesById[MaterialID];
+				return true;
+			}
 		}
 	}
 
-
+		
 	if(ConvertedMaterials.Contains(MaterialID))
 	{
-		return ConvertedMaterials[MaterialID];
+		OutMaterial = ConvertedMaterials[MaterialID];
+		return true;
 	}
-	
-	//Create Convert Material Instance
-	UMaterialInterface* ExplicitMaterial;
-	if(SpeckleMaterial->Opacity >= 1)
-		ExplicitMaterial = BaseMeshOpaqueMaterial;
-	else
-		ExplicitMaterial = BaseMeshTransparentMaterial;
-		
-	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(ExplicitMaterial, this, FName(SpeckleMaterial->Name));
-	UMaterialConverter::AssignPropertiesFromSpeckle(DynMaterial, SpeckleMaterial);
 
-	ConvertedMaterials.Add(MaterialID, DynMaterial);
-	
-	return DynMaterial;
+	return false;
 }
 
 
@@ -186,154 +165,41 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 }
 
 
-ASpeckleUnrealMesh* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
+ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
 {
 	const FString ObjId = Obj->GetStringField("id");
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
-
-	const FString Units = Obj->GetStringField("units");
-	const float ScaleFactor = ParseScaleFactor(Units);
-
+	
 	const FString SpeckleType = Obj->GetStringField("speckle_type");
-
 	
-	ASpeckleUnrealMesh* MeshInstance = World->SpawnActor<ASpeckleUnrealMesh>(MeshActor);
-	
-	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
-
-	//Parse optional Transform
-	{
-		FMatrix TransformMatrix = FMatrix::Identity;
-	
-		const TArray<TSharedPtr<FJsonValue>>* TransformData = nullptr;
-		if(Obj->HasField("properties") && Obj->GetObjectField("properties")->TryGetArrayField("transform", TransformData))
-		{
-			for(int32 Row = 0; Row < 4; Row++)
-				for(int32 Col = 0; Col < 4; Col++)
-				{
-					TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
-				}
-			TransformMatrix = TransformMatrix.GetTransposed();
-			TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
 		
-			MeshInstance->SetActorTransform(FTransform(TransformMatrix));
-		}
-	}
-
-	//Parse Vertices
-	TArray<FVector> ParsedVertices;
-	int32 NumberOfVertices;
-	{
-		TArray<TSharedPtr<FJsonValue>> ObjectVertices = CombineChunks(Obj->GetArrayField("vertices"));
-		NumberOfVertices = ObjectVertices.Num() / 3;
+	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
 	
-		ParsedVertices.Reserve(NumberOfVertices);
-
-		for (size_t i = 0, j = 0; i < NumberOfVertices; i++, j += 3)
-		{
-			ParsedVertices.Add(MeshInstance->GetTransform().InverseTransformPosition(FVector
-			(
-				ObjectVertices[j].Get()->AsNumber(),
-				ObjectVertices[j + 1].Get()->AsNumber(),
-				ObjectVertices[j + 2].Get()->AsNumber()
-			) * ScaleFactor ));
-		
-		}
-	} 
+	ActorInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
 	
-	bool UseVertexIndexForTexCoordinate = false;
-	//Parse Texture Coordinates
-	TArray<FVector2D> ParsedTextureCoords;
-	{
-		const TArray<TSharedPtr<FJsonValue>>* TextCoordArray;
-		if(Obj->TryGetArrayField("textureCoordinates", TextCoordArray))
-		{
-			TArray<TSharedPtr<FJsonValue>> TexCoords = CombineChunks(*TextCoordArray);
-			
-			ParsedTextureCoords.Reserve(TexCoords.Num() / 2);
-			
-			for (int32 i = 0; i + 1 < TexCoords.Num(); i += 2)
-			{
-				ParsedTextureCoords.Add(FVector2D
-				(
-					TexCoords[i].Get()->AsNumber(),
-					TexCoords[i + 1].Get()->AsNumber()
-				));
-			}
-			
-			UseVertexIndexForTexCoordinate = ParsedTextureCoords.Num() == NumberOfVertices;
-		}
-	}
+	UMesh* Mesh = NewObject<UMesh>();
+	Mesh->Deserialize(Obj, this);
 
-	//Array of Faces (Tuple of Vertex index, TexCoord index)
-	TArray<TArray<TTuple<int32,int32>>> ParsedPolygons;
-	{
-		TArray<TSharedPtr<FJsonValue>> FaceVertices = CombineChunks(Obj->GetArrayField("faces"));
-		ParsedPolygons.Reserve(FaceVertices.Num() / 3); //Reserve space assuming faces will all be triangles
-		
-		int32 NIndex = 0, TIndex = 0;
-		while (NIndex < FaceVertices.Num()) //TODO some sort of assertion that there are indeed N more vertices
-		{			
-			//Number of vertices in polygon
-			int32 n = FaceVertices[NIndex].Get()->AsNumber();
-			if(n < 3) n += 3; // 0 -> 3, 1 -> 4
-
-			TArray<TTuple<int32,int32>> Polygon;
-			Polygon.Reserve(n);
-			
-			for(int32 i = n - 1; i >= 0; i--)
-			{
-				int32 VertexIndex = FaceVertices[NIndex + i + 1].Get()->AsNumber();
-				int32 TexCoordIndex = UseVertexIndexForTexCoordinate? VertexIndex : TIndex + i; //Some connectors (like sketchup) index texture coordinates using vertex index rather than sequentially (like blender)
-				
-				Polygon.Add(TTuple<int32,int32>(
-					VertexIndex,
-					TexCoordIndex)
-					);
-			}
-			NIndex += n + 1;
-			TIndex += n;
-			ParsedPolygons.Add(Polygon);
-		}
-
-		//Fill missing tex coords with default values
-		ParsedTextureCoords.SetNum(TIndex);
-	}
-	
 
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
-	UMaterialInterface* Material;
+	URenderMaterial* Material = NewObject<URenderMaterial>();
 
-	// if (Obj->HasField("renderMaterial"))
-	// {
-	// 	//Material = CreateMaterial(Obj->GetObjectField("renderMaterial"));
-	// }
-	// else if (Parent && Parent->HasField("renderMaterial"))
-	// {
-	// 	//Material = CreateMaterial(Parent->GetObjectField("renderMaterial"));
-	// }
-	// else
-		Material = DefaultMeshMaterial;
-
+	if (Obj->HasField("renderMaterial"))
+	{
+		Material->Deserialize(Obj->GetObjectField("renderMaterial"), this);
+	}
+	else if (Parent && Parent->HasField("renderMaterial"))
+	{
+		Material->Deserialize(Parent->GetObjectField("renderMaterial"), this);
+	}
 	
-#if !WITH_EDITOR
-	constexpr bool UseFullBuildProcess = false;
-#endif
+	Mesh->RenderMaterial = Material;
 	
-	MeshInstance->SetMesh(
-		StreamID,
-		ObjId,
-		ParsedVertices,
-		ParsedPolygons,
-		ParsedTextureCoords,
-		Material,
-		BuildSimpleCollisions,
-		UseFullBuildProcess
-		);
+	ISpeckleMesh::Execute_SetMesh(ActorInstance, Mesh, this);
 
 	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
 
-	return MeshInstance;
+	return ActorInstance;
 }
 
 
