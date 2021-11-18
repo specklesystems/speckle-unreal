@@ -196,12 +196,8 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 
 	if(ActorInstance->GetClass()->ImplementsInterface(USpeckleMesh::StaticClass()))
 	{
-		bool Previous = GAllowActorScriptExecutionInEditor;
-		GAllowActorScriptExecutionInEditor = true;
-		
+		FEditorScriptExecutionGuard ScriptGuard;
 		ISpeckleMesh::Execute_SetMesh(ActorInstance, Mesh, this);
-
-		GAllowActorScriptExecutionInEditor = Previous;
 	}
 	else
 	{
