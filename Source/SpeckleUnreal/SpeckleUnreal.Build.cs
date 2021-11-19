@@ -31,7 +31,8 @@ public class SpeckleUnreal : ModuleRules
 				"JsonUtilities", 
 				"ProceduralMeshComponent",
 				"MeshDescription",
-				"StaticMeshDescription",
+				"StaticMeshDescription", 
+				"LidarPointCloudRuntime",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

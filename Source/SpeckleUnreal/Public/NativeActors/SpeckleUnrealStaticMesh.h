@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MeshAttributeArray.h"
-#include "SpeckleMesh.h"
 #include "SpeckleUnrealActor.h"
+#include "Interfaces/SpeckleMesh.h"
 
 #include "SpeckleUnrealStaticMesh.generated.h"
 
