@@ -1,6 +1,5 @@
 #include "SpeckleUnrealManager.h"
 
-#include "MaterialConverter.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -14,8 +13,7 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
-
-	World = GetWorld();
+    RootComponent->SetMobility(EComponentMobility::Static); 
 	
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
@@ -26,7 +24,6 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 void ASpeckleUnrealManager::BeginPlay()
 {
 	Super::BeginPlay();
-	World = GetWorld();
 	
 	if (ImportAtRuntime)
 		ImportSpeckleObject();
@@ -150,11 +147,20 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Converting %d objects..."), lineCount));
 
-	WorldToCentimeters = World->GetWorldSettings()->WorldToMeters / 100;
+	//World Units setup
+	WorldToCentimeters = 1; //Default value of 1uu = 1cm
+
+	AWorldSettings* WorldSettings;
+	if(IsValid(World = GetWorld() )
+		&& IsValid(WorldSettings = World->GetWorldSettings()) )
+	{
+		WorldToCentimeters = WorldSettings->WorldToMeters / 100;
+	}
+	
 	
 	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
-	for (auto& m : CreatedObjectsCache)
+	for (const auto& m : CreatedObjectsCache)
 	{
 		if(AActor* a = Cast<AActor>(m))
 			a->Destroy();

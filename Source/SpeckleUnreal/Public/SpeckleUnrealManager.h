@@ -1,19 +1,18 @@
 #pragma once
 
-// logs
-#include "Engine/Engine.h"
-
 // json manipulation
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
 
 // web requests
+#include "SpeckleUnrealActor.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 
-#include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealLayer.h"
+#include "SpeckleUnrealProceduralMesh.h"
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
+
 
 UCLASS(BlueprintType)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
@@ -29,7 +28,7 @@ public:
 
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void DeleteObjects();
-
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
@@ -46,19 +45,22 @@ public:
 		""
 	};
 
+	/** A Personal Access Token can be created from your Speckle Profile page (Treat tokens like passwords, do not share publicly) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString AuthToken {
 		""
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		TSubclassOf<ASpeckleUnrealActor> MeshActor {
-		ASpeckleUnrealActor::StaticClass()
-	};
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	bool ImportAtRuntime;
+	
 
+	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", meta = (MustImplement = "SpeckleMesh"))
+		TSubclassOf<ASpeckleUnrealActor> MeshActor {
+		ASpeckleUnrealProceduralMesh::StaticClass()
+	};
+	
 	
 	/** Material to be applied to meshes when no RenderMaterial can be converted */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
@@ -83,7 +85,8 @@ public:
 	/** Materials converted from stream RenderMaterial objects */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Speckle|Materials")
 	TMap<FString, UMaterialInterface*> ConvertedMaterials;
-
+	
+	
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -94,6 +97,11 @@ public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const;
+	float ParseScaleFactor(const FString& Units) const;
+	
+	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
+	                    UMaterialInterface*& OutMaterial);
 protected:
 
 	UWorld* World;
@@ -103,19 +111,13 @@ protected:
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
 	
-	//TMap<FString, UObject*> CreatedObjectsCache;
-	//TMap<FString, UObject*> InProgressObjectsCache;
 	TArray<UObject*> CreatedObjectsCache;
 	TArray<UObject*> InProgressObjectsCache;
 	
 	
 	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
-
-	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
-	UMaterialInterface* CreateMaterial(const class URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true);
+	
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
 	
-	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField);
-	float ParseScaleFactor(const FString& Units) const;
 };

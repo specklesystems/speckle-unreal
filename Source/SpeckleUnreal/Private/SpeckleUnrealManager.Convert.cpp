@@ -1,7 +1,6 @@
 #include "SpeckleUnrealManager.h"
 
-#include "MaterialConverter.h"
-
+#include "Objects/RenderMaterial.h"
 
 
 void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject)
@@ -24,6 +23,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	AActor* Native = nullptr;
 
 
+	
 	if(SpeckleType == "Objects.Geometry.Mesh")
 	{
 		Native = CreateMesh(SpeckleObject, ParentObject);
@@ -80,68 +80,58 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	}
 }
 
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, const bool AcceptMaterialOverride)
+bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride, UMaterialInterface*& OutMaterial)
 {
-	if (RenderMaterialObject->GetStringField("speckle_type") == "reference")
-		RenderMaterialObject = SpeckleObjects[RenderMaterialObject->GetStringField("referencedId")];
-
-	//Parse to a URenderMaterial
-	const URenderMaterial* SpeckleMaterial = UMaterialConverter::ParseRenderMaterial(RenderMaterialObject);
-
-	return CreateMaterial(SpeckleMaterial, AcceptMaterialOverride);
-}
-
-UMaterialInterface* ASpeckleUnrealManager::CreateMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride)
-{
-	const auto MaterialID = SpeckleMaterial->ObjectID;
-
+	const auto MaterialID = SpeckleMaterial->Id;
 	
 	if(AcceptMaterialOverride)
 	{
 		//Override by id
 		if(MaterialOverridesById.Contains(MaterialID))
 		{
-			return MaterialOverridesById[MaterialID];
+			OutMaterial = MaterialOverridesById[MaterialID];
+			return true;
 		}
 		//Override by name
 		const FString Name = SpeckleMaterial->Name;
-		for (UMaterialInterface* Mat : MaterialOverridesByName)
+		for (const UMaterialInterface* Mat : MaterialOverridesByName)
 		{
-			if(Mat->GetName() == Name) return Mat;
+			if(Mat->GetName() == Name)
+			{
+				OutMaterial = MaterialOverridesById[MaterialID];
+				return true;
+			}
 		}
 	}
 
-
+		
 	if(ConvertedMaterials.Contains(MaterialID))
 	{
-		return ConvertedMaterials[MaterialID];
+		OutMaterial = ConvertedMaterials[MaterialID];
+		return true;
 	}
-	
-	//Create Convert Material Instance
-	UMaterialInterface* ExplicitMaterial;
-	if(SpeckleMaterial->Opacity >= 1)
-		ExplicitMaterial = BaseMeshOpaqueMaterial;
-	else
-		ExplicitMaterial = BaseMeshTransparentMaterial;
-		
-	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(ExplicitMaterial, this, FName(SpeckleMaterial->Name));
-	UMaterialConverter::AssignPropertiesFromSpeckle(DynMaterial, SpeckleMaterial);
 
-	ConvertedMaterials.Add(MaterialID, DynMaterial);
-	
-	return DynMaterial;
+	return false;
 }
 
 
 
-TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField)
+TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const
 {
 	TArray<TSharedPtr<FJsonValue>> ObjectPoints;
-	for(int i = 0; i < ArrayField.Num(); i++)
+		
+	for(int32 i = 0; i < ArrayField.Num(); i++)
 	{
-		const FString Index = ArrayField[i]->AsObject()->GetStringField("referencedId");
-		const auto Chunk = SpeckleObjects[Index]->GetArrayField("data");
-		ObjectPoints.Append(Chunk);
+		FString Index;
+		if(ArrayField[i]->AsObject()->TryGetStringField("referencedId", Index))
+		{
+			const auto Chunk = SpeckleObjects[Index]->GetArrayField("data");
+			ObjectPoints.Append(Chunk);
+		}
+		else
+		{
+			return ArrayField; //Array was never chunked to begin with
+		}
 	}
 	return ObjectPoints;
 }
@@ -179,123 +169,46 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 {
 	const FString ObjId = Obj->GetStringField("id");
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
-
-	const FString Units = Obj->GetStringField("units");
-	const float ScaleFactor = ParseScaleFactor(Units);
-
+	
 	const FString SpeckleType = Obj->GetStringField("speckle_type");
 
-
 	
-	ASpeckleUnrealActor* MeshInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor);
-	
-#if WITH_EDITOR
-	MeshInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
-#endif
-
-
-	//Parse Vertices
-	TArray<FVector> ParsedVertices;
-	int32 NumberOfVertices;
-	{
-		TArray<TSharedPtr<FJsonValue>> ObjectVertices = CombineChunks(Obj->GetArrayField("vertices"));
-		NumberOfVertices = ObjectVertices.Num() / 3;
-	
-		ParsedVertices.SetNum(NumberOfVertices);
-
-		for (size_t i = 0, j = 0; i < NumberOfVertices; i++, j += 3)
-		{
-			ParsedVertices[i] = FVector
-			(
-				ObjectVertices[j].Get()->AsNumber(),
-				ObjectVertices[j + 1].Get()->AsNumber(),
-				ObjectVertices[j + 2].Get()->AsNumber()
-			) * ScaleFactor;
+	UMesh* Mesh = NewObject<UMesh>();
+	Mesh->Parse(Obj, this);
 		
-		}
-	} 
-
-
-
-	//Parse Triangles
-	TArray<int32> ParsedTriangles;
-	{
-		TArray<TSharedPtr<FJsonValue>> ObjectFaces = CombineChunks(Obj->GetArrayField("faces"));
-		//convert mesh faces into triangle array regardless of whether or not they are quads
-
-		int32 j = 0;
-		while (j < ObjectFaces.Num())
-		{
-			if (ObjectFaces[j].Get()->AsNumber() == 0)
-			{
-				//Triangles
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-				j += 4;
-			}
-			else
-			{
-				//Quads to triangles
-				ParsedTriangles.Add(ObjectFaces[j + 4].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-
-				ParsedTriangles.Add(ObjectFaces[j + 3].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 2].Get()->AsNumber());
-				ParsedTriangles.Add(ObjectFaces[j + 1].Get()->AsNumber());
-
-				j += 5;
-			}
-		}
-	}
-
-	//Parse Texture Coordinates
-	TArray<FVector2D> ParsedTextureCoords;
-	{
-		const TArray<TSharedPtr<FJsonValue>>* TextCoordArray;
-		if(Obj->TryGetArrayField("textureCoordinates", TextCoordArray))
-		{
-			TArray<TSharedPtr<FJsonValue>> TexCoords = CombineChunks(*TextCoordArray);
-			
-			ParsedTextureCoords.SetNum(NumberOfVertices);
-			
-			const auto NumberOfTexCoords = TexCoords.Num() / 2;
-			for (size_t i = 0, j = 0; i < NumberOfTexCoords; i++, j += 2)
-			{
-				ParsedTextureCoords[i] = FVector2D
-				(
-					TexCoords[j].Get()->AsNumber(),
-					TexCoords[j + 1].Get()->AsNumber()
-				);
-			}
-			
-			//TODO create UV for missing TexCoords
-		}
-	}
+	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor, FTransform(Mesh->Transform));
+#if WITH_EDITOR
+	ActorInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
+#endif
 	
-
 
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
-	UMaterialInterface* Material;
+	URenderMaterial* Material = NewObject<URenderMaterial>();
 
 	if (Obj->HasField("renderMaterial"))
 	{
-		Material = CreateMaterial(Obj->GetObjectField("renderMaterial"));
+		Material->Parse(Obj->GetObjectField("renderMaterial"), this);
 	}
 	else if (Parent && Parent->HasField("renderMaterial"))
 	{
-		Material = CreateMaterial(Parent->GetObjectField("renderMaterial"));
+		Material->Parse(Parent->GetObjectField("renderMaterial"), this);
+	}
+	
+	Mesh->RenderMaterial = Material;
+
+	if(ActorInstance->GetClass()->ImplementsInterface(USpeckleMesh::StaticClass()))
+	{
+		FEditorScriptExecutionGuard ScriptGuard;
+		ISpeckleMesh::Execute_SetMesh(ActorInstance, Mesh, this);
 	}
 	else
-		Material = DefaultMeshMaterial;
-
-	MeshInstance->SetMesh(ParsedVertices, ParsedTriangles, ParsedTextureCoords, Material);
-
-	//UE_LOG(LogTemp, Warning, TEXT("Added %d vertices and %d triangles"), ParsedVertices.Num(), ParsedTriangles.Num());
-
-	return MeshInstance;
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s does not implement $s interface"), MeshActor , USpeckleMesh::StaticClass());
+	}
+	
+	return ActorInstance;
 }
+
 
 ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
 {
@@ -305,6 +218,7 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	
 	const TArray<TSharedPtr<FJsonValue>>* TransformData;
 	if(!Obj->TryGetArrayField("transform", TransformData)) return nullptr;
+	
 	
 	FMatrix TransformMatrix;
 	for(int32 Row = 0; Row < 4; Row++)
@@ -318,13 +232,10 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	//Block Instance
 	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
 
-	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(); //TODO for now, we shall reuse ASpeckleUnrealActor because it has a root component defined in its constructor that we can use to attach the actor's parent
-
+	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(ASpeckleUnrealActor::StaticClass(), FTransform(TransformMatrix));
 #if WITH_EDITOR
 	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
 #endif
-	
-	BlockInstance->SetActorTransform(FTransform(TransformMatrix));
 	
 	//Block Definition
 	const TSharedPtr<FJsonObject>* BlockDefinitionReference;
