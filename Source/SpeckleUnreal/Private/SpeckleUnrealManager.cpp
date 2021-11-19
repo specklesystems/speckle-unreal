@@ -40,7 +40,7 @@ void ASpeckleUnrealManager::ImportSpeckleObject()
 
 	const FString HostApplication = FString::Printf(TEXT("Unreal%%20Engine%%20%d"), ENGINE_MAJOR_VERSION);
 	const FString Action = "receive/manual";
-	FString SpeckleUserID = "No%20SUID";
+	FString SpeckleUserID = "No%20SUUID";
 	
 #if PLATFORM_WINDOWS
 	const FString UserPath = UKismetSystemLibrary::GetPlatformUserDir().LeftChop(10); //remove "Documents/"
