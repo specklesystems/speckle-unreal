@@ -1,4 +1,5 @@
 #include "SpeckleUnrealManager.h"
+#include "Objects/PointCloud.h"
 
 #include "Objects/RenderMaterial.h"
 
@@ -28,10 +29,10 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	{
 		Native = CreateMesh(SpeckleObject, ParentObject);
 	}
-	//else if(SpeckleType == "Objects.Geometry.PointCloud")
-	//{
-	//    Native = CreatePointCloud(SpeckleObj);
-	//}
+	else if(SpeckleType == "Objects.Geometry.Pointcloud")
+	{
+	    Native = CreatePointCloud(SpeckleObject);
+	}
 	else if(SpeckleType == "Objects.Other.BlockInstance")
 	{
 		Native = CreateBlockInstance(SpeckleObject);
@@ -44,6 +45,11 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	
 	if(IsValid(Native))
 	{
+
+#if WITH_EDITOR
+		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
+#endif
+		
         Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
         Native->SetOwner(AOwner);
 
@@ -158,7 +164,7 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 		if (LUnits == "miles" || LUnits == "mile" || LUnits == "mi")
 			return 160934.4;
 
-		return 1;
+		return 100;
 	};
 
 	return ParseUnits(Units.ToLower()) * WorldToCentimeters;
@@ -170,16 +176,12 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	const FString ObjId = Obj->GetStringField("id");
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
 	
-	const FString SpeckleType = Obj->GetStringField("speckle_type");
-
 	
 	UMesh* Mesh = NewObject<UMesh>();
 	Mesh->Parse(Obj, this);
 		
 	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor, FTransform(Mesh->Transform));
-#if WITH_EDITOR
-	ActorInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjId));
-#endif
+
 	
 
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
@@ -209,6 +211,31 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	return ActorInstance;
 }
 
+AActor* ASpeckleUnrealManager::CreatePointCloud(const TSharedPtr<FJsonObject> Obj)
+{
+	const FString ObjId = Obj->GetStringField("id");
+	UE_LOG(LogTemp, Log, TEXT("Creating PointCloud for object %s"), *ObjId);
+	
+	
+	UPointCloud* Base = NewObject<UPointCloud>();
+	Base->Parse(Obj, this);
+		
+	AActor* ActorInstance = World->SpawnActor<AActor>(PointCloudActor);
+	
+	if(ActorInstance->GetClass()->ImplementsInterface(USpecklePointCloud::StaticClass()))
+	{
+		FEditorScriptExecutionGuard ScriptGuard;
+		ISpecklePointCloud::Execute_SetData(ActorInstance, Base, this);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s does not implement $s interface"), PointCloudActor , USpecklePointCloud::StaticClass());
+	}
+	
+	return ActorInstance;
+}
+
+
 
 ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
 {
@@ -233,9 +260,7 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
 
 	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(ASpeckleUnrealActor::StaticClass(), FTransform(TransformMatrix));
-#if WITH_EDITOR
-	BlockInstance->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
-#endif
+
 	
 	//Block Definition
 	const TSharedPtr<FJsonObject>* BlockDefinitionReference;

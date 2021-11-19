@@ -9,8 +9,9 @@
 #include "Runtime/Online/HTTP/Public/Http.h"
 
 #include "SpeckleUnrealLayer.h"
-#include "SpeckleUnrealProceduralMesh.h"
 #include "GameFramework/Actor.h"
+#include "NativeActors/SpeckleUnrealPointCloud.h"
+#include "NativeActors/SpeckleUnrealProceduralMesh.h"
 #include "SpeckleUnrealManager.generated.h"
 
 
@@ -56,9 +57,15 @@ public:
 	
 
 	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", meta = (MustImplement = "SpeckleMesh"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpeckleMesh"))
 		TSubclassOf<ASpeckleUnrealActor> MeshActor {
 		ASpeckleUnrealProceduralMesh::StaticClass()
+	};
+	
+	/** The type of Actor to use for PointCloud conversion, you may create a custom actor implementing ISpecklePointCloud */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpecklePointCloud"))
+	TSubclassOf<AActor> PointCloudActor {
+		ASpeckleUnrealPointCloud::StaticClass()
 	};
 	
 	
@@ -119,5 +126,6 @@ protected:
 	
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
+	AActor* CreatePointCloud(const TSharedPtr<FJsonObject> Obj);
 	
 };

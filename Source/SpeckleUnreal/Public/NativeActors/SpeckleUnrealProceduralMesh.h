@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "ProceduralMeshComponent.h"
-#include "SpeckleMesh.h"
 #include "SpeckleUnrealActor.h"
+#include "Interfaces/SpeckleMesh.h"
 
 #include "SpeckleUnrealProceduralMesh.generated.h"
 
