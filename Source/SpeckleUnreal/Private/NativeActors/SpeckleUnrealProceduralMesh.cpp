@@ -82,7 +82,7 @@ UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMater
 	
     UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Package, FName(SpeckleMaterial->Name));
     
-    DynMaterial->SetFlags(RF_Public | RF_Transient);
+    DynMaterial->SetFlags(RF_Public);
 	
     DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
     DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
@@ -91,9 +91,11 @@ UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMater
     DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
 	
     Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
-	
+
+#if WITH_EDITOR
     FAssetRegistryModule::AssetCreated(DynMaterial);
-		
+#endif
+    
     return DynMaterial;
 	
 }

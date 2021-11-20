@@ -164,12 +164,9 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
 
 #if WITH_EDITOR
 	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
-#endif
-	
-	//Mesh->PostEditChange(); //This doesn't seem to be required
-	
-	
 	FAssetRegistryModule::AssetCreated(Mesh);
+#endif
+	//Mesh->PostEditChange(); //This doesn't seem to be required
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	
@@ -204,9 +201,11 @@ UMaterialInterface* ASpeckleUnrealStaticMesh::GetMaterial(const URenderMaterial*
 	DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
 	
 	Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
-	
+
+#if WITH_EDITOR
 	FAssetRegistryModule::AssetCreated(DynMaterial);
-		
+#endif
+	
 	return DynMaterial;
 	
 }
