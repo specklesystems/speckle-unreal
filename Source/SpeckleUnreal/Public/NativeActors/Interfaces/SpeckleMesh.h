@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/Mesh.h"
 #include "UObject/Interface.h"
 #include "SpeckleMesh.generated.h"
+
+class ASpeckleUnrealManager;
+class UMesh;
 
 // This class does not need to be modified.
 UINTERFACE()

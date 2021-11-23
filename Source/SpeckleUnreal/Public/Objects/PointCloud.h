@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Base.h"
-#include "UObject/Object.h"
 #include "PointCloud.generated.h"
 
 /**

@@ -20,13 +20,14 @@ void UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 		{
 			Points.Add(FVector
 			(
-				-ObjectPoints[i - 2].Get()->AsNumber(),
+				ObjectPoints[i - 2].Get()->AsNumber(),
 				ObjectPoints[i - 1].Get()->AsNumber(),
 				ObjectPoints[i].Get()->AsNumber()
 			) * ScaleFactor);
 		}
 	}
 
+	
 	//Parse Colors
 	{
 		TArray<TSharedPtr<FJsonValue>> ObjectColors = Manager->CombineChunks(Obj->GetArrayField("colors"));
@@ -38,14 +39,14 @@ void UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 		}
 	}
 
-	//Parse Colors
+	//Parse Sizes
 	{
 		TArray<TSharedPtr<FJsonValue>> ObjectSizes = Manager->CombineChunks(Obj->GetArrayField("sizes"));
 		
 		Sizes.Reserve(ObjectSizes.Num());
 		for (int32 i = 0; i < ObjectSizes.Num(); i += 1) 
 		{
-			Sizes.Add( ObjectSizes[i].Get()->AsNumber() );
+			Sizes.Add( ObjectSizes[i].Get()->AsNumber() * ScaleFactor);
 		}
 	}
 	
