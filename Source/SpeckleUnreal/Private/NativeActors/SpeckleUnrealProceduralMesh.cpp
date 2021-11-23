@@ -5,6 +5,7 @@
 #include "StaticMeshDescription.h"
 #include "SpeckleUnrealManager.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
 
 

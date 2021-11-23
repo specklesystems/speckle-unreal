@@ -33,7 +33,8 @@ void ASpeckleUnrealPointCloud::SetData_Implementation(const UPointCloud* Speckle
 	PointCloud->Initialize(FBox(SpecklePointCloud->Points));
 
 	PointCloud->InsertPoints(LidarPoints, ELidarPointCloudDuplicateHandling::Ignore, false, FVector::ZeroVector);
-
+	
+	PointCloud->CenterPoints();
 	PointCloud->RefreshBounds();
 
 	this->SetPointCloud(PointCloud);

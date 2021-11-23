@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/Mesh.h"
 #include "UObject/Interface.h"
 #include "SpecklePointCloud.generated.h"
 
+class ASpeckleUnrealManager;
 class UPointCloud;
 
 // This class does not need to be modified.
