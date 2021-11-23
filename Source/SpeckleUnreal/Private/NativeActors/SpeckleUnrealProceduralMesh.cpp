@@ -93,9 +93,11 @@ UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMater
 	
     Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
 
-#if WITH_EDITOR
-    FAssetRegistryModule::AssetCreated(DynMaterial);
-#endif
+    if (GetWorld()->WorldType == EWorldType::PIE)
+    {
+        FAssetRegistryModule::AssetCreated(DynMaterial);
+    }
+   
     
     return DynMaterial;
 	
