@@ -5,7 +5,6 @@
 #include "Materials/MaterialInstanceConstant.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "Panagiotis/MaterialConverter.h"
 #include "Objects/RenderMaterial.h"
 
 // Sets default values

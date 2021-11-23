@@ -7,7 +7,6 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Objects/RenderMaterial.h"
 
-
 // Sets default values
 ASpeckleUnrealProceduralMesh::ASpeckleUnrealProceduralMesh() : ASpeckleUnrealActor()
 {
@@ -66,6 +65,10 @@ void ASpeckleUnrealProceduralMesh::SetMesh_Implementation(const UMesh* SpeckleMe
     
     MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
 }
+
+
+
+
 
 UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
 {

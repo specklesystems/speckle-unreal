@@ -41,7 +41,9 @@ public:
 	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override
 	{
 		Super::Parse(Obj, Manager);
-	
+
+		//UE_LOG(LogTemp, Warning, );
+		
 		Obj->TryGetStringField("name", Name);
 		Obj->TryGetNumberField("opacity", Opacity);
 		Obj->TryGetNumberField("metalness", Metalness);
@@ -50,6 +52,8 @@ public:
 		int32 ARGB;
 		if(Obj->TryGetNumberField("diffuse", ARGB))
 			Diffuse = FColor(ARGB);
+
+		
 		
 		if(Obj->TryGetNumberField("emissive", ARGB))
 			Emissive = FColor(ARGB);

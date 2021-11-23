@@ -86,7 +86,8 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	}
 }
 
-bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride, UMaterialInterface*& OutMaterial)
+bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride,
+																	UMaterialInterface*& OutMaterial)
 {
 	const auto MaterialID = SpeckleMaterial->Id;
 	
@@ -174,7 +175,13 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
 {
 	const FString ObjId = Obj->GetStringField("id");
-	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
+
+
+
+	
+	
+	
+	
 	
 	
 	UMesh* Mesh = NewObject<UMesh>();

@@ -17,6 +17,9 @@ class SPECKLEUNREAL_API ASpeckleUnrealProceduralMesh : public ASpeckleUnrealActo
 {
 	GENERATED_BODY()
 
+protected:
+	UMaterialInterface* CreateMaterial(TSharedPtr<FJsonObject> RenderMaterialObject, bool AcceptMaterialOverride = true);
+	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UProceduralMeshComponent* MeshComponent;
