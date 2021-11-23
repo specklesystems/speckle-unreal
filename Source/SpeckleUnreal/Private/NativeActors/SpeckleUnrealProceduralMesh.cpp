@@ -70,6 +70,7 @@ void ASpeckleUnrealProceduralMesh::SetMesh_Implementation(const UMesh* SpeckleMe
 UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
 {
     UMaterialInterface* ExistingMaterial;
+
     if(Manager->TryGetMaterial(SpeckleMaterial, true, ExistingMaterial))
         return ExistingMaterial; //Return existing material
 		

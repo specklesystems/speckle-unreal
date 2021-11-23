@@ -1,5 +1,8 @@
 #pragma once
 
+// logs
+#include "Engine/Engine.h"
+
 // json manipulation
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
@@ -10,16 +13,26 @@
 
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
+#include "Panagiotis/SpeckleStructs.h"
 #include "NativeActors/SpeckleUnrealPointCloud.h"
 #include "NativeActors/SpeckleUnrealProceduralMesh.h"
 #include "SpeckleUnrealManager.generated.h"
 
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
 	GENERATED_BODY()
 
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessedDyn, const TArray<FSpeckleBranch>&, BranchesList);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessedDyn, const TArray<FSpeckleCommit>&, CommitsList);	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStreamsRequestProcessedDyn, const TArray<FSpeckleStream>&, StreamsList);	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalsRequestProcessedDyn, const FSpeckleGlobals&, GlobalsObject, const FString&, StreamID);	
+	
+	DECLARE_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessed, const TArray<FSpeckleBranch>&);
+    DECLARE_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessed, const TArray<FSpeckleCommit>&);
+	
 public:
 	FHttpModule* Http;
 
@@ -27,22 +40,25 @@ public:
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void ImportSpeckleObject();
 
-	UFUNCTION(CallInEditor, Category = "Speckle")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Speckle")
 		void DeleteObjects();
 	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString ServerUrl {
+	FString ServerUrl
+	{
 		"https://speckle.xyz"
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString StreamID {
+		FString StreamID
+	{
 		""
 	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-		FString ObjectID {
+	FString ObjectID
+	{
 		""
 	};
 
@@ -97,6 +113,10 @@ public:
 	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGlobalStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
@@ -104,7 +124,38 @@ public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
+	TArray<FSpeckleCommit> ArrayOfCommits;
+
+	UPROPERTY()
+	TArray<FSpeckleBranch> ArrayOfBranches;
+
+	UPROPERTY()
+	TArray<FSpeckleStream> ArrayOfStreams;
+
+	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
+	void FetchGlobalItems(FString PostPayload, const FString& RefObjectID);
+
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FBranchesRequestProcessedDyn OnBranchesProcessedDynamic;
+
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FCommitsRequestProcessedDyn OnCommitsProcessedDynamic;
+
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FStreamsRequestProcessedDyn OnStreamsProcessedDynamic;
+
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FGlobalsRequestProcessedDyn OnGlobalsProcessedDynamic;
+
+	FBranchesRequestProcessed OnBranchesProcessed;
+	FCommitsRequestProcessed OnCommitsProcessed;
+
+	UFUNCTION(BlueprintCallable)
+	void FetchGlobalVariables(const FString& ServerName, const FString& Stream, const FString& Bearer);
+	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const;
+
 	float ParseScaleFactor(const FString& Units) const;
 	
 	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
@@ -117,6 +168,7 @@ protected:
 	
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
+	TMap<FString, TSharedPtr<FJsonObject>> SpeckleCommits;
 	
 	TArray<UObject*> CreatedObjectsCache;
 	TArray<UObject*> InProgressObjectsCache;
@@ -127,5 +179,19 @@ protected:
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
 	AActor* CreatePointCloud(const TSharedPtr<FJsonObject> Obj);
+
+
 	
+	TArray<uint8> FStringToUint8(const FString& InString)
+	{
+		TArray<uint8> OutBytes;
+
+		// Handle empty strings
+		if (InString.Len() > 0)
+		{
+			FTCHARToUTF8 Converted(*InString); // Convert to UTF8
+			OutBytes.Append(reinterpret_cast<const uint8*>(Converted.Get()), Converted.Length());
+		}
+		return OutBytes;
+	}
 };

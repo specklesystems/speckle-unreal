@@ -30,6 +30,9 @@ public class SpeckleUnreal : ModuleRules
 				"Json", 
 				"JsonUtilities", 
 				"ProceduralMeshComponent",
+				"InputCore",
+				"Slate",
+				"SlateCore",
 				"MeshDescription",
 				"StaticMeshDescription", 
 				"LidarPointCloudRuntime",
@@ -45,6 +48,7 @@ public class SpeckleUnreal : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UMG"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

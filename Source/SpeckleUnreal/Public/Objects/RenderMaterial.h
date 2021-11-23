@@ -18,6 +18,9 @@ class SPECKLEUNREAL_API URenderMaterial : public UBase
 public:
 
 	UPROPERTY()
+	FString ObjectID;
+	
+	UPROPERTY()
 	FString Name;
 	
 	UPROPERTY()
