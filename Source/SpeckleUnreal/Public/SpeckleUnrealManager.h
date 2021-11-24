@@ -176,7 +176,15 @@ protected:
 	TArray<UObject*> InProgressObjectsCache;
 	
 	
-	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
+	void ImportObjectFromCache(AActor* AOwner,
+							   const TSharedPtr<FJsonObject> SpeckleObject,
+							   const TSharedPtr<FJsonObject> ParentObject = nullptr);
+
+	TMap<FString, FString> ImportObjectFromCacheNew(AActor* AOwner,
+								const TSharedPtr<FJsonObject> SpeckleObject,
+								const TSharedPtr<FJsonObject> ParentObject,
+								TMap<FString, FString> ObjectsMapIn,
+								FString who);
 	
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);

@@ -225,7 +225,7 @@ void SpecklePanel::SpeckleBranchesReceived(const TArray<FSpeckleBranch>& Branche
 
 void SpecklePanel::SpeckleCommitsReceived(const TArray<FSpeckleCommit>& CommitsList)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%d"), CommitsList.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("%d"), CommitsList.Num());
 	CommitsCBoxContent.Empty();		
 	for(auto C : CommitsList)
 	{

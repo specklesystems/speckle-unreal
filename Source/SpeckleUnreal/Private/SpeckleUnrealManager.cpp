@@ -162,9 +162,22 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	{
 		WorldToCentimeters = WorldSettings->WorldToMeters / 100;
 	}
+
+	//ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
+	TMap<FString, FString> ObjectsMap;
+	ObjectsMap = ImportObjectFromCacheNew(this, SpeckleObjects[ObjectID], NULL, ObjectsMap, "STARTER");
+
+
 	
-	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
+
+	UE_LOG(LogTemp, Warning, TEXT("MAP Layers Object Hashes : %d"), ObjectsMap.Num());
+	
+	for (auto& Elem : ObjectsMap)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("KEY VAL: %s - %s"), *Elem.Key, *Elem.Value);
+		
+	}
 	
 	
 	
@@ -179,7 +192,9 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	CreatedObjectsCache = InProgressObjectsCache;
 	InProgressObjectsCache.Empty();
 	
-	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green, FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"), CreatedObjectsCache.Num()));
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, FColor::Green,
+		FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"),
+											CreatedObjectsCache.Num()));
 
 }
 
@@ -278,7 +293,7 @@ void ASpeckleUnrealManager::OnBranchesItemsResponseReceived(FHttpRequestPtr Requ
 	auto responseCode = Response-> GetResponseCode();
 
 	FString MsgBody = Response->GetContentAsString();
-	UE_LOG(LogTemp, Warning, TEXT("BRANCHES RESPONSE: %s"), *MsgBody);
+	//UE_LOG(LogTemp, Warning, TEXT("BRANCHES RESPONSE: %s"), *MsgBody);
 	
 	if (responseCode != 200)
 	{
