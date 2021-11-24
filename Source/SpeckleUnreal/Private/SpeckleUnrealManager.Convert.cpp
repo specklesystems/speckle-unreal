@@ -1,4 +1,5 @@
 #include "SpeckleUnrealManager.h"
+#include "Objects/Mesh.h"
 #include "Objects/PointCloud.h"
 
 #include "Objects/RenderMaterial.h"
