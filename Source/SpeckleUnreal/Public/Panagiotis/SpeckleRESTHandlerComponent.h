@@ -2,6 +2,7 @@
 
 #pragma once
 
+
 #include "CoreMinimal.h"
 
 #include "ISpeckleReceiver.h"
@@ -38,6 +39,11 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
 	virtual void FetchListOfBranches() override;
+
+	
+	
+	
+	
 	
 	UPROPERTY()
 	ASpeckleUnrealManager* SpeckleManager;

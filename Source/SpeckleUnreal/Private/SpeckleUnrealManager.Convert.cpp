@@ -2,27 +2,50 @@
 #include "Objects/PointCloud.h"
 
 #include "Objects/RenderMaterial.h"
+#include "Panagiotis/SpeckleRESTHandlerComponent.h"
 
 
-void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject)
+void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject,
+                                                                  const TSharedPtr<FJsonObject> ParentObject)
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("EXECUTING"));
+	
+	
+	// If it doesn't have type then ignore
 	if (!SpeckleObject->HasField("speckle_type"))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Speckle Type"));
 		return;
+	}
+
+	// Check if it is a reference
 	if (SpeckleObject->GetStringField("speckle_type") == "reference" && SpeckleObject->HasField("referencedId")) {
 		TSharedPtr<FJsonObject> ReferencedObj;
 		if (SpeckleObjects.Contains(SpeckleObject->GetStringField("referencedId")))
+		{
 			ImportObjectFromCache(AOwner, SpeckleObjects[SpeckleObject->GetStringField("referencedId")], ParentObject);
+			UE_LOG(LogTemp, Warning, TEXT("It is a reference"));
+		}
 		return;
 	}
+
+	// If it does not have id, then return
 	if (!SpeckleObject->HasField("id"))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No id"));
 		return;
+	}
+
+
 
 	
-	const FString ObjectId = SpeckleObject->GetStringField("id");
+
+	
+	const FString ObjectId    = SpeckleObject->GetStringField("id");
 	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
 	
 	AActor* Native = nullptr;
-
 
 	
 	if(SpeckleType == "Objects.Geometry.Mesh")
@@ -46,8 +69,68 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	if(IsValid(Native))
 	{
 
+		// // --  Print as String --
+		 FString OutputString;
+		 TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		 FJsonSerializer::Serialize(SpeckleObject.ToSharedRef(), Writer);
+		 UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString);
+		// -- -------------------- --
+		
+		//--------------
+		FString LayerName = "";
+		
+		// Iterate over Json Values
+		if (ParentObject.IsValid())
+		{
+			for (auto currJsonValue = ParentObject->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
+			{
+				// Get the key name
+				FString KeyName = (*currJsonValue).Key;
+				// TSharedPtr<FJsonValue> KeyValue = (*currJsonValue).Value;
+
+
+				// FString OutputString2;
+				// TSharedRef< TJsonWriter<> > Writer2 = TJsonWriterFactory<>::Create(&OutputString2);
+				// TSharedRef<FJsonValue, ESPMode::Fast> k = KeyValue.ToSharedRef();
+
+				
+					// FJsonSerializer::Serialize(KeyValue->AsArray(), Writer2);
+					// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2a -> %s"), *OutputString2);
+				 //
+				 //    double d = KeyValue->AsNumber();
+					// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2b -> %5.2f"), d);
+					//
+					// FString s = KeyValue->AsString();
+					// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2c -> %s"), *s);
+					
+				if (KeyName.Contains("::"))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Key Name -> %s"), *KeyName);
+					
+					LayerName = KeyName; // FString::Printf(TEXT("%s"), *KeyName ) ;
+
+					UE_LOG(LogTemp, Warning, TEXT("Key Name -> %s"), *LayerName);
+					
+					
+					// for (int i=0; i < kv_Array.Num(); i++)
+					// {
+					// 	FString OutputString = kv_Array[i]->AsString();
+					// 	//TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+					// 	
+					// 	UE_LOG(LogTemp, Warning, TEXT("Key Value Data -> %s"), *OutputString);
+					// }
+					
+				}
+				// Get the value as a FJsonValue object
+				//TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("LayerName Name -> %s"), *LayerName);
+		//----------------------
+
 #if WITH_EDITOR
-		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
+		//UE_LOG(LogTemp, Warning, TEXT("%s - %s - %s"), *LayerName, *SpeckleType, *ObjectId);
+		Native->SetActorLabel(FString::Printf(TEXT("%s - %s - %s"), *LayerName, *SpeckleType, *ObjectId));
 #endif
 		
         Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
@@ -176,13 +259,6 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 {
 	const FString ObjId = Obj->GetStringField("id");
 
-
-
-	
-	
-	
-	
-	
 	
 	UMesh* Mesh = NewObject<UMesh>();
 	Mesh->Parse(Obj, this);
