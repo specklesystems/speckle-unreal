@@ -169,6 +169,12 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	}
 }
 
+
+
+
+
+
+
 bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride,
 																	UMaterialInterface*& OutMaterial)
 {

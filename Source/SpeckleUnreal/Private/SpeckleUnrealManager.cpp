@@ -166,6 +166,8 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	
 	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 	
+	
+	
 	for (const auto& m : CreatedObjectsCache)
 	{
 		if(AActor* a = Cast<AActor>(m))
