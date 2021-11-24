@@ -5,6 +5,7 @@
 #include "StaticMeshDescription.h"
 #include "SpeckleUnrealManager.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
 
 // Sets default values
@@ -100,8 +101,6 @@ UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMater
     {
         FAssetRegistryModule::AssetCreated(DynMaterial);
     }
-   
-    
     return DynMaterial;
 	
 }

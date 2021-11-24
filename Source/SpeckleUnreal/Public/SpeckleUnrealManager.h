@@ -19,6 +19,8 @@
 #include "SpeckleUnrealManager.generated.h"
 
 
+class URenderMaterial;
+
 UCLASS(BlueprintType, Blueprintable)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
