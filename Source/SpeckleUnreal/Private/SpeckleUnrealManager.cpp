@@ -166,7 +166,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	//ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 
 	// Dimitrios: Under construction. Provide a Meshes to Layers map
-	TMultiMap<FString, FString> ObjectsMap;
+	
 
 	ObjectsMap = ImportObjectFromCacheNew(this, SpeckleObjects[ObjectID], NULL,
 													ObjectsMap, "STARTER");
@@ -180,7 +180,6 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	for (auto& Elem : ObjectsMap)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("KEY VAL: %s - %s"), *Elem.Key, *Elem.Value);
-		
 	}
 	
 	

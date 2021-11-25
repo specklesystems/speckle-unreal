@@ -306,11 +306,11 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 
 
 
-
-TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AOwner,
+// Dimitrios variation
+TMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AOwner,
 													 const TSharedPtr<FJsonObject> SpeckleObject,
                                                      const TSharedPtr<FJsonObject> ParentObject,
-                                                     TMultiMap<FString, FString> ObjectsMap,
+                                                     TMap<FString, FString> ObjectsMapIn,
                                                      FString Who)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("EXECUTING Map size %d %s"), ObjectsMap.Num(), *Who );
@@ -332,8 +332,6 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 			FString id_Layer = KeyName;
 			FString id_mesh  = "";
 
-			
-			
 			const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
 			if (KeyValue->TryGetArray(SubArrayPtr))
 			{
@@ -351,7 +349,7 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 						id_mesh = (*ArraySubObjPtr)->GetStringField("referencedId");
 
 						//UE_LOG(LogTemp, Warning, TEXT("KEY VAL 2: %s - %s"), *id_mesh, *id_Layer );
-						ObjectsMap.Add(*id_mesh, *id_Layer);
+						ObjectsMapIn.Add(*id_mesh, *id_Layer);
 					}
 				}
 			}
@@ -370,7 +368,7 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 	if (!SpeckleObject->HasField("speckle_type"))
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("No Speckle Type"));
-		return ObjectsMap;
+		return ObjectsMapIn;
 	}
 
 	// Check if it is a reference
@@ -380,18 +378,18 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 		if (SpeckleObjects.Contains(SpeckleObject->GetStringField("referencedId")))
 		{
 			ImportObjectFromCacheNew(AOwner, SpeckleObjects[SpeckleObject->GetStringField("referencedId")],
-									ParentObject, ObjectsMap, "REFERENCE");
+									ParentObject, ObjectsMapIn, "REFERENCE");
 			
 			//UE_LOG(LogTemp, Warning, TEXT("It is a reference"));
 		}
-		return ObjectsMap;
+		return ObjectsMapIn;
 	}
 
 	// If it does not have id, then return
 	if (!SpeckleObject->HasField("id"))
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("No id"));
-		return ObjectsMap;
+		return ObjectsMapIn;
 	}
 
 
@@ -415,7 +413,7 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 	}
 	else if (SpeckleType == "Objects.Other.BlockDefinition")
 	{
-		return ObjectsMap; //Ignore block definitions, Block instances will create geometry instead.
+		return ObjectsMapIn; //Ignore block definitions, Block instances will create geometry instead.
 	}
 
 
@@ -443,7 +441,7 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 		const TSharedPtr<FJsonObject>* SubObjectPtr;
 		if (Kv.Value->TryGetObject(SubObjectPtr))
 		{
-			ImportObjectFromCacheNew(Native, *SubObjectPtr, SpeckleObject, ObjectsMap, "ChildObject");
+			ImportObjectFromCacheNew(Native, *SubObjectPtr, SpeckleObject, ObjectsMapIn, "ChildObject");
 			continue;
 		}
 
@@ -457,11 +455,11 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 				if (!ArrayElement->TryGetObject(ArraySubObjPtr))
 					continue;
 
-				ImportObjectFromCacheNew(Native, *ArraySubObjPtr, SpeckleObject, ObjectsMap, "ChildArray");
+				ImportObjectFromCacheNew(Native, *ArraySubObjPtr, SpeckleObject, ObjectsMapIn, "ChildArray");
 			}
 		}
 	}
-	return ObjectsMap;
+	return ObjectsMapIn;
 }
 
 		// --  Print as String --

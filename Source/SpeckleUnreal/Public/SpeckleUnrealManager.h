@@ -71,6 +71,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	bool ImportAtRuntime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	TMap<FString, FString> ObjectsMap;
 	
 	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpeckleMesh"))
@@ -133,6 +136,8 @@ public:
 	UPROPERTY()
 	TArray<FSpeckleStream> ArrayOfStreams;
 
+
+	
 	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
 	void FetchGlobalItems(FString PostPayload, const FString& RefObjectID);
 
@@ -182,11 +187,11 @@ protected:
 
 
 	// Dimitrios: Under construction: Import objects, Return a Map of Meshes to Layers correspondence
-	TMultiMap<FString, FString> ImportObjectFromCacheNew(
+	TMap<FString, FString> ImportObjectFromCacheNew(
 								AActor* AOwner,
 								const TSharedPtr<FJsonObject> SpeckleJsonObject,
 								const TSharedPtr<FJsonObject> ParentJsonObject,
-								TMultiMap<FString, FString> ObjectsMapIn,
+								TMap<FString, FString> ObjectsMapIn,
 								FString who);
 
 	
