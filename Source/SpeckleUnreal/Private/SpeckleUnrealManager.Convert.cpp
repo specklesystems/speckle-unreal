@@ -5,219 +5,6 @@
 #include "Objects/RenderMaterial.h"
 #include "SpeckleRESTHandlerComponent.h"
 
-
-
-		// --  Print as String --
-		// FString OutputString;
-		// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
-		// FJsonSerializer::Serialize(SpeckleObject.ToSharedRef(), Writer);
-		// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString);
-		// -- -------------------- --
-		
-		// //--------------
-		// FString LayerName = "";
-		//
-		// // Iterate over Json Values
-		// if (ParentObject.IsValid())
-		// {
-		// 	for (auto currJsonValue = ParentObject->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
-		// 	{
-		// 		// Get the key name
-		// 		FString KeyName = (*currJsonValue).Key;
-		// 		// TSharedPtr<FJsonValue> KeyValue = (*currJsonValue).Value;
-		//
-		//
-		// 		// FString OutputString2;
-		// 		// TSharedRef< TJsonWriter<> > Writer2 = TJsonWriterFactory<>::Create(&OutputString2);
-		// 		// TSharedRef<FJsonValue, ESPMode::Fast> k = KeyValue.ToSharedRef();
-		//
-		// 		
-		// 			// FJsonSerializer::Serialize(KeyValue->AsArray(), Writer2);
-		// 			// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2a -> %s"), *OutputString2);
-		// 		 //
-		// 		 //    double d = KeyValue->AsNumber();
-		// 			// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2b -> %5.2f"), d);
-		// 			//
-		// 			// FString s = KeyValue->AsString();
-		// 			// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2c -> %s"), *s);
-		// 			
-		// 		if (KeyName.Contains("::"))
-		// 		{
-		// 			UE_LOG(LogTemp, Warning, TEXT("Key Name -> %s"), *KeyName);
-		// 			
-		// 			LayerName = KeyName; // FString::Printf(TEXT("%s"), *KeyName ) ;
-		//
-		// 			UE_LOG(LogTemp, Warning, TEXT("LayerName Name -> %s"), *LayerName);
-		// 			
-		// 			
-		// 			// for (int i=0; i < kv_Array.Num(); i++)
-		// 			// {
-		// 			// 	FString OutputString = kv_Array[i]->AsString();
-		// 			// 	//TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
-		// 			// 	
-		// 			// 	UE_LOG(LogTemp, Warning, TEXT("Key Value Data -> %s"), *OutputString);
-		// 			// }
-		// 			
-		// 		}
-		// 		// Get the value as a FJsonValue object
-		// 		//TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
-		// 	}
-		// }
-		// UE_LOG(LogTemp, Warning, TEXT("LayerName Name -> %s"), *LayerName);
-		//----------------------
-
-
-TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AOwner,
-													 const TSharedPtr<FJsonObject> SpeckleObject,
-                                                     const TSharedPtr<FJsonObject> ParentObject,
-                                                     TMultiMap<FString, FString> ObjectsMap,
-                                                     FString Who)
-{
-	//UE_LOG(LogTemp, Warning, TEXT("EXECUTING Map size %d %s"), ObjectsMap.Num(), *Who );
-
-
-	// Iterate over Speckle json objects
-	for (auto currJsonValue = SpeckleObject->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
-	{
-		// Get the json key name
-		FString KeyName = (*currJsonValue).Key;
-
-		// Get the json value
-		TSharedPtr<FJsonValue, ESPMode::Fast> KeyValue = (*currJsonValue).Value;
-
-		// Check if it is a layer name from Rhino
-		if (KeyName.Contains("::"))
-		{
-				
-            FString id_Layer="";
-	
-			const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
-			if (KeyValue->TryGetArray(SubArrayPtr))
-			{
-				for (const auto& ArrayElement : *SubArrayPtr)
-				{
-					const TSharedPtr<FJsonObject>* ArraySubObjPtr;
-
-					if (!ArrayElement->TryGetObject(ArraySubObjPtr))
-						continue;
-					else
-					{
-						TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_Layer);
-						FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
-					}
-				}
-			}
-			
-			//UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString);
-
-			UE_LOG(LogTemp, Warning, TEXT("KEY VAL 2: %s - %s"), *KeyName, *currJsonValue.Key());
-			ObjectsMap.Add(*KeyName, *id_Layer);
-		}
-	}
-	
-	// If it doesn't have type then ignore
-	if (!SpeckleObject->HasField("speckle_type"))
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("No Speckle Type"));
-		return ObjectsMap;
-	}
-
-	// Check if it is a reference
-	if (SpeckleObject->GetStringField("speckle_type") == "reference" && SpeckleObject->HasField("referencedId"))
-	{
-		TSharedPtr<FJsonObject> ReferencedObj;
-		if (SpeckleObjects.Contains(SpeckleObject->GetStringField("referencedId")))
-		{
-			ImportObjectFromCacheNew(AOwner, SpeckleObjects[SpeckleObject->GetStringField("referencedId")],
-			                         ParentObject, ObjectsMap, "REFERENCE");
-			
-			//UE_LOG(LogTemp, Warning, TEXT("It is a reference"));
-		}
-		return ObjectsMap;
-	}
-
-	// If it does not have id, then return
-	if (!SpeckleObject->HasField("id"))
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("No id"));
-		return ObjectsMap;
-	}
-
-
-	const FString ObjectId = SpeckleObject->GetStringField("id");
-	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
-
-	AActor* Native = nullptr;
-
-
-	if (SpeckleType == "Objects.Geometry.Mesh")
-	{
-		Native = CreateMesh(SpeckleObject, ParentObject);
-	}
-	else if (SpeckleType == "Objects.Geometry.Pointcloud")
-	{
-		Native = CreatePointCloud(SpeckleObject);
-	}
-	else if (SpeckleType == "Objects.Other.BlockInstance")
-	{
-		Native = CreateBlockInstance(SpeckleObject);
-	}
-	else if (SpeckleType == "Objects.Other.BlockDefinition")
-	{
-		return ObjectsMap; //Ignore block definitions, Block instances will create geometry instead.
-	}
-
-
-	if (IsValid(Native))
-	{
-#if WITH_EDITOR
-		//UE_LOG(LogTemp, Warning, TEXT("%s - %s - %s"), *LayerName, *SpeckleType, *ObjectId);
-		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
-#endif
-
-		Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
-		Native->SetOwner(AOwner);
-
-		InProgressObjectsCache.Add(Native);
-	}
-	else
-	{
-		Native = AOwner;
-	}
-
-
-	//Convert Children
-	for (const auto& Kv : SpeckleObject->Values)
-	{
-		const TSharedPtr<FJsonObject>* SubObjectPtr;
-		if (Kv.Value->TryGetObject(SubObjectPtr))
-		{
-			ImportObjectFromCacheNew(Native, *SubObjectPtr, SpeckleObject, ObjectsMap, "ChildObject");
-			continue;
-		}
-
-		const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
-		if (Kv.Value->TryGetArray(SubArrayPtr))
-		{
-			for (const auto& ArrayElement : *SubArrayPtr)
-			{
-				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
-
-				if (!ArrayElement->TryGetObject(ArraySubObjPtr))
-					continue;
-
-				ImportObjectFromCacheNew(Native, *ArraySubObjPtr, SpeckleObject, ObjectsMap, "ChildArray");
-			}
-		}
-	}
-	return ObjectsMap;
-}
-
-
-
-
-
-
 void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject,
                                                                   const TSharedPtr<FJsonObject> ParentObject)
 {
@@ -225,7 +12,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	// If it doesn't have type then ignore
 	if (!SpeckleObject->HasField("speckle_type"))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Speckle Type"));
+		//UE_LOG(LogTemp, Warning, TEXT("No Speckle Type"));
 		return;
 	}
 
@@ -235,7 +22,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 		if (SpeckleObjects.Contains(SpeckleObject->GetStringField("referencedId")))
 		{
 			ImportObjectFromCache(AOwner, SpeckleObjects[SpeckleObject->GetStringField("referencedId")], ParentObject);
-			UE_LOG(LogTemp, Warning, TEXT("It is a reference"));
+			//UE_LOG(LogTemp, Warning, TEXT("It is a reference"));
 		}
 		return;
 	}
@@ -247,7 +34,6 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 		return;
 	}
 
-	
 	const FString ObjectId    = SpeckleObject->GetStringField("id");
 	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
 	
@@ -315,11 +101,6 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 		}
 	}
 }
-
-
-
-
-
 
 
 bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride,
@@ -524,3 +305,208 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 
 
 
+
+TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AOwner,
+													 const TSharedPtr<FJsonObject> SpeckleObject,
+                                                     const TSharedPtr<FJsonObject> ParentObject,
+                                                     TMultiMap<FString, FString> ObjectsMap,
+                                                     FString Who)
+{
+	//UE_LOG(LogTemp, Warning, TEXT("EXECUTING Map size %d %s"), ObjectsMap.Num(), *Who );
+
+
+	// Iterate over Speckle json objects
+	for (auto currJsonValue = SpeckleObject->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
+	{
+		// Get the json key name
+		FString KeyName = (*currJsonValue).Key;
+
+		// Get the json value
+		TSharedPtr<FJsonValue, ESPMode::Fast> KeyValue = (*currJsonValue).Value;
+
+		// Check if it is a layer name from Rhino
+		if (KeyName.Contains("::"))
+		{
+				
+			FString id_Layer="";
+	
+			const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
+			if (KeyValue->TryGetArray(SubArrayPtr))
+			{
+				for (const auto& ArrayElement : *SubArrayPtr)
+				{
+					const TSharedPtr<FJsonObject>* ArraySubObjPtr;
+
+					if (!ArrayElement->TryGetObject(ArraySubObjPtr))
+						continue;
+					else
+					{
+						TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_Layer);
+						FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
+					}
+				}
+			}
+			
+			//UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString);
+
+			UE_LOG(LogTemp, Warning, TEXT("KEY VAL 2: %s - %s"), *KeyName, *currJsonValue.Key());
+			ObjectsMap.Add(*KeyName, *id_Layer);
+		}
+	}
+	
+	// If it doesn't have type then ignore
+	if (!SpeckleObject->HasField("speckle_type"))
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("No Speckle Type"));
+		return ObjectsMap;
+	}
+
+	// Check if it is a reference
+	if (SpeckleObject->GetStringField("speckle_type") == "reference" && SpeckleObject->HasField("referencedId"))
+	{
+		TSharedPtr<FJsonObject> ReferencedObj;
+		if (SpeckleObjects.Contains(SpeckleObject->GetStringField("referencedId")))
+		{
+			ImportObjectFromCacheNew(AOwner, SpeckleObjects[SpeckleObject->GetStringField("referencedId")],
+									ParentObject, ObjectsMap, "REFERENCE");
+			
+			//UE_LOG(LogTemp, Warning, TEXT("It is a reference"));
+		}
+		return ObjectsMap;
+	}
+
+	// If it does not have id, then return
+	if (!SpeckleObject->HasField("id"))
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("No id"));
+		return ObjectsMap;
+	}
+
+
+	const FString ObjectId = SpeckleObject->GetStringField("id");
+	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
+
+	AActor* Native = nullptr;
+
+
+	if (SpeckleType == "Objects.Geometry.Mesh")
+	{
+		Native = CreateMesh(SpeckleObject, ParentObject);
+	}
+	else if (SpeckleType == "Objects.Geometry.Pointcloud")
+	{
+		Native = CreatePointCloud(SpeckleObject);
+	}
+	else if (SpeckleType == "Objects.Other.BlockInstance")
+	{
+		Native = CreateBlockInstance(SpeckleObject);
+	}
+	else if (SpeckleType == "Objects.Other.BlockDefinition")
+	{
+		return ObjectsMap; //Ignore block definitions, Block instances will create geometry instead.
+	}
+
+
+	if (IsValid(Native))
+	{
+#if WITH_EDITOR
+		//UE_LOG(LogTemp, Warning, TEXT("%s - %s - %s"), *LayerName, *SpeckleType, *ObjectId);
+		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
+#endif
+
+		Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
+		Native->SetOwner(AOwner);
+
+		InProgressObjectsCache.Add(Native);
+	}
+	else
+	{
+		Native = AOwner;
+	}
+
+
+	//Convert Children
+	for (const auto& Kv : SpeckleObject->Values)
+	{
+		const TSharedPtr<FJsonObject>* SubObjectPtr;
+		if (Kv.Value->TryGetObject(SubObjectPtr))
+		{
+			ImportObjectFromCacheNew(Native, *SubObjectPtr, SpeckleObject, ObjectsMap, "ChildObject");
+			continue;
+		}
+
+		const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
+		if (Kv.Value->TryGetArray(SubArrayPtr))
+		{
+			for (const auto& ArrayElement : *SubArrayPtr)
+			{
+				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
+
+				if (!ArrayElement->TryGetObject(ArraySubObjPtr))
+					continue;
+
+				ImportObjectFromCacheNew(Native, *ArraySubObjPtr, SpeckleObject, ObjectsMap, "ChildArray");
+			}
+		}
+	}
+	return ObjectsMap;
+}
+
+		// --  Print as String --
+		// FString OutputString;
+		// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		// FJsonSerializer::Serialize(SpeckleObject.ToSharedRef(), Writer);
+		// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString);
+		// -- -------------------- --
+		
+		// //--------------
+		// FString LayerName = "";
+		//
+		// // Iterate over Json Values
+		// if (ParentObject.IsValid())
+		// {
+		// 	for (auto currJsonValue = ParentObject->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
+		// 	{
+		// 		// Get the key name
+		// 		FString KeyName = (*currJsonValue).Key;
+		// 		// TSharedPtr<FJsonValue> KeyValue = (*currJsonValue).Value;
+		//
+		//
+		// 		// FString OutputString2;
+		// 		// TSharedRef< TJsonWriter<> > Writer2 = TJsonWriterFactory<>::Create(&OutputString2);
+		// 		// TSharedRef<FJsonValue, ESPMode::Fast> k = KeyValue.ToSharedRef();
+		//
+		// 		
+		// 			// FJsonSerializer::Serialize(KeyValue->AsArray(), Writer2);
+		// 			// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2a -> %s"), *OutputString2);
+		// 		 //
+		// 		 //    double d = KeyValue->AsNumber();
+		// 			// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2b -> %5.2f"), d);
+		// 			//
+		// 			// FString s = KeyValue->AsString();
+		// 			// UE_LOG(LogTemp, Warning, TEXT("resulting jsonString2c -> %s"), *s);
+		// 			
+		// 		if (KeyName.Contains("::"))
+		// 		{
+		// 			UE_LOG(LogTemp, Warning, TEXT("Key Name -> %s"), *KeyName);
+		// 			
+		// 			LayerName = KeyName; // FString::Printf(TEXT("%s"), *KeyName ) ;
+		//
+		// 			UE_LOG(LogTemp, Warning, TEXT("LayerName Name -> %s"), *LayerName);
+		// 			
+		// 			
+		// 			// for (int i=0; i < kv_Array.Num(); i++)
+		// 			// {
+		// 			// 	FString OutputString = kv_Array[i]->AsString();
+		// 			// 	//TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		// 			// 	
+		// 			// 	UE_LOG(LogTemp, Warning, TEXT("Key Value Data -> %s"), *OutputString);
+		// 			// }
+		// 			
+		// 		}
+		// 		// Get the value as a FJsonValue object
+		// 		//TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
+		// 	}
+		// }
+		// UE_LOG(LogTemp, Warning, TEXT("LayerName Name -> %s"), *LayerName);
+		//----------------------
