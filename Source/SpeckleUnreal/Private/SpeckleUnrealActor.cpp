@@ -10,7 +10,7 @@ ASpeckleUnrealActor::ASpeckleUnrealActor()
 	
 	Scene = CreateDefaultSubobject<USceneComponent>("Root");
 	RootComponent = Scene;
-	Scene->SetMobility(EComponentMobility::Static);
+	Scene->SetMobility(EComponentMobility::Movable);
 }
 
 

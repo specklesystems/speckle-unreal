@@ -276,7 +276,8 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr
 	//Block Instance
 	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
 
-	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(ASpeckleUnrealActor::StaticClass(), FTransform(TransformMatrix));
+	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(ASpeckleUnrealActor::StaticClass(),
+		FTransform(TransformMatrix));
 
 	
 	//Block Definition
@@ -328,8 +329,11 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 		if (KeyName.Contains("::"))
 		{
 				
-			FString id_Layer="";
-	
+			FString id_Layer = KeyName;
+			FString id_mesh  = "";
+
+			
+			
 			const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
 			if (KeyValue->TryGetArray(SubArrayPtr))
 			{
@@ -341,16 +345,24 @@ TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActo
 						continue;
 					else
 					{
-						TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_Layer);
-						FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
+						// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_mesh);
+						// FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
+
+						id_mesh = (*ArraySubObjPtr)->GetStringField("referencedId");
+
+						//UE_LOG(LogTemp, Warning, TEXT("KEY VAL 2: %s - %s"), *id_mesh, *id_Layer );
+						ObjectsMap.Add(*id_mesh, *id_Layer);
 					}
 				}
 			}
 			
 			//UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString);
+			// ASpeckleUnrealActor* ActorInstanceLayer = World->SpawnActor<ASpeckleUnrealActor>(
+			// 			ASpeckleUnrealActor::StaticClass(), *id_Layer, 
+			// 				FTransform(Mesh->Transform)
+			// 				);
 
-			UE_LOG(LogTemp, Warning, TEXT("KEY VAL 2: %s - %s"), *KeyName, *currJsonValue.Key());
-			ObjectsMap.Add(*KeyName, *id_Layer);
+			
 		}
 	}
 	

@@ -18,7 +18,7 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
-    RootComponent->SetMobility(EComponentMobility::Static); 
+    RootComponent->SetMobility(EComponentMobility::Movable); 
 	
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
@@ -163,19 +163,25 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 		WorldToCentimeters = WorldSettings->WorldToMeters / 100;
 	}
 
-	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
+	//ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 
 	// Dimitrios: Under construction. Provide a Meshes to Layers map
-	// TMultiMap<FString, FString> ObjectsMap;
-	// ObjectsMap = ImportObjectFromCacheNew(this, SpeckleObjects[ObjectID], NULL, ObjectsMap, "STARTER");
-	//
-	// UE_LOG(LogTemp, Warning, TEXT("MAP Layers Object Hashes : %d"), ObjectsMap.Num());
-	//
-	// for (auto& Elem : ObjectsMap)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("KEY VAL: %s - %s"), *Elem.Key, *Elem.Value);
-	// 	
-	// }
+	TMultiMap<FString, FString> ObjectsMap;
+
+	ObjectsMap = ImportObjectFromCacheNew(this, SpeckleObjects[ObjectID], NULL,
+													ObjectsMap, "STARTER");
+
+
+	
+	UE_LOG(LogTemp, Warning, TEXT("--------------------------------"));
+	UE_LOG(LogTemp, Warning, TEXT("MAP Layers Object Hashes : %d"), ObjectsMap.Num());
+	UE_LOG(LogTemp, Warning, TEXT("--------------------------------"));
+	
+	for (auto& Elem : ObjectsMap)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("KEY VAL: %s - %s"), *Elem.Key, *Elem.Value);
+		
+	}
 	
 	
 	

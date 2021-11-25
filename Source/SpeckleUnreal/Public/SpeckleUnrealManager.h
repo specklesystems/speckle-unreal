@@ -160,6 +160,8 @@ public:
 	
 	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
 	                    UMaterialInterface*& OutMaterial);
+
+	
 protected:
 
 	UWorld* World;
@@ -172,17 +174,21 @@ protected:
 	
 	TArray<UObject*> CreatedObjectsCache;
 	TArray<UObject*> InProgressObjectsCache;
-		
+
+	
 	void ImportObjectFromCache(AActor* AOwner,
-							   const TSharedPtr<FJsonObject> SpeckleObject,
-							   const TSharedPtr<FJsonObject> ParentObject = nullptr);
+							   const TSharedPtr<FJsonObject> SpeckleJsonObject,
+							   const TSharedPtr<FJsonObject> ParentJsonObject = nullptr);
+
 
 	// Dimitrios: Under construction: Import objects, Return a Map of Meshes to Layers correspondence
-	TMultiMap<FString, FString> ImportObjectFromCacheNew(AActor* AOwner,
-								const TSharedPtr<FJsonObject> SpeckleObject,
-								const TSharedPtr<FJsonObject> ParentObject,
+	TMultiMap<FString, FString> ImportObjectFromCacheNew(
+								AActor* AOwner,
+								const TSharedPtr<FJsonObject> SpeckleJsonObject,
+								const TSharedPtr<FJsonObject> ParentJsonObject,
 								TMultiMap<FString, FString> ObjectsMapIn,
 								FString who);
+
 	
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
