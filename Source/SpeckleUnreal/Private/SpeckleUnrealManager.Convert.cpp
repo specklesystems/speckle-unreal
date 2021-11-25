@@ -3,7 +3,7 @@
 #include "Objects/PointCloud.h"
 
 #include "Objects/RenderMaterial.h"
-#include "Panagiotis/SpeckleRESTHandlerComponent.h"
+#include "SpeckleRESTHandlerComponent.h"
 
 
 
@@ -67,28 +67,30 @@
 		//----------------------
 
 
-TMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AOwner,
+TMultiMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AOwner,
 													 const TSharedPtr<FJsonObject> SpeckleObject,
                                                      const TSharedPtr<FJsonObject> ParentObject,
-                                                     TMap<FString, FString> ObjectsMap,
+                                                     TMultiMap<FString, FString> ObjectsMap,
                                                      FString Who)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("EXECUTING Map size %d %s"), ObjectsMap.Num(), *Who );
 
 
-	
+	// Iterate over Speckle json objects
 	for (auto currJsonValue = SpeckleObject->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
 	{
-		// Get the key name
+		// Get the json key name
 		FString KeyName = (*currJsonValue).Key;
+
+		// Get the json value
 		TSharedPtr<FJsonValue, ESPMode::Fast> KeyValue = (*currJsonValue).Value;
 
+		// Check if it is a layer name from Rhino
 		if (KeyName.Contains("::"))
 		{
+				
             FString id_Layer="";
-
-			
-
+	
 			const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
 			if (KeyValue->TryGetArray(SubArrayPtr))
 			{
@@ -100,7 +102,6 @@ TMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AO
 						continue;
 					else
 					{
-						
 						TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_Layer);
 						FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
 					}

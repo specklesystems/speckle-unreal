@@ -2,7 +2,7 @@
 
 #include "EngineUtils.h"
 #include "PanelButton.h"
-#include "SpeckleUnreal/Public/Panagiotis/SpeckleRESTHandlerComponent.h"
+#include "SpeckleRESTHandlerComponent.h"
 #include "Engine/World.h"
 #include "SpeckleStyle.h"
 #include "Widgets/Layout/SScaleBox.h"

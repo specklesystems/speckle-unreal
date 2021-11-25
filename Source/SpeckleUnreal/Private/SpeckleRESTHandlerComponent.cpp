@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Panagiotis/SpeckleRESTHandlerComponent.h"
+#include "SpeckleRESTHandlerComponent.h"
 
 // Sets default values for this component's properties
 USpeckleRESTHandlerComponent::USpeckleRESTHandlerComponent()

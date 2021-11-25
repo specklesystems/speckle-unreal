@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "SpeckleStructs.generated.h"
+#include "MetaInformation.generated.h"
 
 /*
 * Struct that holds all the properties required

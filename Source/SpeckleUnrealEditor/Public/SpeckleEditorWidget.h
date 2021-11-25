@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "EditorUtilityWidget.h"
 #include "EngineUtils.h"
-#include "SpeckleUnreal/Public/Panagiotis/ISpeckleReceiver.h"
+#include "NativeActors/Interfaces/SpeckleReceiver.h"
 #include "SpeckleEditorWidget.generated.h"
 
 class ASpeckleUnrealManager;

@@ -38,11 +38,11 @@ void ASpeckleUnrealManager::BeginPlay()
 /*Import the Speckle object*/
 void ASpeckleUnrealManager::ImportSpeckleObject()
 {
-	const FString UserAgent = FString::Printf(TEXT("Unreal Engine (%s) / %d.%d.%d"), *UGameplayStatics::GetPlatformName(), ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION, ENGINE_PATCH_VERSION);
+	const FString UserAgent = FString::Printf(TEXT("Unreal Engine (%s) / %d.%d.%d"),
+		*UGameplayStatics::GetPlatformName(), ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION, ENGINE_PATCH_VERSION);
 
 #if !SUPPRESS_SPECKLE_ANALYTICS
 	
-
 	const FString HostApplication = FString::Printf(TEXT("Unreal%%20Engine%%20%d"), ENGINE_MAJOR_VERSION);
 	const FString Action = "receive/manual";
 	FString SpeckleUserID = "No%20SUUID";
@@ -163,21 +163,19 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 		WorldToCentimeters = WorldSettings->WorldToMeters / 100;
 	}
 
-	//ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
-	
-	TMap<FString, FString> ObjectsMap;
-	ObjectsMap = ImportObjectFromCacheNew(this, SpeckleObjects[ObjectID], NULL, ObjectsMap, "STARTER");
+	ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 
-
-	
-
-	UE_LOG(LogTemp, Warning, TEXT("MAP Layers Object Hashes : %d"), ObjectsMap.Num());
-	
-	for (auto& Elem : ObjectsMap)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("KEY VAL: %s - %s"), *Elem.Key, *Elem.Value);
-		
-	}
+	// Dimitrios: Under construction. Provide a Meshes to Layers map
+	// TMultiMap<FString, FString> ObjectsMap;
+	// ObjectsMap = ImportObjectFromCacheNew(this, SpeckleObjects[ObjectID], NULL, ObjectsMap, "STARTER");
+	//
+	// UE_LOG(LogTemp, Warning, TEXT("MAP Layers Object Hashes : %d"), ObjectsMap.Num());
+	//
+	// for (auto& Elem : ObjectsMap)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("KEY VAL: %s - %s"), *Elem.Key, *Elem.Value);
+	// 	
+	// }
 	
 	
 	

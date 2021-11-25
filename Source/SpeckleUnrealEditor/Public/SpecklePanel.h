@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "SpeckleUnreal/Public/Panagiotis/SpeckleStructs.h"
-#include "SpeckleUnreal/Public/SpeckleUnrealManager.h"
-#include "SpeckleUnreal/Public/Panagiotis/SpeckleRESTHandlerComponent.h"
+#include "Objects/MetaInformation.h"
+#include "SpeckleUnrealManager.h"
+#include "SpeckleRESTHandlerComponent.h"
 
 struct FSpeckleBranch;
 struct FSpeckleCommit;

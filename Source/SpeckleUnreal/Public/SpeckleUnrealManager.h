@@ -13,7 +13,7 @@
 
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
-#include "Panagiotis/SpeckleStructs.h"
+#include "Objects/MetaInformation.h"
 #include "NativeActors/SpeckleUnrealPointCloud.h"
 #include "NativeActors/SpeckleUnrealProceduralMesh.h"
 #include "SpeckleUnrealManager.generated.h"
@@ -26,7 +26,7 @@ class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
 	GENERATED_BODY()
 
-
+	// Asynchronously fetch of Streams, Branches, Commits, (access in Blueprints)
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessedDyn, const TArray<FSpeckleBranch>&, BranchesList);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessedDyn, const TArray<FSpeckleCommit>&, CommitsList);	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStreamsRequestProcessedDyn, const TArray<FSpeckleStream>&, StreamsList);	
@@ -44,7 +44,6 @@ public:
 
 	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Speckle")
 		void DeleteObjects();
-	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	FString ServerUrl
@@ -73,7 +72,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	bool ImportAtRuntime;
 	
-
 	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpeckleMesh"))
 		TSubclassOf<ASpeckleUnrealActor> MeshActor {
@@ -174,16 +172,16 @@ protected:
 	
 	TArray<UObject*> CreatedObjectsCache;
 	TArray<UObject*> InProgressObjectsCache;
-	
-	
+		
 	void ImportObjectFromCache(AActor* AOwner,
 							   const TSharedPtr<FJsonObject> SpeckleObject,
 							   const TSharedPtr<FJsonObject> ParentObject = nullptr);
 
-	TMap<FString, FString> ImportObjectFromCacheNew(AActor* AOwner,
+	// Dimitrios: Under construction: Import objects, Return a Map of Meshes to Layers correspondence
+	TMultiMap<FString, FString> ImportObjectFromCacheNew(AActor* AOwner,
 								const TSharedPtr<FJsonObject> SpeckleObject,
 								const TSharedPtr<FJsonObject> ParentObject,
-								TMap<FString, FString> ObjectsMapIn,
+								TMultiMap<FString, FString> ObjectsMapIn,
 								FString who);
 	
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);

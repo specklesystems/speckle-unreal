@@ -6,7 +6,7 @@
 
 #include "SpeckleUnrealManager.h"
 #include "UObject/Interface.h"
-#include "ISpeckleReceiver.generated.h"
+#include "SpeckleReceiver.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)

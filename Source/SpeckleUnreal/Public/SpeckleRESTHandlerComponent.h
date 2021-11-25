@@ -5,7 +5,7 @@
 
 #include "CoreMinimal.h"
 
-#include "ISpeckleReceiver.h"
+#include "NativeActors/Interfaces/SpeckleReceiver.h"
 #include "Components/ActorComponent.h"
 #include "SpeckleRESTHandlerComponent.generated.h"
 
