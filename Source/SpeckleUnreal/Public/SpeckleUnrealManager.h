@@ -28,12 +28,21 @@ class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 
 	// Asynchronously fetch of Streams, Branches, Commits, (access in Blueprints)
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessedDyn, const TArray<FSpeckleBranch>&, BranchesList);
+
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessedDyn, const TArray<FSpeckleCommit>&, CommitsList);	
+
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStreamsRequestProcessedDyn, const TArray<FSpeckleStream>&, StreamsList);	
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalsRequestProcessedDyn, const FSpeckleGlobals&, GlobalsObject, const FString&, StreamID);	
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGlobalsRequestProcessedDyn,
+													const FSpeckleGlobals&, GlobalsObject, const FString&, StreamID);	
 	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitJsonParsedDyn, const FString&, Completed);
+
+	
+
 	DECLARE_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessed, const TArray<FSpeckleBranch>&);
-    DECLARE_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessed, const TArray<FSpeckleCommit>&);
+
+	DECLARE_MULTICAST_DELEGATE_OneParam(FCommitsRequestProcessed, const TArray<FSpeckleCommit>&);
 	
 public:
 	FHttpModule* Http;
@@ -72,8 +81,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	bool ImportAtRuntime;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
-	TMap<FString, FString> ObjectsMap;
+	
 	
 	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpeckleMesh"))
@@ -119,8 +127,24 @@ public:
 	void OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnGlobalStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	//void OnGlobalStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
+	void OnCommitJsonParsedFinished(AActor* AOwner,
+								const TSharedPtr<FJsonObject> SpeckleJsonObject,
+								const TSharedPtr<FJsonObject> ParentJsonObject,
+								TMap<FString, FString> ObjectsMapIn,
+								FString Who);
+
+	
+	TMap<FString, FString> ImportObjectFromCacheNew(
+								AActor* AOwner,
+								const TSharedPtr<FJsonObject> SpeckleJsonObject,
+								const TSharedPtr<FJsonObject> ParentJsonObject,
+								TMap<FString, FString> ObjectsMapIn,
+								FString who);
+	
+
+	
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
 
@@ -136,7 +160,8 @@ public:
 	UPROPERTY()
 	TArray<FSpeckleStream> ArrayOfStreams;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	TMap<FString, FString> ObjectsMap;
 	
 	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
 	void FetchGlobalItems(FString PostPayload, const FString& RefObjectID);
@@ -149,6 +174,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
 	FStreamsRequestProcessedDyn OnStreamsProcessedDynamic;
+
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FCommitJsonParsedDyn OnCommitJsonParsedDynamic;
 
 	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
 	FGlobalsRequestProcessedDyn OnGlobalsProcessedDynamic;
@@ -166,6 +194,13 @@ public:
 	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
 	                    UMaterialInterface*& OutMaterial);
 
+	// Dimitrios: Under construction: Import objects, Return a Map of Meshes to Layers correspondence
+
+
+	
+	
+	
+	
 	
 protected:
 
@@ -186,13 +221,7 @@ protected:
 							   const TSharedPtr<FJsonObject> ParentJsonObject = nullptr);
 
 
-	// Dimitrios: Under construction: Import objects, Return a Map of Meshes to Layers correspondence
-	TMap<FString, FString> ImportObjectFromCacheNew(
-								AActor* AOwner,
-								const TSharedPtr<FJsonObject> SpeckleJsonObject,
-								const TSharedPtr<FJsonObject> ParentJsonObject,
-								TMap<FString, FString> ObjectsMapIn,
-								FString who);
+
 
 	
 	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);

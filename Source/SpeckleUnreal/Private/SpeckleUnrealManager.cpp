@@ -166,12 +166,13 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 	//ImportObjectFromCache(this, SpeckleObjects[ObjectID]);
 
 	// Dimitrios: Under construction. Provide a Meshes to Layers map
-	
+
+	ObjectsMap.Empty();
 
 	ObjectsMap = ImportObjectFromCacheNew(this, SpeckleObjects[ObjectID], NULL,
 													ObjectsMap, "STARTER");
 
-
+	
 	
 	UE_LOG(LogTemp, Warning, TEXT("--------------------------------"));
 	UE_LOG(LogTemp, Warning, TEXT("MAP Layers Object Hashes : %d"), ObjectsMap.Num());
@@ -199,6 +200,8 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 		FString::Printf(TEXT("[Speckle] Objects imported successfully. Created %d Actors"),
 											CreatedObjectsCache.Num()));
 
+
+	OnCommitJsonParsedDynamic.Broadcast("Completed");
 }
 
 
@@ -338,6 +341,25 @@ void ASpeckleUnrealManager::OnBranchesItemsResponseReceived(FHttpRequestPtr Requ
 	OnBranchesProcessed.Broadcast(ArrayOfBranches);
 }
 
+
+void ASpeckleUnrealManager::OnCommitJsonParsedFinished(AActor* AOwner,
+								const TSharedPtr<FJsonObject> SpeckleJsonObject,
+								const TSharedPtr<FJsonObject> ParentJsonObject,
+								TMap<FString, FString> ObjectsMapIn,
+								FString Who)
+{
+
+   
+
+
+	
+}
+
+
+
+
+
+
 void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response,
 	bool bWasSuccessful)
 {
@@ -367,9 +389,6 @@ void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Reques
 	{
 		for(const auto& pair:JsonObject->Values)
 		{
-
-			
-			
 			auto StreamsArr = JsonObject->GetObjectField(TEXT("data"))
             ->GetObjectField(TEXT("user"))
             ->GetObjectField(TEXT("streams"))
@@ -378,8 +397,6 @@ void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Reques
 			// FString OutputString;
 			// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
 			// FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
-				
-			
 			
 			for (auto s : StreamsArr)
 			{
@@ -392,10 +409,7 @@ void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Reques
 				auto IsPublic = s->AsObject()->GetBoolField("isPublic");
 
 				//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::White, RoleUser);
-				
 				auto Stream = FSpeckleStream(ID, Name, Description, IsPublic, RoleUser, CreatedAt, UpdatedAt);
-
-				
 				
 				ArrayOfStreams.Add(Stream);
 			}
