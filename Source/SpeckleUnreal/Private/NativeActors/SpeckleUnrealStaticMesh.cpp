@@ -160,8 +160,13 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
     }
 	
 	//Mesh->PreEditChange(nullptr);
-			
+	
+#if ENGINE_MAJOR_VERSION <= 4
+	Mesh->LightMapCoordinateIndex = 1;
+#else
 	Mesh->SetLightMapCoordinateIndex(1);
+#endif
+	
 	Mesh->BuildFromMeshDescriptions(TArray<const FMeshDescription*>{&BaseMeshDescription}, MeshParams);
 
 #if WITH_EDITOR
