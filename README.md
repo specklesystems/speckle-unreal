@@ -12,7 +12,7 @@ Screencast of an example: https://user-images.githubusercontent.com/2551138/1147
 
 ## NOTICE
 
-* Tested on Windows, Unreal Engine v4.26 and Visual Studio Community 2019
+* Tested on Windows, Unreal Engine v4.26 with Visual Studio Community 2019 and JetBrain's Rider for Unreal 2021.2
 * Only displays meshes. Breps are converted using their display values.
 * Does not use the Speckle Kit workflow as conversions all happen in C++. 
 
