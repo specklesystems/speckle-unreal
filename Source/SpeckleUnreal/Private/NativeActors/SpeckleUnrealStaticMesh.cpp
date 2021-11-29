@@ -9,12 +9,13 @@
 #include "StaticMeshOperations.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
 
 
 ASpeckleUnrealStaticMesh::ASpeckleUnrealStaticMesh() : ASpeckleUnrealActor()
 {
-	MeshComponent = NewObject<UStaticMeshComponent>(RootComponent, FName("SpeckleMeshComponent"), RF_Public);
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(FName("SpeckleMeshComponent"), RF_Public);
 	MeshComponent->SetMobility(EComponentMobility::Stationary);
 	MeshComponent->SetupAttachment(RootComponent);
 
@@ -145,21 +146,27 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
 			StaticMeshDescription->ComputePolygonTriangulation(PolygonID);
 		}
 	
-		
+#if ENGINE_MAJOR_VERSION <= 4
 		BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Normal, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
 		BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Tangent, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
 		BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Binormal, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
 		BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Center, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
-		
 		FStaticMeshOperations::ComputePolygonTangentsAndNormals(BaseMeshDescription);
+#else
+		FStaticMeshOperations::ComputeTriangleTangentsAndNormals(BaseMeshDescription);
+#endif
+		
 		FStaticMeshOperations::ComputeTangentsAndNormals(BaseMeshDescription, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
     }
 	
-	
-	
 	//Mesh->PreEditChange(nullptr);
-			
+	
+#if ENGINE_MAJOR_VERSION <= 4
 	Mesh->LightMapCoordinateIndex = 1;
+#else
+	Mesh->SetLightMapCoordinateIndex(1);
+#endif
+	
 	Mesh->BuildFromMeshDescriptions(TArray<const FMeshDescription*>{&BaseMeshDescription}, MeshParams);
 
 #if WITH_EDITOR
