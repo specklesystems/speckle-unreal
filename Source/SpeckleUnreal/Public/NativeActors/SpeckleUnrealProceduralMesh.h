@@ -9,6 +9,7 @@
 
 #include "SpeckleUnrealProceduralMesh.generated.h"
 
+class URenderMaterial;
 /**
  * 
  */

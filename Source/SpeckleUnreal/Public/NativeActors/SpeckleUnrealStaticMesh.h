@@ -8,6 +8,7 @@
 
 #include "SpeckleUnrealStaticMesh.generated.h"
 
+class URenderMaterial;
 /**
  * 
  */
