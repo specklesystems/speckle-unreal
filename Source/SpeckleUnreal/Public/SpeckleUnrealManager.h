@@ -119,7 +119,8 @@ protected:
 	
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
-	
+
+	UPROPERTY()
 	TArray<UObject*> CreatedObjectsCache;
 	TArray<UObject*> InProgressObjectsCache;
 	

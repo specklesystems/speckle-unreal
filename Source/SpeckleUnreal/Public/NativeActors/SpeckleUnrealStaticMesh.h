@@ -17,6 +17,9 @@ class SPECKLEUNREAL_API ASpeckleUnrealStaticMesh : public ASpeckleUnrealActor, p
 {
 	GENERATED_BODY()
 	
+protected:
+	virtual UStaticMesh* MeshToNative(UObject* Outer, const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager);
+	
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -33,7 +36,8 @@ public:
 		
 	// Sets default values for this actor's properties
 	ASpeckleUnrealStaticMesh();
-	
+
+
 	virtual void SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager) override;
 	
 	UFUNCTION(BlueprintCallable)
