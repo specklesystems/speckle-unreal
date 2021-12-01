@@ -77,11 +77,8 @@ UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMater
     UMaterialInterface* MaterialBase = SpeckleMaterial->Opacity >= 1
         ? Manager->BaseMeshOpaqueMaterial
         : Manager->BaseMeshTransparentMaterial;
-
-    const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Materials"), SpeckleMaterial->Id);
-    UPackage* Package = CreatePackage(*PackagePath);
 	
-    UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Package, FName(SpeckleMaterial->Name));
+    UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Manager, FName(SpeckleMaterial->Name));
     
     DynMaterial->SetFlags(RF_Public);
 	
@@ -92,12 +89,6 @@ UMaterialInterface* ASpeckleUnrealProceduralMesh::GetMaterial(const URenderMater
     DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
 	
     Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
-
-    if (GetWorld()->WorldType == EWorldType::PIE)
-    {
-        FAssetRegistryModule::AssetCreated(DynMaterial);
-    }
     
     return DynMaterial;
-	
 }

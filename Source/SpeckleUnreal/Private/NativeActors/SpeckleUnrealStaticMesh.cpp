@@ -24,16 +24,11 @@ ASpeckleUnrealStaticMesh::ASpeckleUnrealStaticMesh() : ASpeckleUnrealActor()
 	BuildSimpleCollision = true;
 }
 
-void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
+UStaticMesh* ASpeckleUnrealStaticMesh::MeshToNative(UObject* Outer, const UMesh* SpeckleMesh,
+                                                    ASpeckleUnrealManager* Manager)
 {
-
-	//Create Mesh Asset
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"),SpeckleMesh->Id);
-	UPackage* Package = CreatePackage(*PackagePath);
-	
 	const EObjectFlags ObjectFags = Transient? RF_Transient | RF_Public : RF_Public;
-	
-	UStaticMesh* Mesh = NewObject<UStaticMesh>(Package, FName(SpeckleMesh->Id), ObjectFags);
+	UStaticMesh* Mesh = NewObject<UStaticMesh>(Outer, FName(SpeckleMesh->Id), ObjectFags);
 
 	Mesh->InitResources();
 	Mesh->SetLightingGuid();
@@ -171,17 +166,36 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
 
 #if WITH_EDITOR
 	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
-#endif
 
-	if (GetWorld()->WorldType == EWorldType::PIE)
+
+	if (GetWorld()->WorldType == EWorldType::Editor)
 	{
+		Mesh->MarkPackageDirty();
 		FAssetRegistryModule::AssetCreated(Mesh);
 	}
+#endif
 	//Mesh->PostEditChange(); //This doesn't seem to be required
+
+	return Mesh;
+}
+
+void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
+{
+	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"),SpeckleMesh->Id);
+	UPackage* Package = CreatePackage(*PackagePath);
+
+	//Find existing mesh
+	UStaticMesh* Mesh = Cast<UStaticMesh>(Package->FindAssetInPackage());
+	
+	if(!IsValid(Mesh))
+	{
+		//No existing mesh was found, convert SpeckleMesh
+		Mesh = MeshToNative(Package, SpeckleMesh, Manager);
+	}
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	
-	MeshComponent->SetMaterialByName(MaterialSlotName, Material);
+	MeshComponent->SetMaterial(0, Mesh->GetMaterial(0));
 }
 
 
@@ -200,24 +214,50 @@ UMaterialInterface* ASpeckleUnrealStaticMesh::GetMaterial(const URenderMaterial*
 	
 	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Materials"), SpeckleMaterial->Id);
 	UPackage* Package = CreatePackage(*PackagePath);
-	
-	UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Package, FName(SpeckleMaterial->Name));
 
-	DynMaterial->SetFlags(RF_Public);
 	
-	DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
-	DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
-	DynMaterial->SetScalarParameterValue("Roughness", SpeckleMaterial->Roughness);
-	DynMaterial->SetVectorParameterValue("BaseColor", SpeckleMaterial->Diffuse);
-	DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
-	
-	Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
-
-	if (GetWorld()->WorldType == EWorldType::PIE)
+	UMaterialInstance* MaterialInstance;
+#if WITH_EDITOR
+	if (GetWorld()->WorldType == EWorldType::Editor)
 	{
-		FAssetRegistryModule::AssetCreated(DynMaterial);
+		const FName Name = MakeUniqueObjectName(Package, UMaterialInstanceConstant::StaticClass(), FName(SpeckleMaterial->Name));
+
+		//TStrongObjectPtr< UMaterialInstanceConstantFactoryNew > MaterialFact( NewObject< UMaterialInstanceConstantFactoryNew >() );
+		//MaterialFact->InitialParent = MaterialBase;
+		//UMaterialInstanceConstant* ConstMaterial = Cast< UMaterialInstanceConstant >( MaterialFact->FactoryCreateNew( UMaterialInstanceConstant::StaticClass(), Package, Name, RF_Public, nullptr, GWarn ) );
+		UMaterialInstanceConstant* ConstMaterial = NewObject<UMaterialInstanceConstant>(Package, Name, RF_Public);
+		
+		MaterialInstance = ConstMaterial;
+		ConstMaterial->SetParentEditorOnly(MaterialBase);
+		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Opacity"), SpeckleMaterial->Opacity);
+		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Metallic"), SpeckleMaterial->Metalness);
+		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Roughness"), SpeckleMaterial->Roughness);
+		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("BaseColor"), SpeckleMaterial->Diffuse);
+		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("EmissiveColor"), SpeckleMaterial->Emissive);
+		
+		//ConstMaterial->InitStaticPermutation();
+		
+		ConstMaterial->MarkPackageDirty();
+
+		FAssetRegistryModule::AssetCreated(MaterialInstance);
+	}
+	else
+#endif
+	{
+		UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Package, FName(SpeckleMaterial->Name));
+		MaterialInstance = DynMaterial;
+		
+		DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
+		DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
+		DynMaterial->SetScalarParameterValue("Roughness", SpeckleMaterial->Roughness);
+		DynMaterial->SetVectorParameterValue("BaseColor", SpeckleMaterial->Diffuse);
+		DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
+		
+		DynMaterial->SetFlags(RF_Public);
 	}
 	
-	return DynMaterial;
+	Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, MaterialInstance);
+	
+	return MaterialInstance;
 	
 }
