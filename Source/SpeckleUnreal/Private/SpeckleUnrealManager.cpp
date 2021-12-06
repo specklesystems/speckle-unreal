@@ -288,6 +288,10 @@ void ASpeckleUnrealManager::OnCommitsItemsResponseReceived(FHttpRequestPtr Reque
 	OnCommitsProcessed.Broadcast(ArrayOfCommits);
 }
 
+
+
+
+
 void ASpeckleUnrealManager::OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
@@ -418,6 +422,34 @@ void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Reques
 
 	OnStreamsProcessedDynamic.Broadcast(ArrayOfStreams);
 }
+
+
+void ASpeckleUnrealManager::FetchJson(FString StreamId, FString ObjectId, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
+{
+	FString url = ServerUrl + "/objects/" + StreamId + "/" + ObjectId;
+
+	FHttpRequestRef Request = Http->CreateRequest();
+	Request->SetVerb(TEXT("GET"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip")); 
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+
+	//Request->SetContentAsString(PostPayload);
+	
+	Request->OnProcessRequestComplete().BindLambda([=](
+		FHttpRequestPtr request,
+		FHttpResponsePtr response,
+		bool success)
+		{ HandleResponse(request, response, success); });
+
+	Request->SetURL(url);
+	Request->ProcessRequest();
+}
+
+
+
+
+
 
 void ASpeckleUnrealManager::FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
 {

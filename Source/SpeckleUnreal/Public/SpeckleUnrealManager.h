@@ -164,7 +164,11 @@ public:
 	TMap<FString, FString> ObjectsMap;
 	
 	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
+	void FetchJson(FString StreamId, FString ObjectId, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
+
 	void FetchGlobalItems(FString PostPayload, const FString& RefObjectID);
+
+	
 
 	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
 	FBranchesRequestProcessedDyn OnBranchesProcessedDynamic;

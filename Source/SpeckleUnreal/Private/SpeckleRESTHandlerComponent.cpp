@@ -123,3 +123,25 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 
 
 
+
+
+
+void USpeckleRESTHandlerComponent::FetchPlainJSON(const FString& StreamId, const FString& ObjectId)
+{
+	
+#if WITH_EDITOR
+	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
+#endif
+	
+	if(SpeckleManager)
+	{
+		
+		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse =
+			[this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		{ SpeckleManager->OnCommitsItemsResponseReceived(Request, Response, bWasSuccessful); };
+
+		SpeckleManager->FetchJson(StreamId, ObjectId, HandleResponse);
+	}
+}
+
+
