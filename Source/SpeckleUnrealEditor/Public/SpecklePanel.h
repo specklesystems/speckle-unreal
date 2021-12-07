@@ -47,6 +47,8 @@ private:
 	void SpeckleBranchesReceived(const TArray<FSpeckleBranch>& BranchesList);
 	void SpeckleCommitsReceived(const TArray<FSpeckleCommit>& CommitsList);
 
+	void GraphQLJsonReceived(const FString& JsonStringReceived);
+
 	//Dropdowns and content structures
 	TSharedPtr<STextComboBox> ManagersCBox;
 	TSharedPtr<STextComboBox> CommitsCBox;

@@ -114,8 +114,10 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 		FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + SpeckleManager->StreamID +
 			"\\\"){branch(name: \\\"" + BranchName + "\\\"){commits{items {id referencedObject sourceApplication totalChildrenCount " +
 				"branchName parents authorName authorAvatar authorId message createdAt} } }}}\"}";
-		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse = [this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-		{ SpeckleManager->OnCommitsItemsResponseReceived(Request, Response, bWasSuccessful); };
+		
+		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse =
+			[this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		         { SpeckleManager->OnCommitsItemsResponseReceived(Request, Response, bWasSuccessful); };
 
 		SpeckleManager->FetchStreamItems(PostPayload, HandleResponse);
 	}
@@ -126,21 +128,23 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 
 
 
-void USpeckleRESTHandlerComponent::FetchPlainJSON(const FString& StreamId, const FString& ObjectId)
+void USpeckleRESTHandlerComponent::FetchGraphQL(const FString& GraphQLPayload)
 {
 	
 #if WITH_EDITOR
 	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
 #endif
+
+
+	UE_LOG(LogTemp, Warning, TEXT("GraphQLPayload initial: %s"), *GraphQLPayload);
 	
 	if(SpeckleManager)
 	{
-		
 		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse =
 			[this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-		{ SpeckleManager->OnCommitsItemsResponseReceived(Request, Response, bWasSuccessful); };
+		       { SpeckleManager->OnGraphQLJsonReceived(Request, Response, bWasSuccessful); };
 
-		SpeckleManager->FetchJson(StreamId, ObjectId, HandleResponse);
+		SpeckleManager->FetchJson(GraphQLPayload, HandleResponse);
 	}
 }
 

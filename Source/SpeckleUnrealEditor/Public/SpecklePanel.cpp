@@ -235,4 +235,16 @@ void SpecklePanel::SpeckleCommitsReceived(const TArray<FSpeckleCommit>& CommitsL
 	CommitsCBox->RefreshOptions();
 }
 
+void SpecklePanel::GraphQLJsonReceived(const FString& JsonString)
+{
+	// //UE_LOG(LogTemp, Warning, TEXT("%d"), CommitsList.Num());
+	// CommitsCBoxContent.Empty();		
+	// for(auto C : CommitsList)
+	// {
+	// 	CommitsCBoxContent.Add(MakeShareable(new FString(C.Message + " [" + C.AuthorName + "]")));
+	// }
+	//
+	// CommitsCBox->RefreshOptions();
+}
+
 #undef LOCTEXT_NAMESPACE

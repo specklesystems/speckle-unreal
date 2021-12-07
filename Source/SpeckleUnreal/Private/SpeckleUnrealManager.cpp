@@ -424,32 +424,6 @@ void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Reques
 }
 
 
-void ASpeckleUnrealManager::FetchJson(FString StreamId, FString ObjectId, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
-{
-	FString url = ServerUrl + "/objects/" + StreamId + "/" + ObjectId;
-
-	FHttpRequestRef Request = Http->CreateRequest();
-	Request->SetVerb(TEXT("GET"));
-	Request->SetHeader("Accept-Encoding", TEXT("gzip")); 
-	Request->SetHeader("Content-Type", TEXT("application/json"));
-	Request->SetHeader("Authorization", "Bearer " + AuthToken);
-
-	//Request->SetContentAsString(PostPayload);
-	
-	Request->OnProcessRequestComplete().BindLambda([=](
-		FHttpRequestPtr request,
-		FHttpResponsePtr response,
-		bool success)
-		{ HandleResponse(request, response, success); });
-
-	Request->SetURL(url);
-	Request->ProcessRequest();
-}
-
-
-
-
-
 
 void ASpeckleUnrealManager::FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
 {
@@ -519,7 +493,6 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 	        		return;
 	        	}
 	        	
-	        	
 				RefObjectID = Commits->Get()->GetArrayField("items")[0]->AsObject()->GetStringField("referencedObject");
                 //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Ref: %s"), *RefObjectID));
 
@@ -560,4 +533,110 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 	
 	Request->SetURL(url);
 	Request->ProcessRequest();
+}
+
+
+void ASpeckleUnrealManager::FetchJson(const FString& GraphQLPayload,
+								TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
+{
+	FString url = this->ServerUrl + "/graphql";
+	auto HttpMod = &FHttpModule::Get();
+	FHttpRequestRef Request = Http->CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Accept", TEXT("application/json"));
+	Request->SetHeader("DNT", TEXT("1"));
+	Request->SetHeader("Origin", TEXT("https://speckle.xyz"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+
+	UE_LOG(LogTemp, Warning, TEXT("GraphQLPayload Final: %s"), *GraphQLPayload);
+	
+	Request->SetContentAsString(GraphQLPayload);
+	
+	Request->OnProcessRequestComplete().BindLambda([=](
+		FHttpRequestPtr request,
+		FHttpResponsePtr response,
+		bool success)
+		{ HandleResponse(request, response, success); });
+
+
+	UE_LOG(LogTemp, Warning, TEXT("url: %s"), *url);
+	
+	Request->SetURL(url);
+	Request->ProcessRequest();
+}
+
+
+void ASpeckleUnrealManager::OnGraphQLJsonReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!bWasSuccessful)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Stream Request failed: " + Response->GetContentAsString());
+		return;
+	}
+
+	auto responseCode = Response-> GetResponseCode();
+	if (responseCode != 200)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red,
+		FString::Printf(TEXT("SpeckleUnrealManager 2: Error response. Response code %d"), responseCode));
+		return;
+	}
+
+	FString response = Response->GetContentAsString();
+
+	UE_LOG(LogTemp, Warning, TEXT("Response of custom json : %s"), *response);
+	
+	// //Create a pointer to hold the json serialized data
+	// TSharedPtr<FJsonObject> JsonObject;
+	// //Create a reader pointer to read the json data
+	// TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
+	//
+	// ArrayOfCommits.Empty();
+	//
+	// //Deserialize the json data given Reader and the actual object to deserialize
+	// if (FJsonSerializer::Deserialize(Reader, JsonObject))
+	// {
+	// 	for(const auto& pair:JsonObject->Values)
+	// 	{
+	// 		auto CommitsArr = JsonObject->GetObjectField(TEXT("data"))
+	// 		->GetObjectField(TEXT("stream"))
+	// 		->GetObjectField(TEXT("branch"))
+	// 		->GetObjectField(TEXT("commits"))
+	// 		->GetArrayField(TEXT("items"));
+	//
+	// 		for (auto commit : CommitsArr)
+	// 		{
+	// 			auto ObjID = commit->AsObject()->GetStringField("referencedObject");
+	// 			auto Message = commit->AsObject()->GetStringField("message");
+	// 			auto AuthorName = commit->AsObject()->GetStringField("authorName");
+	// 			auto BranchName = commit->AsObject()->GetStringField("branchName");
+	//
+	// 			auto Id = commit->AsObject()->GetStringField("id");
+	// 			auto SourceApplication = commit->AsObject()->GetStringField("sourceApplication");
+	// 			auto TotalChildrenCount = commit->AsObject()->GetStringField("totalChildrenCount");
+	// 			auto Parents = commit->AsObject()->GetStringField("parents");
+	// 			auto AuthorId = commit->AsObject()->GetStringField("authorId");
+	// 			auto AuthorAvatar = commit->AsObject()->GetStringField("authorAvatar");
+	// 			auto CreatedAt = commit->AsObject()->GetStringField("createdAt");
+	// 			
+	// 			
+	// 			//auto Commit = FSpeckleCommit(ObjID, AuthorName, Message, BranchName);
+	//
+	// 			auto Commit = FSpeckleCommit(ObjID, AuthorName, Message, BranchName,
+	// 					Id, SourceApplication, TotalChildrenCount, Parents,
+	// 					AuthorId, AuthorAvatar, CreatedAt);
+	// 			
+	// 			
+	// 			ArrayOfCommits.Add(Commit);
+	// 		}
+	// 	}
+	// }
+
+    OnGraphQLProcessedDynamic.Broadcast(response);
+	
+	
+	// OnCommitsProcessedDynamic.Broadcast(ArrayOfCommits);
+	// OnCommitsProcessed.Broadcast(ArrayOfCommits);
 }

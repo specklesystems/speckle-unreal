@@ -57,6 +57,9 @@ public:
     void SpeckleCommitsReceived(const TArray<FSpeckleCommit>& CommitsList);
 
 	UFUNCTION(BlueprintCallable)
+	void GraphQLJsonReceived(const FString& JsonString);
+
+	UFUNCTION(BlueprintCallable)
     void FetchSpeckleBranches(UActorComponent* SpeckleReceiver);
 
 	UFUNCTION(BlueprintCallable)

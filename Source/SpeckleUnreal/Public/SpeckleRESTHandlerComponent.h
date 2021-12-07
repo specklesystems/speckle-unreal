@@ -41,12 +41,7 @@ public:
 	virtual void FetchListOfBranches() override;
 
 	UFUNCTION(BlueprintCallable, Category="Speckle REST")
-	virtual void FetchPlainJSON(const FString& StreamId, const FString& ObjectId) override;
-
-	
-	
-	
-	
+	virtual void FetchGraphQL(const FString& GraphQLPayload) override;
 	
 	UPROPERTY()
 	ASpeckleUnrealManager* SpeckleManager;

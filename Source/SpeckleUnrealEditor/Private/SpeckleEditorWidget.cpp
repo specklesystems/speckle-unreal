@@ -49,6 +49,7 @@ void USpeckleEditorWidget::NativeConstruct()
 	{
 		CurrentSpeckleManager->OnBranchesProcessedDynamic.AddDynamic(this, &USpeckleEditorWidget::SpeckleBranchesReceived);
 		CurrentSpeckleManager->OnCommitsProcessedDynamic.AddDynamic(this, &USpeckleEditorWidget::SpeckleCommitsReceived);
+		CurrentSpeckleManager->OnGraphQLProcessedDynamic.AddDynamic(this, &USpeckleEditorWidget::GraphQLJsonReceived);
 	}
 	
 	InitUI();
@@ -94,6 +95,15 @@ void USpeckleEditorWidget::SpeckleCommitsReceived(const TArray<FSpeckleCommit>& 
 	{
 		CommitsCBox->AddOption(C.Message + " [" + C.AuthorName + "]");
 	}
+}
+
+void USpeckleEditorWidget::GraphQLJsonReceived(const FString& JsonString)
+{
+	// CommitsCBox->ClearOptions();
+	// for (auto C : CommitsList)
+	// {
+	// 	CommitsCBox->AddOption(C.Message + " [" + C.AuthorName + "]");
+	// }
 }
 
 void USpeckleEditorWidget::FetchSpeckleBranches(UActorComponent* SpeckleActorComponent)

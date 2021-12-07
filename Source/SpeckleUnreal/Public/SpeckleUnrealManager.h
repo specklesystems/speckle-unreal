@@ -38,6 +38,8 @@ class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCommitJsonParsedDyn, const FString&, Completed);
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FJsonGraphQLProcessedDyn, const FString&, Completed);
+
 	
 
 	DECLARE_MULTICAST_DELEGATE_OneParam(FBranchesRequestProcessed, const TArray<FSpeckleBranch>&);
@@ -127,6 +129,10 @@ public:
 	void OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGraphQLJsonReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
+	
+
 	//void OnGlobalStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	void OnCommitJsonParsedFinished(AActor* AOwner,
@@ -164,8 +170,11 @@ public:
 	TMap<FString, FString> ObjectsMap;
 	
 	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
-	void FetchJson(FString StreamId, FString ObjectId, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
+	
+	void FetchJson(const FString& GraphQLPayload,
+			TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
 
+	
 	void FetchGlobalItems(FString PostPayload, const FString& RefObjectID);
 
 	
@@ -185,11 +194,20 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
 	FGlobalsRequestProcessedDyn OnGlobalsProcessedDynamic;
 
+	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
+	FJsonGraphQLProcessedDyn OnGraphQLProcessedDynamic;
+	
+
 	FBranchesRequestProcessed OnBranchesProcessed;
 	FCommitsRequestProcessed OnCommitsProcessed;
 
 	UFUNCTION(BlueprintCallable)
 	void FetchGlobalVariables(const FString& ServerName, const FString& Stream, const FString& Bearer);
+
+	
+	
+
+
 	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const;
 
