@@ -18,7 +18,7 @@ class SPECKLEUNREAL_API UBase : public UObject
 public:
 	GENERATED_BODY()
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	FString Id;
 	
 	//UPROPERTY(BlueprintReadOnly)
