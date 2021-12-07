@@ -171,7 +171,7 @@ public:
 	
 	void FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
 	
-	void FetchJson(const FString& GraphQLPayload,
+	void FetchJson(const FString& CustomBearer, const FString& GraphQLPayload,
 			TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
 
 	

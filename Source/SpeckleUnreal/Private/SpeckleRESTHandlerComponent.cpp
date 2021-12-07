@@ -128,7 +128,7 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 
 
 
-void USpeckleRESTHandlerComponent::FetchGraphQL(const FString& GraphQLPayload)
+void USpeckleRESTHandlerComponent::FetchGraphQL(const FString& CustomBearer, const FString& GraphQLPayload)
 {
 	
 #if WITH_EDITOR
@@ -144,7 +144,7 @@ void USpeckleRESTHandlerComponent::FetchGraphQL(const FString& GraphQLPayload)
 			[this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 		       { SpeckleManager->OnGraphQLJsonReceived(Request, Response, bWasSuccessful); };
 
-		SpeckleManager->FetchJson(GraphQLPayload, HandleResponse);
+		SpeckleManager->FetchJson(CustomBearer, GraphQLPayload, HandleResponse);
 	}
 }
 

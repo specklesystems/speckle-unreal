@@ -536,7 +536,7 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 }
 
 
-void ASpeckleUnrealManager::FetchJson(const FString& GraphQLPayload,
+void ASpeckleUnrealManager::FetchJson(const FString& CustomBearer, const FString& GraphQLPayload,
 								TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
 {
 	FString url = this->ServerUrl + "/graphql";
@@ -548,7 +548,7 @@ void ASpeckleUnrealManager::FetchJson(const FString& GraphQLPayload,
 	Request->SetHeader("Accept", TEXT("application/json"));
 	Request->SetHeader("DNT", TEXT("1"));
 	Request->SetHeader("Origin", TEXT("https://speckle.xyz"));
-	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetHeader("Authorization", "Bearer " + CustomBearer);
 
 	UE_LOG(LogTemp, Warning, TEXT("GraphQLPayload Final: %s"), *GraphQLPayload);
 	

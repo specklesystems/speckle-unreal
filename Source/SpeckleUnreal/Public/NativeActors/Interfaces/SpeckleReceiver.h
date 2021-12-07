@@ -28,5 +28,5 @@ public:
 	virtual void FetchListOfCommits(const FString& BranchName) = 0;
 	virtual void FetchListOfStreams() = 0;
 	virtual void FetchListOfBranches() = 0;
-	virtual void FetchGraphQL(const FString& GraphQLPayload) = 0;
+	virtual void FetchGraphQL(const FString& CustomBearer, const FString& GraphQLPayload) = 0;
 };
