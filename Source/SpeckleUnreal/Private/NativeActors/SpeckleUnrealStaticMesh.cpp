@@ -45,7 +45,7 @@ UStaticMesh* ASpeckleUnrealStaticMesh::MeshToNative(UObject* Outer, const UMesh*
 		SrcModel.BuildSettings.bRemoveDegenerates = false;
 		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
 		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
-		SrcModel.BuildSettings.bGenerateLightmapUVs = true;
+		SrcModel.BuildSettings.bGenerateLightmapUVs = false;
 		SrcModel.BuildSettings.SrcLightmapIndex = 0;
 		SrcModel.BuildSettings.DstLightmapIndex = 1;
 	}
@@ -195,7 +195,7 @@ void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, 
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	
-	MeshComponent->SetMaterial(0, Mesh->GetMaterial(0));
+	MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
 }
 
 

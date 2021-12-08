@@ -11,7 +11,7 @@
 #include "SpeckleUnrealLayer.h"
 #include "GameFramework/Actor.h"
 #include "NativeActors/SpeckleUnrealPointCloud.h"
-#include "NativeActors/SpeckleUnrealProceduralMesh.h"
+#include "NativeActors/SpeckleUnrealStaticMesh.h"
 #include "SpeckleUnrealManager.generated.h"
 
 
@@ -61,7 +61,7 @@ public:
 	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpeckleMesh"))
 		TSubclassOf<ASpeckleUnrealActor> MeshActor {
-		ASpeckleUnrealProceduralMesh::StaticClass()
+		ASpeckleUnrealStaticMesh::StaticClass()
 	};
 	
 	/** The type of Actor to use for PointCloud conversion, you may create a custom actor implementing ISpecklePointCloud */
