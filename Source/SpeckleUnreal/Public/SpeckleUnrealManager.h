@@ -83,6 +83,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	bool ImportAtRuntime;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	FString Longitude
+	{
+		""
+	};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	FString Latitude
+	{
+		""
+	};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	FString Height
+	{
+		""
+	};
 	
 	
 	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
