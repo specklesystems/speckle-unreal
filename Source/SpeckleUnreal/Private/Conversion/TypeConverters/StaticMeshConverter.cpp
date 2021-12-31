@@ -1,6 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "NativeActors/SpeckleUnrealStaticMesh.h"
+#include "Conversion/TypeConverters/StaticMeshConverter.h"
 
 #include "MeshDescriptionBase.h"
 #include "StaticMeshDescription.h"
@@ -8,32 +8,63 @@
 #include "SpeckleUnrealManager.h"
 #include "StaticMeshOperations.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Engine/StaticMeshActor.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
 
 
-ASpeckleUnrealStaticMesh::ASpeckleUnrealStaticMesh() : ASpeckleUnrealActor()
+AStaticMeshActor* UStaticMeshConverter::CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(FName("SpeckleMeshComponent"), RF_Public);
-	MeshComponent->SetMobility(EComponentMobility::Stationary);
-	MeshComponent->SetupAttachment(RootComponent);
+	AStaticMeshActor* Actor = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), Transform, SpawnParameters);
+	return Actor;
+}
 
+UStaticMeshConverter::UStaticMeshConverter()
+{
 	Transient = false;
 	UseFullBuild = true;
 	BuildSimpleCollision = true;
 }
 
-UStaticMesh* ASpeckleUnrealStaticMesh::MeshToNative(UObject* Outer, const UMesh* SpeckleMesh,
+AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleMesh, ASpeckleUnrealManager* Manager)
+{
+	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"),SpeckleMesh->Id);
+	UPackage* Package = CreatePackage(*PackagePath);
+
+	//Find existing mesh
+	UStaticMesh* Mesh = Cast<UStaticMesh>(Package->FindAssetInPackage());
+	
+	const UMesh* M = Cast<UMesh>(SpeckleMesh);
+	
+	if(!IsValid(Mesh))
+	{
+		//No existing mesh was found, convert SpeckleMesh
+		if(M == nullptr) return nullptr;
+		
+		Mesh = MeshToNative(Package, M, Manager);
+	}
+
+
+	AStaticMeshActor* Actor = CreateActor(FTransform(M->Transform));
+	UStaticMeshComponent* MeshComponent = Actor->GetStaticMeshComponent();
+	MeshComponent->SetStaticMesh(Mesh);
+	MeshComponent->SetMaterial(0, GetMaterial(M->RenderMaterial, Manager));
+	
+	return Actor;
+}
+
+UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* SpeckleMesh,
                                                     ASpeckleUnrealManager* Manager)
 {
+	
 	const EObjectFlags ObjectFags = Transient? RF_Transient | RF_Public : RF_Public;
 	UStaticMesh* Mesh = NewObject<UStaticMesh>(Outer, FName(SpeckleMesh->Id), ObjectFags);
 
 	Mesh->InitResources();
 	Mesh->SetLightingGuid();
 
-	UStaticMeshDescription* StaticMeshDescription = Mesh->CreateStaticMeshDescription(RootComponent);
+	UStaticMeshDescription* StaticMeshDescription = Mesh->CreateStaticMeshDescription(Outer);
 	FMeshDescription& BaseMeshDescription = StaticMeshDescription->GetMeshDescription();
 
 	//Build Settings
@@ -179,27 +210,8 @@ UStaticMesh* ASpeckleUnrealStaticMesh::MeshToNative(UObject* Outer, const UMesh*
 	return Mesh;
 }
 
-void ASpeckleUnrealStaticMesh::SetMesh_Implementation(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
-{
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"),SpeckleMesh->Id);
-	UPackage* Package = CreatePackage(*PackagePath);
 
-	//Find existing mesh
-	UStaticMesh* Mesh = Cast<UStaticMesh>(Package->FindAssetInPackage());
-	
-	if(!IsValid(Mesh))
-	{
-		//No existing mesh was found, convert SpeckleMesh
-		Mesh = MeshToNative(Package, SpeckleMesh, Manager);
-	}
-	
-	MeshComponent->SetStaticMesh(Mesh);
-	
-	MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
-}
-
-
-UMaterialInterface* ASpeckleUnrealStaticMesh::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
+UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
 {
 	if(SpeckleMaterial->Id == "") return Manager->DefaultMeshMaterial; //Material is invalid
 	
@@ -260,4 +272,28 @@ UMaterialInterface* ASpeckleUnrealStaticMesh::GetMaterial(const URenderMaterial*
 	
 	return MaterialInstance;
 	
+}
+
+
+UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)
+{
+	const UStaticMeshComponent* M = Cast<UStaticMeshComponent>(Object);
+
+	if(M == nullptr)
+	{
+		const AActor* A = Cast<AActor>(Object);
+		if(A != nullptr)
+		{
+			M = A->FindComponentByClass<UStaticMeshComponent>();
+		}
+	}
+	if(M == nullptr) return nullptr;
+	
+	return MeshToSpeckle(M, Manager);
+}
+
+
+UMesh* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object, ASpeckleUnrealManager* Manager)
+{
+	return nullptr; //TODO implement ToSpeckle function
 }

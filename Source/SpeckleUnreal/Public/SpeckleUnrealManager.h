@@ -9,9 +9,8 @@
 #include "Runtime/Online/HTTP/Public/Http.h"
 
 #include "SpeckleUnrealLayer.h"
+#include "Components/SpeckleConverterComponent.h"
 #include "GameFramework/Actor.h"
-#include "NativeActors/SpeckleUnrealPointCloud.h"
-#include "NativeActors/SpeckleUnrealStaticMesh.h"
 #include "SpeckleUnrealManager.generated.h"
 
 
@@ -31,7 +30,7 @@ public:
 
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void DeleteObjects();
-	
+		
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
@@ -56,20 +55,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	bool ImportAtRuntime;
-	
 
-	/** The type of Actor to use for Mesh conversion, you may create a custom actor implementing ISpeckleMesh */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpeckleMesh"))
-		TSubclassOf<ASpeckleUnrealActor> MeshActor {
-		ASpeckleUnrealStaticMesh::StaticClass()
-	};
-	
-	/** The type of Actor to use for PointCloud conversion, you may create a custom actor implementing ISpecklePointCloud */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Conversion", meta = (MustImplement = "SpecklePointCloud"))
-	TSubclassOf<AActor> PointCloudActor {
-		ASpeckleUnrealPointCloud::StaticClass()
-	};
-	
 	
 	/** Material to be applied to meshes when no RenderMaterial can be converted */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle|Materials")
@@ -95,8 +81,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Speckle|Materials")
 	TMap<FString, UMaterialInterface*> ConvertedMaterials;
 	
-	
-	TArray<USpeckleUnrealLayer*> SpeckleUnrealLayers;
 
 	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
@@ -113,6 +97,10 @@ public:
 	                    UMaterialInterface*& OutMaterial);
 protected:
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Speckle|Convert")
+	USpeckleConverterComponent* Converter;
+
+	
 	UWorld* World;
 	
 	float WorldToCentimeters;
@@ -127,8 +115,8 @@ protected:
 	
 	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
 	
-	ASpeckleUnrealActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
-	ASpeckleUnrealActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
+	AActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
+	AActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
 	AActor* CreatePointCloud(const TSharedPtr<FJsonObject> Obj);
 	
 };

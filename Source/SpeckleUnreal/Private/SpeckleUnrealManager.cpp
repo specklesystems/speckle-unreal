@@ -13,7 +13,9 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
-    RootComponent->SetMobility(EComponentMobility::Static); 
+    RootComponent->SetMobility(EComponentMobility::Static);
+
+	Converter = CreateDefaultSubobject<USpeckleConverterComponent>(FName("Converter"));
 	
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;

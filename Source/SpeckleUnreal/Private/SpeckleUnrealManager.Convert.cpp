@@ -24,7 +24,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	
 	AActor* Native = nullptr;
 
-
+	
 	
 	if(SpeckleType == "Objects.Geometry.Mesh")
 	{
@@ -172,7 +172,7 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 }
 
 
-ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
+AActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
 {
 	const FString ObjId = Obj->GetStringField("id");
 	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
@@ -181,7 +181,7 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	UMesh* Mesh = NewObject<UMesh>();
 	Mesh->Parse(Obj, this);
 		
-	ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor, FTransform(Mesh->Transform));
+	//ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor, FTransform(Mesh->Transform));
 
 	
 
@@ -199,17 +199,10 @@ ASpeckleUnrealActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObj
 	
 	Mesh->RenderMaterial = Material;
 
-	if(ActorInstance->GetClass()->ImplementsInterface(USpeckleMesh::StaticClass()))
-	{
-		FEditorScriptExecutionGuard ScriptGuard;
-		ISpeckleMesh::Execute_SetMesh(ActorInstance, Mesh, this);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s does not implement $s interface"), MeshActor , USpeckleMesh::StaticClass());
-	}
+
+	AActor* Native = Converter->ConvertToNative(Mesh, this);
 	
-	return ActorInstance;
+	return Native;
 }
 
 AActor* ASpeckleUnrealManager::CreatePointCloud(const TSharedPtr<FJsonObject> Obj)
@@ -220,25 +213,15 @@ AActor* ASpeckleUnrealManager::CreatePointCloud(const TSharedPtr<FJsonObject> Ob
 	
 	UPointCloud* Base = NewObject<UPointCloud>();
 	Base->Parse(Obj, this);
-		
-	AActor* ActorInstance = World->SpawnActor<AActor>(PointCloudActor);
 	
-	if(ActorInstance->GetClass()->ImplementsInterface(USpecklePointCloud::StaticClass()))
-	{
-		FEditorScriptExecutionGuard ScriptGuard;
-		ISpecklePointCloud::Execute_SetData(ActorInstance, Base, this);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s does not implement $s interface"), PointCloudActor , USpecklePointCloud::StaticClass());
-	}
+	AActor* Native = Converter->ConvertToNative(Base, this);
 	
-	return ActorInstance;
+	return Native;
 }
 
 
 
-ASpeckleUnrealActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
+AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
 {
 	//Transform
     const FString Units = Obj->GetStringField("units");
