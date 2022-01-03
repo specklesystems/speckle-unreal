@@ -4,14 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
+#include "Conversion/TypeConverters/ProceduralMeshConverter.h"
+#include "Conversion/TypeConverters/StaticMeshConverter.h"
+#include "Conversion/TypeConverters/PointCloudConverter.h"
 
 #include "ConverterFactory.generated.h"
 
 /**
  * This class is designed to reduce the boiler plate required to define a UFactory for ISpeckleTypeConverter types.
  * 
+ * For each ISpeckleTypeConverter we want to appear in the "Create Advanced Asset" context menu
+ * A class definition : UConverterFactory should be created (see below examples)
+ *
+ * A FConverterAction : FAssetTypeActions_Base instance will automatically be created by
+ * FSpeckleUnrealEditorModule::StartupModule for each class definition : UConverterFactory.
+ * So we don't need to worry about manually registering the SupportedClass types with FAssetToolsModule.
  */
-
 UCLASS(abstract)
 class SPECKLEUNREALEDITOR_API UConverterFactory : public UFactory
 {
@@ -28,6 +36,27 @@ public:
 	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
 
+UCLASS() 
+class SPECKLEUNREALEDITOR_API UStaticMeshConverterFactory : public UConverterFactory
+{ 
+	GENERATED_BODY() 
+public: 
+	UStaticMeshConverterFactory() : Super( UStaticMeshConverter::StaticClass() ) { } 
+};
 
+UCLASS() 
+class SPECKLEUNREALEDITOR_API UProceduralMeshConverterFactory  : public UConverterFactory
+{ 
+	GENERATED_BODY() 
+public: 
+	UProceduralMeshConverterFactory() : Super( UProceduralMeshConverter::StaticClass() ) { } 
+};
 
+UCLASS() 
+class SPECKLEUNREALEDITOR_API UPointCloudConverterFactory  : public UConverterFactory
+{ 
+	GENERATED_BODY() 
+public: 
+	UPointCloudConverterFactory() : Super( UPointCloudConverter::StaticClass() ) { } 
+}; 
 
