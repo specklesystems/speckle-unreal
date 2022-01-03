@@ -71,7 +71,7 @@ void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 				(
 					TexCoords[i].Get()->AsNumber(),
 					TexCoords[i + 1].Get()->AsNumber()
-				) * 0.1); //This is just a bodge for the webinar, this scaling is incorrect!
+				)); 
 			}
 		}
 	}
