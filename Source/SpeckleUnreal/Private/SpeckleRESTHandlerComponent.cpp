@@ -3,6 +3,7 @@
 
 #include "SpeckleRESTHandlerComponent.h"
 
+// =========
 // Sets default values for this component's properties
 USpeckleRESTHandlerComponent::USpeckleRESTHandlerComponent()
 {
@@ -13,7 +14,7 @@ USpeckleRESTHandlerComponent::USpeckleRESTHandlerComponent()
 	// ...
 }
 
-
+// =========
 // Called when the game starts
 void USpeckleRESTHandlerComponent::BeginPlay()
 {
@@ -22,7 +23,7 @@ void USpeckleRESTHandlerComponent::BeginPlay()
 	SpeckleManager = Cast<ASpeckleUnrealManager>(GetOwner());
 }
 
-
+// =========
 void USpeckleRESTHandlerComponent::ImportSpeckleObjectByRefObjId(FString ReferenceObjectID)
 {
 
@@ -39,7 +40,7 @@ void USpeckleRESTHandlerComponent::ImportSpeckleObjectByRefObjId(FString Referen
 }
 
 
-
+//=========================
 void USpeckleRESTHandlerComponent::ImportSpeckleObject(int CurrIndex)
 {
 
@@ -65,7 +66,7 @@ void USpeckleRESTHandlerComponent::ImportSpeckleObject(int CurrIndex)
 }
 
 
-
+//========
 void USpeckleRESTHandlerComponent::FetchListOfStreams()
 {
 #if WITH_EDITOR
@@ -82,6 +83,7 @@ void USpeckleRESTHandlerComponent::FetchListOfStreams()
 	}
 }
 
+//=========
 void USpeckleRESTHandlerComponent::FetchListOfBranches()
 {
 	
@@ -102,6 +104,7 @@ void USpeckleRESTHandlerComponent::FetchListOfBranches()
 	}
 }
 
+//==============
 void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 {
 	
@@ -127,7 +130,7 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 
 
 
-
+// =============
 void USpeckleRESTHandlerComponent::FetchGraphQL(const FString& CustomBearer, const FString& GraphQLPayload)
 {
 	

@@ -424,7 +424,7 @@ void ASpeckleUnrealManager::OnStreamItemsResponseReceived(FHttpRequestPtr Reques
 }
 
 
-
+//=================
 void ASpeckleUnrealManager::FetchStreamItems(FString PostPayload, TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
 {
 	FString url = ServerUrl + "/graphql";
@@ -448,7 +448,7 @@ void ASpeckleUnrealManager::FetchStreamItems(FString PostPayload, TFunction<void
 }
 
 
-
+//=====================
 void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, const FString& Stream, const FString& Bearer)
 {
 	FString url = ServerName + "/graphql";
@@ -470,6 +470,10 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
         auto responseCode = Response-> GetResponseCode();
 
         FString response = Response->GetContentAsString();
+
+		
+		UE_LOG(LogTemp, Warning, TEXT("Response of custom json Globals----- : %s"), *response);
+		
         //Create a pointer to hold the json serialized data
         TSharedPtr<FJsonObject> JsonObject;
         //Create a reader pointer to read the json data
@@ -518,7 +522,15 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 
                            double LongitudeOut = 0.0f;
                            auto longitude = GlobalObject->TryGetNumberField("Longitude", LongitudeOut);
-                           FSpeckleGlobals Global = FSpeckleGlobals(RefObjectID, RegionOut, static_cast<float>(LatitudeOut),static_cast<float>(LongitudeOut));
+
+                           double HeightOut = 0.0f;
+						   auto height = GlobalObject->TryGetNumberField("Height", HeightOut);
+
+                         	FSpeckleGlobals Global = FSpeckleGlobals(RefObjectID, RegionOut,
+                         		static_cast<float>(LatitudeOut),
+                         		static_cast<float>(LongitudeOut),
+                         		static_cast<float>(HeightOut)
+                         		);
 		
                            OnGlobalsProcessedDynamic.Broadcast(Global, Stream);
                          }
@@ -535,7 +547,7 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 	Request->ProcessRequest();
 }
 
-
+//=============
 void ASpeckleUnrealManager::FetchJson(const FString& CustomBearer, const FString& GraphQLPayload,
 								TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse)
 {
@@ -567,7 +579,7 @@ void ASpeckleUnrealManager::FetchJson(const FString& CustomBearer, const FString
 	Request->ProcessRequest();
 }
 
-
+//==================
 void ASpeckleUnrealManager::OnGraphQLJsonReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
