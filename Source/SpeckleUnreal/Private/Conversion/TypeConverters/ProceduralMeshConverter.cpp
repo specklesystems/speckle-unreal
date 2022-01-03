@@ -20,7 +20,10 @@ AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* Sp
 
 AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
 {
-    UProceduralMeshComponent* MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(FName("SpeckleMeshComponent"));
+    AActor* MeshActor = CreateActor(FTransform(SpeckleMesh->Transform));
+    UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));
+    MeshComponent->SetupAttachment(MeshActor->GetRootComponent());
+    MeshComponent->RegisterComponent();
     
     TArray<int32> Faces;
 
@@ -69,14 +72,15 @@ AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckl
     
     MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
     
-    return CreateActor(MeshComponent, FTransform(SpeckleMesh->Transform));
+    return MeshActor;
 }
 
-AActor* UProceduralMeshConverter::CreateActor(UProceduralMeshComponent* MeshData, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
+AActor* UProceduralMeshConverter::CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
     AActor* Actor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), Transform, SpawnParameters);
-    Actor->SetRootComponent(NewObject<USceneComponent>(Actor, "Root"));
-    MeshData->SetupAttachment(Actor->GetRootComponent());
+    USceneComponent* Scene = NewObject<USceneComponent>(Actor, "Root");
+    Actor->SetRootComponent(Scene);
+    Scene->RegisterComponent();
     return Actor;
 }
 

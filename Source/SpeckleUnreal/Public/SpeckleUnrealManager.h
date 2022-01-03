@@ -30,7 +30,11 @@ public:
 
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void DeleteObjects();
-		
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Speckle|Convert")
+	USpeckleConverterComponent* Converter;
+
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
@@ -95,10 +99,9 @@ public:
 	
 	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
 	                    UMaterialInterface*& OutMaterial);
-protected:
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Speckle|Convert")
-	USpeckleConverterComponent* Converter;
+	
+protected:
 
 	
 	UWorld* World;

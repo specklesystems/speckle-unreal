@@ -182,9 +182,7 @@ AActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, con
 	Mesh->Parse(Obj, this);
 		
 	//ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor, FTransform(Mesh->Transform));
-
 	
-
 	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
 	URenderMaterial* Material = NewObject<URenderMaterial>();
 
@@ -198,7 +196,6 @@ AActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, con
 	}
 	
 	Mesh->RenderMaterial = Material;
-
 
 	AActor* Native = Converter->ConvertToNative(Mesh, this);
 	

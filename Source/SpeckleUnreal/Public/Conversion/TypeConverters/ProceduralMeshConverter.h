@@ -18,7 +18,7 @@ class SPECKLEUNREAL_API UProceduralMeshConverter : public UObject, public ISpeck
 
 protected:
 
-	virtual AActor* CreateActor(UProceduralMeshComponent* MeshData, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+	virtual AActor* CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 	
 public:
 	

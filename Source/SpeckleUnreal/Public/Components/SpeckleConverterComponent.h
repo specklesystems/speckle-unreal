@@ -21,8 +21,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category="Speckle|Convert")
 	TMap<TSubclassOf<UBase>, UObject*> SpeckleConverters;
 
-	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Speckle|Convert")
-	//TSet<ISpeckleTypeConverter*> SpeckleConverter;
+	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Speckle|Convert", meta = (MustImplement = "SpeckleTypeConverter"))
+	//TList<TSubclassOf<UObject>> SpeckleConverters;
 	
 	// Sets default values for this component's properties
 	USpeckleConverterComponent();

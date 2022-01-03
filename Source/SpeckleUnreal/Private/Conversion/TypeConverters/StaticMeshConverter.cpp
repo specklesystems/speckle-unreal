@@ -27,29 +27,27 @@ UStaticMeshConverter::UStaticMeshConverter()
 	BuildSimpleCollision = true;
 }
 
-AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleMesh, ASpeckleUnrealManager* Manager)
+AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
 {
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"),SpeckleMesh->Id);
+	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"), SpeckleBase->Id);
 	UPackage* Package = CreatePackage(*PackagePath);
 
+	const UMesh* SpeckleMesh = Cast<UMesh>(SpeckleBase);
+	if(SpeckleMesh == nullptr) return nullptr;
+	
 	//Find existing mesh
 	UStaticMesh* Mesh = Cast<UStaticMesh>(Package->FindAssetInPackage());
 	
-	const UMesh* M = Cast<UMesh>(SpeckleMesh);
-	
 	if(!IsValid(Mesh))
 	{
-		//No existing mesh was found, convert SpeckleMesh
-		if(M == nullptr) return nullptr;
-		
-		Mesh = MeshToNative(Package, M, Manager);
+		//No existing mesh was found, try and convert SpeckleMesh
+		Mesh = MeshToNative(Package, SpeckleMesh, Manager);
 	}
-
-
-	AStaticMeshActor* Actor = CreateActor(FTransform(M->Transform));
+	
+	AStaticMeshActor* Actor = CreateActor(FTransform(SpeckleMesh->Transform));
 	UStaticMeshComponent* MeshComponent = Actor->GetStaticMeshComponent();
 	MeshComponent->SetStaticMesh(Mesh);
-	MeshComponent->SetMaterial(0, GetMaterial(M->RenderMaterial, Manager));
+	MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
 	
 	return Actor;
 }
