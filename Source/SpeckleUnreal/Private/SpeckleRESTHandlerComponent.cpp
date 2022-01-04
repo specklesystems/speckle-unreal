@@ -117,6 +117,8 @@ void USpeckleRESTHandlerComponent::FetchListOfCommits(const FString& BranchName)
 		FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + SpeckleManager->StreamID +
 			"\\\"){branch(name: \\\"" + BranchName + "\\\"){commits{items {id referencedObject sourceApplication totalChildrenCount " +
 				"branchName parents authorName authorAvatar authorId message createdAt} } }}}\"}";
+
+		UE_LOG(LogTemp, Warning, TEXT("Fetch Commits: %s"), *BranchName);
 		
 		TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse =
 			[this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)

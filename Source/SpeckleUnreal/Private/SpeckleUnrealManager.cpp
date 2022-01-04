@@ -244,6 +244,7 @@ void ASpeckleUnrealManager::OnCommitsItemsResponseReceived(FHttpRequestPtr Reque
 	//Create a reader pointer to read the json data
 	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
 
+	
 	ArrayOfCommits.Empty();
 	
 	//Deserialize the json data given Reader and the actual object to deserialize
