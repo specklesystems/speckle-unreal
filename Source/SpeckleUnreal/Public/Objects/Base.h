@@ -18,16 +18,16 @@ class SPECKLEUNREAL_API UBase : public UObject
 public:
 	GENERATED_BODY()
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	FString Id;
 	
 	//UPROPERTY(BlueprintReadOnly)
 	//TMap<FString, FString> Properties; //TODO figure out how I'm going to do custom properties
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	FString Units;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	FString SpeckleType;
 	
 	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* _)
