@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
-#include "Conversion/TypeConverters/ProceduralMeshConverter.h"
-#include "Conversion/TypeConverters/StaticMeshConverter.h"
-#include "Conversion/TypeConverters/PointCloudConverter.h"
+#include "Conversion/Converters/ProceduralMeshConverter.h"
+#include "Conversion/Converters/StaticMeshConverter.h"
+#include "Conversion/Converters/PointCloudConverter.h"
 
 #include "ConverterFactory.generated.h"
 

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "LidarPointCloudComponent.h"
-#include "Conversion/SpeckleTypeConverter.h"
+#include "Conversion/SpeckleConverter.h"
 
 #include "PointCloudConverter.generated.h"
 
@@ -13,17 +13,20 @@ class ULidarPointCloud;
 class UPointCloud;
 
 UCLASS()
-class SPECKLEUNREAL_API UPointCloudConverter : public UObject, public ISpeckleTypeConverter
+class SPECKLEUNREAL_API UPointCloudConverter :  public UObject, public ISpeckleConverter
 {
 	GENERATED_BODY()
-
+	
+	CONVERTS_SPECKLE_TYPES()
+	
 protected:
 	UFUNCTION(BlueprintCallable)
 	virtual ALidarPointCloudActor* CreateActor(ULidarPointCloud* PointCloudData);
 	
 public:
-	
 
+	UPointCloudConverter();
+	
 	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager) override;
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager) override;
 

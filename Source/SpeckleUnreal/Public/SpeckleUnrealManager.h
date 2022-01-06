@@ -5,18 +5,17 @@
 #include "Dom/JsonValue.h"
 
 // web requests
-#include "SpeckleUnrealActor.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 
 #include "SpeckleUnrealLayer.h"
-#include "Components/SpeckleConverterComponent.h"
+#include "Conversion/SpeckleConverterComponent.h"
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
 
 
 class URenderMaterial;
 
-UCLASS(BlueprintType)
+UCLASS(ClassGroup=(Speckle), BlueprintType)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
 	GENERATED_BODY()
@@ -31,10 +30,8 @@ public:
 	UFUNCTION(CallInEditor, Category = "Speckle")
 		void DeleteObjects();
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Speckle|Convert")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USpeckleConverterComponent* Converter;
-
-	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
@@ -118,8 +115,8 @@ protected:
 	
 	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
 	
-	AActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
-	AActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
-	AActor* CreatePointCloud(const TSharedPtr<FJsonObject> Obj);
+	 AActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
+	 AActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
+	 AActor* CreatePointCloud(const TSharedPtr<FJsonObject> Obj);
 	
 };

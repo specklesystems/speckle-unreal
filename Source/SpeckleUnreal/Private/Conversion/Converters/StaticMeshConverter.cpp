@@ -1,6 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Conversion/TypeConverters/StaticMeshConverter.h"
+#include "Conversion/Converters/StaticMeshConverter.h"
 
 #include "MeshDescriptionBase.h"
 #include "StaticMeshDescription.h"
@@ -14,17 +14,21 @@
 #include "Objects/RenderMaterial.h"
 
 
-AStaticMeshActor* UStaticMeshConverter::CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
-{
-	AStaticMeshActor* Actor = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), Transform, SpawnParameters);
-	return Actor;
-}
 
 UStaticMeshConverter::UStaticMeshConverter()
 {
 	Transient = false;
 	UseFullBuild = true;
 	BuildSimpleCollision = true;
+
+	MeshActorType = AStaticMeshActor::StaticClass();
+	SpeckleTypes.Add("Objects.Geometry.Mesh");
+}
+
+AActor* UStaticMeshConverter::CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
+{
+	AActor* Actor = GetWorld()->SpawnActor<AActor>(AStaticMeshActor::StaticClass(), Transform, SpawnParameters);
+	return Actor;
 }
 
 AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
@@ -44,8 +48,20 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 		Mesh = MeshToNative(Package, SpeckleMesh, Manager);
 	}
 	
-	AStaticMeshActor* Actor = CreateActor(FTransform(SpeckleMesh->Transform));
-	UStaticMeshComponent* MeshComponent = Actor->GetStaticMeshComponent();
+	AActor* Actor = CreateActor(FTransform(SpeckleMesh->Transform));
+	TInlineComponentArray<UStaticMeshComponent*> Components;
+	Actor->GetComponents<UStaticMeshComponent>(Components);
+	
+	UStaticMeshComponent* MeshComponent;
+	if(Components.Num() > 0) MeshComponent = Components[0];
+	else
+	{
+		// MeshActorType doesn't have a UStaticMeshComponent, so we will add one
+		MeshComponent = NewObject<UStaticMeshComponent>(Actor, FName("SpeckleMeshComponent"));
+		MeshComponent->SetupAttachment(Actor->GetRootComponent());
+		MeshComponent->RegisterComponent();
+	}
+	
 	MeshComponent->SetStaticMesh(Mesh);
 	MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
 	
@@ -74,7 +90,7 @@ UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* Spe
 		SrcModel.BuildSettings.bRemoveDegenerates = false;
 		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
 		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
-		SrcModel.BuildSettings.bGenerateLightmapUVs = false;
+		SrcModel.BuildSettings.bGenerateLightmapUVs = GenerateLightmapUV;
 		SrcModel.BuildSettings.SrcLightmapIndex = 0;
 		SrcModel.BuildSettings.DstLightmapIndex = 1;
 	}
@@ -195,7 +211,6 @@ UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* Spe
 
 #if WITH_EDITOR
 	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
-
 
 	if (GetWorld()->WorldType == EWorldType::Editor)
 	{

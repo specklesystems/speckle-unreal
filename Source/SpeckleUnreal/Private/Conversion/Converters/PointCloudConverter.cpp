@@ -1,11 +1,17 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Conversion/TypeConverters/PointCloudConverter.h"
+#include "Conversion/Converters/PointCloudConverter.h"
 
 #include "LidarPointCloudActor.h"
 #include "LidarPointCloudComponent.h"
 #include "Objects/PointCloud.h"
+
+
+UPointCloudConverter::UPointCloudConverter()
+{
+	SpeckleTypes.Add("Objects.Geometry.Pointcloud");
+}
 
 
 AActor* UPointCloudConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
@@ -43,6 +49,7 @@ ALidarPointCloudActor* UPointCloudConverter::PointCloudToNative(const UPointClou
 	return CreateActor(PointCloud);
 	
 }
+
 
 ALidarPointCloudActor* UPointCloudConverter::CreateActor(ULidarPointCloud* PointCloudData)
 {

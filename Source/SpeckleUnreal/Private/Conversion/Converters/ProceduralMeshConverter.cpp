@@ -1,6 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Conversion/TypeConverters/ProceduralMeshConverter.h"
+#include "Conversion/Converters/ProceduralMeshConverter.h"
 
 #include "ProceduralMeshComponent.h"
 #include "StaticMeshDescription.h"
@@ -8,6 +8,10 @@
 #include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
 
+UProceduralMeshConverter::UProceduralMeshConverter()
+{
+    SpeckleTypes.Add("Objects.Geometry.Mesh");
+}
 
 AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
 {
@@ -84,6 +88,7 @@ AActor* UProceduralMeshConverter::CreateActor(const FTransform& Transform, const
     return Actor;
 }
 
+
 UMaterialInterface* UProceduralMeshConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
 {
     UMaterialInterface* ExistingMaterial;
@@ -108,6 +113,7 @@ UMaterialInterface* UProceduralMeshConverter::GetMaterial(const URenderMaterial*
     
     return DynMaterial;
 }
+
 
 UBase* UProceduralMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)
 {

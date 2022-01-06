@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Conversion/SpeckleTypeConverter.h"
+#include "Conversion/SpeckleConverter.h"
 
 #include "StaticMeshConverter.generated.h"
 
@@ -12,30 +12,39 @@ class UMesh;
 class URenderMaterial;
 
 UCLASS()
-class SPECKLEUNREAL_API UStaticMeshConverter : public UObject, public ISpeckleTypeConverter
+class SPECKLEUNREAL_API UStaticMeshConverter : public UObject, public ISpeckleConverter
 {
 	GENERATED_BODY()
 
-protected:
+	CONVERTS_SPECKLE_TYPES()
 
-	virtual AStaticMeshActor* CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
-	
 public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AActor> MeshActorType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseFullBuild;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool GenerateLightmapUV;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool BuildSimpleCollision;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool Transient;
+
+protected:
+
+	virtual AActor* CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 	
+public:
 	// Sets default values for this actor's properties
 	UStaticMeshConverter();
 
-
 	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager) override;
+
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager) override;
 
 	UFUNCTION(BlueprintCallable)
