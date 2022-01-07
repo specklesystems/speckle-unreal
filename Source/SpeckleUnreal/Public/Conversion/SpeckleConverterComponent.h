@@ -24,14 +24,13 @@ protected:
 public:
 	
 	// Array of converters
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle|Conversion", meta=(DisplayThumbnail=true) )
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle|Conversion")
 	TArray<UObject*> SpeckleConverters;
-
 	
 	// Sets default values for this component's properties
 	USpeckleConverterComponent();
 
-	// Should be called after SpeckleConverters is modified  
+	// Validates changes to SpeckleConverters, Should be called after modifying SpeckleConverters
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual void OnConvertersChangeHandler();
 	

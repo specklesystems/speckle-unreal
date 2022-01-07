@@ -1,3 +1,4 @@
+#include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealManager.h"
 #include "Objects/Mesh.h"
 #include "Objects/PointCloud.h"
@@ -23,8 +24,6 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
 	
 	AActor* Native = nullptr;
-
-	
 	
 	if(SpeckleType == "Objects.Geometry.Mesh")
 	{
