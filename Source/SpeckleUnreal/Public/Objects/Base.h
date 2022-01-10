@@ -19,20 +19,19 @@ UCLASS(BlueprintType)
 class SPECKLEUNREAL_API UBase : public URegisteringBase
 {
 public:
-	
+
 	GENERATED_BODY()
 	
 protected:
 	
-	explicit UBase(FString& SpeckleType) : UBase()
-	{
-		this->SpeckleType = SpeckleType;
-	}
+	explicit UBase(const wchar_t* SpeckleType): SpeckleType(SpeckleType) {}
+	explicit UBase(const FString& SpeckleType) : SpeckleType(SpeckleType) {}
 	
 public:
 
-	UBase() {}
-	
+	UBase() : SpeckleType("Base") {}
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString Id;
 	
@@ -45,7 +44,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString SpeckleType;
 	
-	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* _)
+	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
 	{
 		Obj->TryGetStringField("id", Id);
 		Obj->TryGetStringField("units", Units);

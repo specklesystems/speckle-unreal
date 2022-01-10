@@ -30,9 +30,42 @@ void URegisteringBase::GenerateTypeRegistry()
 	}
 }
 
+
+
+TSubclassOf<UBase> URegisteringBase::FindClosestType(const FString& SpeckleType)
+{
+	FString TypeString(SpeckleType);
+	TSubclassOf<UBase> Type = nullptr;
+
+	while(!TryGetRegisteredType(TypeString, Type))
+	{
+		int32 SplitIndex;
+		if(TypeString.FindLastChar('.', SplitIndex))
+		{
+			TypeString = TypeString.Left(SplitIndex);
+		}
+		else return nullptr;
+	}
+	
+	return Type;
+	
+}
+
 TSubclassOf<UBase> URegisteringBase::GetRegisteredType(const FString& SpeckleType)
 {
+	TSubclassOf<UBase> Type = nullptr;
+	TryGetRegisteredType(SpeckleType, Type);
+	return Type;
+}
+
+bool URegisteringBase::TryGetRegisteredType(const FString& SpeckleType, TSubclassOf<UBase>& OutType)
+{
 	if(!TypeRegistry.IsSet()) GenerateTypeRegistry();
-		
-	return TypeRegistry->Find(SpeckleType)->Get();
+
+	const bool Contains = TypeRegistry->Contains(SpeckleType);
+	if(Contains)
+	{
+		OutType = *TypeRegistry->Find(SpeckleType);
+	}
+	return Contains;
 }

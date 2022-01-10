@@ -18,6 +18,9 @@ class SPECKLEUNREAL_API UMesh : public UBase
 	GENERATED_BODY()
 	
 public:
+
+	UMesh() : UBase(TEXT("Objects.Other.Mesh")) {}
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	TArray<FVector> Vertices;
 	

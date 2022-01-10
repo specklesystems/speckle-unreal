@@ -16,6 +16,8 @@ class SPECKLEUNREAL_API URenderMaterial : public UBase
 	GENERATED_BODY()
 
 public:
+	
+	URenderMaterial() : UBase(TEXT("Objects.Other.RenderMaterial")) {}
 
 	UPROPERTY()
 	FString Name;
@@ -30,7 +32,7 @@ public:
 	double Roughness = 1;
 	
 	UPROPERTY()
-	FLinearColor Diffuse = FLinearColor{221,221,221};
+	FLinearColor Diffuse = FColor{221,221,221};
 	
 	UPROPERTY()
 	FLinearColor Emissive = FLinearColor::Black;

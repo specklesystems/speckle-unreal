@@ -32,7 +32,7 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USpeckleConverterComponent* Converter;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 		FString ServerUrl {
 		"https://speckle.xyz"
@@ -92,11 +92,24 @@ public:
 	virtual void BeginPlay() override;
 
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const;
-	float ParseScaleFactor(const FString& Units) const;
 	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float ParseScaleFactor(const FString& Units) const;
+
+	//TODO move to conversion functions
+	UFUNCTION(BlueprintCallable)
 	bool TryGetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride,
 	                    UMaterialInterface*& OutMaterial);
 
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool HasObject(FString& Id) const;
+	
+	UBase* DeserializeBase(const TSharedPtr<FJsonObject> Obj) const;
+	bool ResolveReference(const TSharedPtr<FJsonObject> Object, TSharedPtr<FJsonObject>& OutObject) const;
+	
+	TSharedPtr<FJsonObject, ESPMode::Fast> GetSpeckleObject(FString& Id) const;
+	
 	
 protected:
 

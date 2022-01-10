@@ -4,6 +4,7 @@
 #include "Objects/Mesh.h"
 
 #include "SpeckleUnrealManager.h"
+#include "Objects/RenderMaterial.h"
 
 void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
 {
@@ -91,6 +92,14 @@ void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 			}
 		}
 	}
+
+	//Parse Optional RenderMaterial
+	if (Obj->HasField("renderMaterial"))
+	{
+		RenderMaterial = NewObject<URenderMaterial>();
+		RenderMaterial->Parse(Obj->GetObjectField("renderMaterial"), Manager);
+	}
+
 	
 	AlignVerticesWithTexCoordsByIndex();
 }

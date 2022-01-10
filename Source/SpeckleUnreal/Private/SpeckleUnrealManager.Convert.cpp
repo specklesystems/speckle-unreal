@@ -1,53 +1,22 @@
 #include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealManager.h"
-#include "Objects/Mesh.h"
-#include "Objects/PointCloud.h"
 
 #include "Objects/RenderMaterial.h"
 
 
 void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject)
 {
-	if (!SpeckleObject->HasField("speckle_type"))
+	const UBase* Base = DeserializeBase(SpeckleObject);
+	if(Base == nullptr)
 		return;
-	if (SpeckleObject->GetStringField("speckle_type") == "reference" && SpeckleObject->HasField("referencedId")) {
-		TSharedPtr<FJsonObject> ReferencedObj;
-		if (SpeckleObjects.Contains(SpeckleObject->GetStringField("referencedId")))
-			ImportObjectFromCache(AOwner, SpeckleObjects[SpeckleObject->GetStringField("referencedId")], ParentObject);
-		return;
-	}
-	if (!SpeckleObject->HasField("id"))
-		return;
-
 	
-	const FString ObjectId = SpeckleObject->GetStringField("id");
-	const FString SpeckleType = SpeckleObject->GetStringField("speckle_type");
-	
-	AActor* Native = nullptr;
-	
-	if(SpeckleType == "Objects.Geometry.Mesh")
-	{
-		Native = CreateMesh(SpeckleObject, ParentObject);
-	}
-	else if(SpeckleType == "Objects.Geometry.Pointcloud")
-	{
-	    Native = CreatePointCloud(SpeckleObject);
-	}
-	else if(SpeckleType == "Objects.Other.BlockInstance")
-	{
-		Native = CreateBlockInstance(SpeckleObject);
-	}
-	else if(SpeckleType == "Objects.Other.BlockDefinition")
-	{
-		return; //Ignore block definitions, Block instances will create geometry instead.
-	}
-
+	AActor* Native = Converter->ConvertToNative(Base, this);
 	
 	if(IsValid(Native))
 	{
 
 #if WITH_EDITOR
-		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *SpeckleType, *ObjectId));
+		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id));
 #endif
 		
         Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
@@ -64,7 +33,6 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	//Convert Children
 	for (const auto& Kv : SpeckleObject->Values)
 	{
-
 		const TSharedPtr<FJsonObject>* SubObjectPtr;
 		if (Kv.Value->TryGetObject(SubObjectPtr))
 		{
@@ -120,6 +88,56 @@ bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMateria
 	return false;
 }
 
+UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj) const
+{
+	{ // Handle Detached Objects
+		TSharedPtr<FJsonObject> DetachedObject;
+		if(ResolveReference(Obj, DetachedObject))
+		{
+			return DeserializeBase(DetachedObject);
+		}
+	}
+	
+	FString SpeckleType;	
+	if (!Obj->TryGetStringField("speckle_type", SpeckleType)) return nullptr;
+		
+	TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
+			
+	if(BaseType == nullptr)
+	{
+		BaseType = UBase::StaticClass();
+	}
+	
+	UBase* Base = NewObject<UBase>(BaseType);
+	Base->Parse(Obj, this);
+
+	return Base;
+}
+
+bool ASpeckleUnrealManager::HasObject(FString& Id) const
+{
+	return SpeckleObjects.Contains(Id);
+}
+
+TSharedPtr<FJsonObject, ESPMode::Fast> ASpeckleUnrealManager::GetSpeckleObject(FString& Id) const
+{
+	return *SpeckleObjects.Find(Id);
+}
+
+bool ASpeckleUnrealManager::ResolveReference(const TSharedPtr<FJsonObject> Object, TSharedPtr<FJsonObject>& OutObject) const
+{
+	FString SpeckleType;	
+	FString ReferenceID;
+	
+	if (Object->TryGetStringField("speckle_type", SpeckleType)
+		&& SpeckleType == "reference"
+		&& Object->TryGetStringField("referencedId",ReferenceID))
+	{
+		OutObject = GetSpeckleObject(ReferenceID);
+		return true;
+	}
+	return false;
+}
 
 
 TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const
@@ -169,52 +187,6 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 
 	return ParseUnits(Units.ToLower()) * WorldToCentimeters;
 }
-
-
-AActor* ASpeckleUnrealManager::CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent)
-{
-	const FString ObjId = Obj->GetStringField("id");
-	UE_LOG(LogTemp, Log, TEXT("Creating mesh for object %s"), *ObjId);
-	
-	
-	UMesh* Mesh = NewObject<UMesh>();
-	Mesh->Parse(Obj, this);
-		
-	//ASpeckleUnrealActor* ActorInstance = World->SpawnActor<ASpeckleUnrealActor>(MeshActor, FTransform(Mesh->Transform));
-	
-	// Material priority (low to high): DefaultMeshMaterial, Material set on parent, Converted RenderMaterial set on mesh, MaterialOverridesByName match, MaterialOverridesById match
-	URenderMaterial* Material = NewObject<URenderMaterial>();
-
-	if (Obj->HasField("renderMaterial"))
-	{
-		Material->Parse(Obj->GetObjectField("renderMaterial"), this);
-	}
-	else if (Parent && Parent->HasField("renderMaterial"))
-	{
-		Material->Parse(Parent->GetObjectField("renderMaterial"), this);
-	}
-	
-	Mesh->RenderMaterial = Material;
-
-	AActor* Native = Converter->ConvertToNative(Mesh, this);
-	
-	return Native;
-}
-
-AActor* ASpeckleUnrealManager::CreatePointCloud(const TSharedPtr<FJsonObject> Obj)
-{
-	const FString ObjId = Obj->GetStringField("id");
-	UE_LOG(LogTemp, Log, TEXT("Creating PointCloud for object %s"), *ObjId);
-	
-	
-	UPointCloud* Base = NewObject<UPointCloud>();
-	Base->Parse(Obj, this);
-	
-	AActor* Native = Converter->ConvertToNative(Base, this);
-	
-	return Native;
-}
-
 
 
 AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
