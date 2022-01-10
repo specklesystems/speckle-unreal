@@ -74,26 +74,26 @@ AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, ASpeckl
 {
 	check(Object != nullptr);
 	const TSubclassOf<UBase> Type = Object->GetClass();
-	UObject* Converter = GetConverter(Object->SpeckleType).GetObject();
+	UObject* Converter = GetConverter(Type).GetObject();
 	if(Converter == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Skipping Object %s - No conversion functions exist for %s"), *Object->Id, *Type->GetName());
 		return nullptr;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Converting object of type: %s id: %s  "), *Object->Id, *Type->GetName());
+	UE_LOG(LogTemp, Log, TEXT("Converting object of type: %s id: %s  "), *Object->Id, *Type->GetName());
 	
 	FEditorScriptExecutionGuard ScriptGuard;
 	return ISpeckleConverter::Execute_ConvertToNative(Converter, Object, Manager);
 
 }
 
-TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(const FString& SpeckleType)
+TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(const TSubclassOf<UBase> BaseType)
 {
 	// Check if this SpeckleType has a known converter.
-	if(SpeckleTypeMap.Contains(SpeckleType))
+	if(SpeckleTypeMap.Contains(BaseType))
 	{
-		return SpeckleTypeMap[SpeckleType];
+		return SpeckleTypeMap[BaseType];
 	}
 
 	// Try and find one that can convert this SpeckleType.
@@ -108,15 +108,15 @@ TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(con
 			continue;
 		}
 		
-		if(ISpeckleConverter::Execute_CanConvertToNative(Converter, SpeckleType))
+		if(ISpeckleConverter::Execute_CanConvertToNative(Converter, BaseType))
 		{
 			//Found a Converter! Save this mapping for next time.
-			SpeckleTypeMap.Add(SpeckleType, Converter);
+			SpeckleTypeMap.Add(BaseType, Converter);
 			return Converter;
 		}
 	}
 	
 	// SpeckleType has no conversions.
-	SpeckleTypeMap.Add(SpeckleType, nullptr);
+	SpeckleTypeMap.Add(BaseType, nullptr);
 	return nullptr;
 }

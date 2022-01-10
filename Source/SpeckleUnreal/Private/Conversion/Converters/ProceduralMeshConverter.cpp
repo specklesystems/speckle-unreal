@@ -10,7 +10,7 @@
 
 UProceduralMeshConverter::UProceduralMeshConverter()
 {
-    SpeckleTypes.Add("Objects.Geometry.Mesh");
+    SpeckleTypes.Add(UMesh::StaticClass());
 }
 
 AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)

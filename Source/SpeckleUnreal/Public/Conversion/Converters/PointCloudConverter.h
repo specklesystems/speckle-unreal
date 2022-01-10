@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LidarPointCloudComponent.h"
 #include "Conversion/SpeckleConverter.h"
 
 #include "PointCloudConverter.generated.h"
 
+class ULidarPointCloudComponent;
 class ALidarPointCloudActor;
 class ULidarPointCloud;
 class UPointCloud;

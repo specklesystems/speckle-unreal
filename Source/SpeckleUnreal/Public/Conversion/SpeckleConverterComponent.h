@@ -19,7 +19,7 @@ class SPECKLEUNREAL_API USpeckleConverterComponent : public UActorComponent
 protected:
 	
 	// A lazily initialised mapping of SpeckleType -> converters.
-	TMap<FString, TScriptInterface<ISpeckleConverter>> SpeckleTypeMap;
+	TMap<TSubclassOf<UBase>, TScriptInterface<ISpeckleConverter>> SpeckleTypeMap;
 
 public:
 	
@@ -45,7 +45,7 @@ public:
 	AActor* ConvertToNative(const UBase* Object, ASpeckleUnrealManager* Manager);
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	TScriptInterface<ISpeckleConverter> GetConverter(const FString& SpeckleType);
+	TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);
 };
 
 

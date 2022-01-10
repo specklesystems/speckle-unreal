@@ -126,10 +126,10 @@ protected:
 	TArray<UObject*> InProgressObjectsCache;
 	
 	
-	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject = nullptr);
+	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject);
 	
-	 AActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
+	 //AActor* CreateMesh(const TSharedPtr<FJsonObject> Obj, const TSharedPtr<FJsonObject> Parent = nullptr);
 	 AActor* CreateBlockInstance(const TSharedPtr<FJsonObject> Obj);
-	 AActor* CreatePointCloud(const TSharedPtr<FJsonObject> Obj);
+	 //AActor* CreatePointCloud(const TSharedPtr<FJsonObject> Obj);
 	
 };

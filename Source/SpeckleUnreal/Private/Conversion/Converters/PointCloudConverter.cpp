@@ -10,7 +10,7 @@
 
 UPointCloudConverter::UPointCloudConverter()
 {
-	SpeckleTypes.Add("Objects.Geometry.Pointcloud");
+	SpeckleTypes.Add(UPointCloud::StaticClass());
 }
 
 

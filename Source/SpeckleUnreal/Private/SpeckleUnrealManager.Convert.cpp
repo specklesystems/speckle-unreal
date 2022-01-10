@@ -4,8 +4,16 @@
 #include "Objects/RenderMaterial.h"
 
 
-void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject, const TSharedPtr<FJsonObject> ParentObject)
+void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject)
 {
+	{ // Handle Detached Objects
+		TSharedPtr<FJsonObject> DetachedObject;
+		if(ResolveReference(SpeckleObject, DetachedObject))
+		{
+			return ImportObjectFromCache(AOwner, DetachedObject);
+		}
+	}
+	
 	const UBase* Base = DeserializeBase(SpeckleObject);
 	if(Base == nullptr)
 		return;
@@ -36,19 +44,19 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 		const TSharedPtr<FJsonObject>* SubObjectPtr;
 		if (Kv.Value->TryGetObject(SubObjectPtr))
 		{
-			ImportObjectFromCache(Native, *SubObjectPtr, SpeckleObject);
+			ImportObjectFromCache(Native, *SubObjectPtr);
 			continue;
 		}
 
 		const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
 		if (Kv.Value->TryGetArray(SubArrayPtr))
 		{
-			for (const auto& ArrayElement : *SubArrayPtr)
+			for (const auto ArrayElement : *SubArrayPtr)
 			{
 				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
 				if (!ArrayElement->TryGetObject(ArraySubObjPtr))
 					continue;
-				ImportObjectFromCache(Native, *ArraySubObjPtr, SpeckleObject);
+				ImportObjectFromCache(Native, *ArraySubObjPtr);
 			}
 		}
 	}
@@ -100,13 +108,17 @@ UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj)
 	
 	FString SpeckleType;	
 	if (!Obj->TryGetStringField("speckle_type", SpeckleType)) return nullptr;
+	FString ObjectId = "";	
+	Obj->TryGetStringField("id", ObjectId);
 		
 	TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
-			
+	
 	if(BaseType == nullptr)
 	{
-		BaseType = UBase::StaticClass();
+		UE_LOG(LogTemp, Verbose, TEXT("SpeckleType: %s is unknown,%t object: %s will be ignored"), *SpeckleType, *ObjectId );
+		return nullptr; //BaseType = UBase::StaticClass();
 	}
+
 	
 	UBase* Base = NewObject<UBase>(BaseType);
 	Base->Parse(Obj, this);
@@ -231,7 +243,7 @@ AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject>
 		const FString MeshID = MeshReference->GetStringField("referencedId");
 		
 		//It is important that ParentObject is the BlockInstance not the BlockDefinition to keep NativeIDs of meshes unique between Block Instances
-		ImportObjectFromCache(BlockInstance, SpeckleObjects[MeshID], Obj);
+		ImportObjectFromCache(BlockInstance, SpeckleObjects[MeshID]);
 	}
 	
 	

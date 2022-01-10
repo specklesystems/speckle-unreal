@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Objects/Base.h"
 #include "UObject/Interface.h"
 
 #include "SpeckleConverter.generated.h"
@@ -26,7 +27,7 @@ class SPECKLEUNREAL_API ISpeckleConverter
 
 public:	
 	UFUNCTION(BlueprintNativeEvent)
-	bool CanConvertToNative(const FString& SpeckleType);
+	bool CanConvertToNative(TSubclassOf<UBase> BaseType);
 
 	/// Returns the type of Base expected for a given SpeckleType
 	UFUNCTION(BlueprintNativeEvent)
@@ -42,7 +43,7 @@ public:
 #define CONVERTS_SPECKLE_TYPES() \
 protected: \
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) \
-	TSet<FString> SpeckleTypes; \
+	TSet<TSubclassOf<UBase>> SpeckleTypes; \
 public: \
-	virtual bool CanConvertToNative_Implementation(const FString &SpeckleType) override { return SpeckleTypes.Contains(SpeckleType); } \
+	virtual bool CanConvertToNative_Implementation(TSubclassOf<UBase> BaseType) override { return SpeckleTypes.Contains(BaseType); } \
 private:

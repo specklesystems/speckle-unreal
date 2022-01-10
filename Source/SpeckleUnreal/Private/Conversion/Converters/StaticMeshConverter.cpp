@@ -22,7 +22,7 @@ UStaticMeshConverter::UStaticMeshConverter()
 	BuildSimpleCollision = true;
 
 	MeshActorType = AStaticMeshActor::StaticClass();
-	SpeckleTypes.Add("Objects.Geometry.Mesh");
+	SpeckleTypes.Add(UMesh::StaticClass());
 }
 
 AActor* UStaticMeshConverter::CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
