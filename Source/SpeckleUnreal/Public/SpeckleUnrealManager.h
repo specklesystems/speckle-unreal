@@ -103,12 +103,12 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	bool HasObject(FString& Id) const;
+	bool HasObject(const FString& Id) const;
 	
 	UBase* DeserializeBase(const TSharedPtr<FJsonObject> Obj) const;
 	bool ResolveReference(const TSharedPtr<FJsonObject> Object, TSharedPtr<FJsonObject>& OutObject) const;
 	
-	TSharedPtr<FJsonObject, ESPMode::Fast> GetSpeckleObject(FString& Id) const;
+	TSharedPtr<FJsonObject, ESPMode::Fast> GetSpeckleObject(const FString& Id) const;
 	
 	
 protected:

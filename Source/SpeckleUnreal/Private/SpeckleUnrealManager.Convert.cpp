@@ -1,5 +1,6 @@
 #include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealManager.h"
+#include "Objects/Mesh.h"
 
 #include "Objects/RenderMaterial.h"
 
@@ -17,7 +18,7 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	const UBase* Base = DeserializeBase(SpeckleObject);
 	if(Base == nullptr)
 		return;
-	
+		
 	AActor* Native = Converter->ConvertToNative(Base, this);
 	
 	if(IsValid(Native))
@@ -111,7 +112,7 @@ UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj)
 	FString ObjectId = "";	
 	Obj->TryGetStringField("id", ObjectId);
 		
-	TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
+	const TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
 	
 	if(BaseType == nullptr)
 	{
@@ -120,18 +121,18 @@ UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj)
 	}
 
 	
-	UBase* Base = NewObject<UBase>(BaseType);
+	UBase* Base =  NewObject<UBase>(GetTransientPackage(), BaseType);
 	Base->Parse(Obj, this);
 
 	return Base;
 }
 
-bool ASpeckleUnrealManager::HasObject(FString& Id) const
+bool ASpeckleUnrealManager::HasObject(const FString& Id) const
 {
 	return SpeckleObjects.Contains(Id);
 }
 
-TSharedPtr<FJsonObject, ESPMode::Fast> ASpeckleUnrealManager::GetSpeckleObject(FString& Id) const
+TSharedPtr<FJsonObject, ESPMode::Fast> ASpeckleUnrealManager::GetSpeckleObject(const FString& Id) const
 {
 	return *SpeckleObjects.Find(Id);
 }

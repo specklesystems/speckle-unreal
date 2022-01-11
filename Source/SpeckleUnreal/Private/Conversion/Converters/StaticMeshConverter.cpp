@@ -25,9 +25,9 @@ UStaticMeshConverter::UStaticMeshConverter()
 	SpeckleTypes.Add(UMesh::StaticClass());
 }
 
-AActor* UStaticMeshConverter::CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
+AActor* UStaticMeshConverter::CreateActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
-	AActor* Actor = GetWorld()->SpawnActor<AActor>(AStaticMeshActor::StaticClass(), Transform, SpawnParameters);
+	AActor* Actor = Manager->GetWorld()->SpawnActor<AActor>(AStaticMeshActor::StaticClass(), Transform, SpawnParameters);
 	return Actor;
 }
 
@@ -48,7 +48,7 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 		Mesh = MeshToNative(Package, SpeckleMesh, Manager);
 	}
 	
-	AActor* Actor = CreateActor(FTransform(SpeckleMesh->Transform));
+	AActor* Actor = CreateActor(Manager, FTransform(SpeckleMesh->Transform));
 	TInlineComponentArray<UStaticMeshComponent*> Components;
 	Actor->GetComponents<UStaticMeshComponent>(Components);
 	
@@ -212,7 +212,7 @@ UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* Spe
 #if WITH_EDITOR
 	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
 
-	if (GetWorld()->WorldType == EWorldType::Editor)
+	if (GIsEditor && !GWorld->HasBegunPlay())
 	{
 		Mesh->MarkPackageDirty();
 		FAssetRegistryModule::AssetCreated(Mesh);
@@ -226,7 +226,7 @@ UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* Spe
 
 UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
 {
-	if(SpeckleMaterial->Id == "") return Manager->DefaultMeshMaterial; //Material is invalid
+	if(SpeckleMaterial == nullptr || SpeckleMaterial->Id == "") return Manager->DefaultMeshMaterial; //Material is invalid
 	
 	UMaterialInterface* ExistingMaterial;
 	if(Manager->TryGetMaterial(SpeckleMaterial, true, ExistingMaterial))
@@ -243,7 +243,7 @@ UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* Spe
 	
 	UMaterialInstance* MaterialInstance;
 #if WITH_EDITOR
-	if (GetWorld()->WorldType == EWorldType::Editor)
+	if (GIsEditor && !GWorld->HasBegunPlay())
 	{
 		const FName Name = MakeUniqueObjectName(Package, UMaterialInstanceConstant::StaticClass(), FName(SpeckleMaterial->Name));
 

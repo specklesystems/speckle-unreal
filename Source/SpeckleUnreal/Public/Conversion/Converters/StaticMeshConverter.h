@@ -37,7 +37,7 @@ public:
 
 protected:
 
-	virtual AActor* CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+	virtual AActor* CreateActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 	
 public:
 	// Sets default values for this actor's properties

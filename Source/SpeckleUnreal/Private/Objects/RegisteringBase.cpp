@@ -2,13 +2,15 @@
 
 #include "Objects/Base.h"
 
-TOptional<TMap<FString, TSubclassOf<UBase>>> URegisteringBase::TypeRegistry;
+//TOptional<TMap<FString, TSubclassOf<UBase>>> URegisteringBase::TypeRegistry;
+TMap<FString, TSubclassOf<UBase>> URegisteringBase::TypeRegistry;
 
 void URegisteringBase::GenerateTypeRegistry()
 {
-	TypeRegistry.Reset();
-	TypeRegistry = TMap<FString, TSubclassOf<UBase>>();
-	check(TypeRegistry.IsSet());
+	//TypeRegistry.Reset();
+	TypeRegistry.Empty();
+	//TypeRegistry = TMap<FString, TSubclassOf<UBase>>();
+	//check(TypeRegistry.IsSet());
 	
 	//Find every class : UBase and add to Registry
 	for (TObjectIterator<UClass> It; It; ++It)
@@ -19,13 +21,13 @@ void URegisteringBase::GenerateTypeRegistry()
 		{
 			const FString& SpeckleType = Class->GetDefaultObject<UBase>()->SpeckleType;;
 
-			ensureAlwaysMsgf(!TypeRegistry->Contains(SpeckleType),
+			ensureAlwaysMsgf(!TypeRegistry.Contains(SpeckleType),
 				TEXT("Base class: %s conflicts with: %s for SpeckleType: %s"),
 				*Class->GetName(),
-				*TypeRegistry->operator[](SpeckleType)->GetName(),
+				*TypeRegistry[SpeckleType]->GetName(),
 				*SpeckleType);
 
-			TypeRegistry->Add(SpeckleType, *It);
+			TypeRegistry.Add(SpeckleType, *It);
 		}
 	}
 }
@@ -46,7 +48,7 @@ TSubclassOf<UBase> URegisteringBase::FindClosestType(const FString& SpeckleType)
 		}
 		else return nullptr;
 	}
-	
+		
 	return Type;
 	
 }
@@ -60,12 +62,13 @@ TSubclassOf<UBase> URegisteringBase::GetRegisteredType(const FString& SpeckleTyp
 
 bool URegisteringBase::TryGetRegisteredType(const FString& SpeckleType, TSubclassOf<UBase>& OutType)
 {
-	if(!TypeRegistry.IsSet()) GenerateTypeRegistry();
+	if(TypeRegistry.Num() == 0) GenerateTypeRegistry();
 
-	const bool Contains = TypeRegistry->Contains(SpeckleType);
+
+	const bool Contains = TypeRegistry.Contains(SpeckleType);
 	if(Contains)
 	{
-		OutType = *TypeRegistry->Find(SpeckleType);
+		OutType = *TypeRegistry.Find(SpeckleType);
 	}
 	return Contains;
 }

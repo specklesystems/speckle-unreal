@@ -5,12 +5,14 @@
 
 #include "LidarPointCloudActor.h"
 #include "LidarPointCloudComponent.h"
+#include "SpeckleUnrealManager.h"
 #include "Objects/PointCloud.h"
 
 
 UPointCloudConverter::UPointCloudConverter()
 {
 	SpeckleTypes.Add(UPointCloud::StaticClass());
+	PointCloudActorType = ALidarPointCloudActor::StaticClass();
 }
 
 
@@ -46,14 +48,14 @@ ALidarPointCloudActor* UPointCloudConverter::PointCloudToNative(const UPointClou
 	PointCloud->CenterPoints();
 	PointCloud->RefreshBounds();
 
-	return CreateActor(PointCloud);
+	return CreateActor(Manager, PointCloud);
 	
 }
 
 
-ALidarPointCloudActor* UPointCloudConverter::CreateActor(ULidarPointCloud* PointCloudData)
+ALidarPointCloudActor* UPointCloudConverter::CreateActor(const ASpeckleUnrealManager* Manager, ULidarPointCloud* PointCloudData)
 {
-	ALidarPointCloudActor* Actor = GetWorld()->SpawnActor<ALidarPointCloudActor>(ALidarPointCloudActor::StaticClass());
+	ALidarPointCloudActor* Actor = Manager->GetWorld()->SpawnActor<ALidarPointCloudActor>(PointCloudActorType);
 	Actor->SetPointCloud(PointCloudData);
 	return Actor;
 }

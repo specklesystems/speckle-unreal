@@ -14,7 +14,8 @@ class SPECKLEUNREAL_API URegisteringBase : public UObject
 	GENERATED_BODY()
 	
 protected:
-	static TOptional<TMap<FString, TSubclassOf<UBase>>> TypeRegistry;
+	//static TOptional<TMap<FString, TSubclassOf<UBase>>> TypeRegistry;
+	static TMap<FString, TSubclassOf<UBase>> TypeRegistry;
 
 	static void GenerateTypeRegistry();
 

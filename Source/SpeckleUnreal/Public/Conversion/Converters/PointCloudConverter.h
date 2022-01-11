@@ -21,10 +21,12 @@ class SPECKLEUNREAL_API UPointCloudConverter :  public UObject, public ISpeckleC
 	
 protected:
 	UFUNCTION(BlueprintCallable)
-	virtual ALidarPointCloudActor* CreateActor(ULidarPointCloud* PointCloudData);
+	virtual ALidarPointCloudActor* CreateActor(const ASpeckleUnrealManager* Manager, ULidarPointCloud* PointCloudData);
 	
 public:
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<ALidarPointCloudActor> PointCloudActorType;
+	
 	UPointCloudConverter();
 	
 	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager) override;

@@ -20,10 +20,13 @@ class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpec
 	
 protected:
 	
-	virtual AActor* CreateActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+	virtual AActor* CreateActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 	
 public:
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AActor> MeshActorType;
+	
 	// Sets default values for this actor's properties
 	UProceduralMeshConverter();
 
