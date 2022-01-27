@@ -7,6 +7,7 @@
 
 #include "Objects/RenderMaterial.h"
 
+
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
 {
@@ -221,7 +222,7 @@ void ASpeckleUnrealManager::DeleteObjects()
 	CreatedObjectsCache.Empty();
 }
 
-
+// When List of Commits has been received
 void ASpeckleUnrealManager::OnCommitsItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful)
@@ -246,12 +247,15 @@ void ASpeckleUnrealManager::OnCommitsItemsResponseReceived(FHttpRequestPtr Reque
 
 	
 	ArrayOfCommits.Empty();
+
+	
 	
 	//Deserialize the json data given Reader and the actual object to deserialize
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
 	{
 		for(const auto& pair:JsonObject->Values)
 		{
+			
 			auto CommitsArr = JsonObject->GetObjectField(TEXT("data"))
 			->GetObjectField(TEXT("stream"))
 			->GetObjectField(TEXT("branch"))
@@ -260,37 +264,79 @@ void ASpeckleUnrealManager::OnCommitsItemsResponseReceived(FHttpRequestPtr Reque
 
 			for (auto commit : CommitsArr)
 			{
+				
 				auto ObjID = commit->AsObject()->GetStringField("referencedObject");
 				auto Message = commit->AsObject()->GetStringField("message");
 				auto AuthorName = commit->AsObject()->GetStringField("authorName");
 				auto BranchName = commit->AsObject()->GetStringField("branchName");
 
-				auto Id = commit->AsObject()->GetStringField("id");
-				auto SourceApplication = commit->AsObject()->GetStringField("sourceApplication");
-				auto TotalChildrenCount = commit->AsObject()->GetStringField("totalChildrenCount");
-				auto Parents = commit->AsObject()->GetStringField("parents");
-				auto AuthorId = commit->AsObject()->GetStringField("authorId");
-				auto AuthorAvatar = commit->AsObject()->GetStringField("authorAvatar");
-				auto CreatedAt = commit->AsObject()->GetStringField("createdAt");
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 1 == ----"));
 				
+				auto Id = commit->AsObject()->GetStringField("id");
+
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 2 == ----"));
+				
+				auto SourceApplication = commit->AsObject()->GetStringField("sourceApplication");
+
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 3 == ----"));
+				
+				auto TotalChildrenCount = commit->AsObject()->GetStringField("totalChildrenCount");
+
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 4 == ----"));
+
+				FString Parents;
+				
+				try
+				{
+
+					
+
+					
+					TSharedPtr<FJsonObject> commitAsObject = commit->AsObject();
+					
+					Parents = commitAsObject->GetStringField("parents");
+				} catch (...)
+				{
+					Parents = "";
+					UE_LOG(LogTemp, Warning, TEXT(" ---=== No Parent == ----"));
+				}
+
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 5 == ----"));
+				
+				auto AuthorId = commit->AsObject()->GetStringField("authorId");
+
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 6 == ----"));
+				
+				auto AuthorAvatar = commit->AsObject()->GetStringField("authorAvatar");
+
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 7 == ----"));
+				
+				auto CreatedAt = commit->AsObject()->GetStringField("createdAt");
+
+				UE_LOG(LogTemp, Warning, TEXT(" ---=== inside 8 == ----"));
 				
 				//auto Commit = FSpeckleCommit(ObjID, AuthorName, Message, BranchName);
 
 				auto Commit = FSpeckleCommit(ObjID, AuthorName, Message, BranchName,
 						Id, SourceApplication, TotalChildrenCount, Parents,
 						AuthorId, AuthorAvatar, CreatedAt);
+
 				
 				
 				ArrayOfCommits.Add(Commit);
 			}
 		}
 	}
+
+	
+	
 	OnCommitsProcessedDynamic.Broadcast(ArrayOfCommits);
 	OnCommitsProcessed.Broadcast(ArrayOfCommits);
 }
 
-
-
+void ASpeckleUnrealManager::FetchGlobalItems(FString PostPayload, const FString& RefObjectID)
+{
+}
 
 
 void ASpeckleUnrealManager::OnBranchesItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -494,30 +540,30 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 	        	UE_LOG(LogTemp, Warning, TEXT(" ddddd --------------------------") );
 	            
 	        	TSharedPtr<FJsonObject> JsonData = JsonObject->GetObjectField(TEXT("data"))
-											                ->GetObjectField(TEXT("stream"));
-	        												//->GetObjectField(TEXT("branch"));
+											                ->GetObjectField(TEXT("stream"))
+	        												->GetObjectField(TEXT("branch"));
 
 
-	        	TSharedPtr< FJsonValue > a = JsonData->TryGetField(TEXT("branch"));
 
-	        	   
-	        	
-	        	
-	        	// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_mesh);
-				// FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
-	        	
-	        	if( a->IsNull() )
-	        	{
-	        		return;
-	        	} else
-	        	{
-	        		
-	        		UE_LOG(LogTemp, Warning, TEXT(" Cotnent of a:  ------------------------ %s "), *(a->AsString()) );
-	        	}
+
+
+
+	   //          TSharedPtr< FJsonValue > a = JsonData->TryGetField(TEXT("branch"));
+	   //          // TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_mesh);
+				// // FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
+	   //      	
+	   //      	if( a->IsNull() )
+	   //      	{
+	   //      		return;
+	   //      	} else
+	   //      	{
+	   //      		
+	   //      		UE_LOG(LogTemp, Warning, TEXT(" Cotnent of a:  ------------------------ %s "), *(a->AsString()) );
+	   //      	}
 
 	        	//
 
-	        	JsonData = JsonObject->GetObjectField(TEXT("branch"));
+	        	// JsonData = JsonObject->GetObjectField(TEXT("branch"));
 	        	
 	        	UE_LOG(LogTemp, Warning, TEXT(" eeeee --------------------------") );
                 const TSharedPtr<FJsonObject>* Commits;
