@@ -463,7 +463,8 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 	Request->SetHeader("Origin", TEXT("https://speckle.xyz"));
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
 
-	FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + Stream + "\\\"){branch(name:  \\\"" + "globals" + "\\\"){commits{totalCount items{referencedObject}}}}}\"}";
+	FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + Stream + "\\\"){branch(name:  \\\"" + "globals" +
+															"\\\"){commits{totalCount items{referencedObject}}}}}\"}";
 	Request->SetContentAsString(PostPayload);
 	Request->OnProcessRequestComplete().BindLambda([=]
     (FHttpRequestPtr request, FHttpResponsePtr Response, bool success)
@@ -473,11 +474,13 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
         FString response = Response->GetContentAsString();
 
 		
-		UE_LOG(LogTemp, Warning, TEXT("Response of custom json Globals----- : %s"), *response);
+		UE_LOG(LogTemp, Warning, TEXT("Response for Stream  ----- : %s"), *Stream);
+		UE_LOG(LogTemp, Warning, TEXT("Response of custom json Globals ----- : %s"), *response);
 		
         //Create a pointer to hold the json serialized data
         TSharedPtr<FJsonObject> JsonObject;
-        //Create a reader pointer to read the json data
+
+		//Create a reader pointer to read the json data
         TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
 
         auto RefObjectID = FString();
@@ -487,11 +490,38 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
         {
 	        for(const auto& pair:JsonObject->Values)
 	        {
-                auto JsonData = JsonObject->GetObjectField(TEXT("data"))
-                ->GetObjectField(TEXT("stream"))
-                ->GetObjectField(TEXT("branch"));
 
+	        	UE_LOG(LogTemp, Warning, TEXT(" ddddd --------------------------") );
+	            
+	        	TSharedPtr<FJsonObject> JsonData = JsonObject->GetObjectField(TEXT("data"))
+											                ->GetObjectField(TEXT("stream"));
+	        												//->GetObjectField(TEXT("branch"));
+
+
+	        	TSharedPtr< FJsonValue > a = JsonData->TryGetField(TEXT("branch"));
+
+	        	   
+	        	
+	        	
+	        	// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_mesh);
+				// FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
+	        	
+	        	if( a->IsNull() )
+	        	{
+	        		return;
+	        	} else
+	        	{
+	        		
+	        		UE_LOG(LogTemp, Warning, TEXT(" Cotnent of a:  ------------------------ %s "), *(a->AsString()) );
+	        	}
+
+	        	//
+
+	        	JsonData = JsonObject->GetObjectField(TEXT("branch"));
+	        	
+	        	UE_LOG(LogTemp, Warning, TEXT(" eeeee --------------------------") );
                 const TSharedPtr<FJsonObject>* Commits;
+
 	        	if(!JsonData->TryGetObjectField("commits", Commits))
 	        	{
 	        		OnGlobalsProcessedDynamic.Broadcast(*new FSpeckleGlobals(), Stream);
@@ -500,45 +530,52 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 	        	
 				RefObjectID = Commits->Get()->GetArrayField("items")[0]->AsObject()->GetStringField("referencedObject");
                 //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Ref: %s"), *RefObjectID));
-
-                TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> TempResponseHandler = [=](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	        	
+                TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> TempResponseHandler =
+                				[=](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
                 {
-                    FString response = Response->GetContentAsString();
+                					
+                    FString responseStr = Response->GetContentAsString();
                     TSharedPtr<FJsonObject> JsonObject;
-                    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
+                    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(responseStr);
+                					
                     if (FJsonSerializer::Deserialize(Reader, JsonObject))
                     {
                          for(const auto& pair:JsonObject->Values)
                          {
+         	
                            auto GlobalObject = JsonObject->GetObjectField(TEXT("data"))
-                           ->GetObjectField(TEXT("stream"))
-                           ->GetObjectField(TEXT("object"))
-                           ->GetObjectField(TEXT("data"));
-
-                           auto RegionOut = FString("Empty");
-                           auto Region = GlobalObject->TryGetStringField("Region", RegionOut);
-
+												                           ->GetObjectField(TEXT("stream"))
+												                           ->GetObjectField(TEXT("object"));
+                           FString RegionOut = FString("Empty");
+                           GlobalObject->TryGetStringField("Region", RegionOut);
+                         	
                            double LatitudeOut = 0.0f;
-                           auto Latitude = GlobalObject->TryGetNumberField("Latitude", LatitudeOut);
+                           GlobalObject->TryGetNumberField("Latitude", LatitudeOut);
 
                            double LongitudeOut = 0.0f;
-                           auto longitude = GlobalObject->TryGetNumberField("Longitude", LongitudeOut);
+                           GlobalObject->TryGetNumberField("Longitude", LongitudeOut);
 
                            double HeightOut = 0.0f;
-						   auto height = GlobalObject->TryGetNumberField("Height", HeightOut);
+						   GlobalObject->TryGetNumberField("Height", HeightOut);
 
+                         	
+                         	
                          	FSpeckleGlobals Global = FSpeckleGlobals(RefObjectID, RegionOut,
-                         		static_cast<float>(LatitudeOut),
-                         		static_cast<float>(LongitudeOut),
-                         		static_cast<float>(HeightOut)
-                         		);
+                         											static_cast<float>(LatitudeOut),
+                         											static_cast<float>(LongitudeOut),
+                         											static_cast<float>(HeightOut)
+                         											);
 		
                            OnGlobalsProcessedDynamic.Broadcast(Global, Stream);
                          }
                     }
                 };
 
-                FString PostPayload = "{\"query\": \"query{stream (id:\\\"" + Stream + "\\\"){id name description updatedAt createdAt role isPublic object(id:\\\"" + RefObjectID + "\\\"){id data}}}\"}";
+                FString PostPayload = "{\"query\": \"query{stream (id:\\\"" + Stream +
+                	"\\\"){id name description updatedAt createdAt role isPublic object(id:\\\"" + RefObjectID +
+                		"\\\"){id data}}}\"}";
+	        	
                 FetchStreamItems(PostPayload, TempResponseHandler);
             }
         }
