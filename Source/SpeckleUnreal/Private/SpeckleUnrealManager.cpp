@@ -476,55 +476,67 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
 		
 		UE_LOG(LogTemp, Warning, TEXT("Response for Stream  ----- : %s"), *Stream);
 		UE_LOG(LogTemp, Warning, TEXT("Response of custom json Globals ----- : %s"), *response);
+
+		//https://www.orfeasel.com/parsing-json-files/
+		//GLog->Log("Json String:");
+		//GLog->Log(response);
 		
         //Create a pointer to hold the json serialized data
-        TSharedPtr<FJsonObject> JsonObject;
+		//TSharedPtr<FJsonObject> JsonObject;
+        TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject()); 
 
 		//Create a reader pointer to read the json data
         TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
-
+		
         auto RefObjectID = FString();
 	
         //Deserialize the json data given Reader and the actual object to deserialize
-        if (FJsonSerializer::Deserialize(Reader, JsonObject))
+		//if (FJsonSerializer::Deserialize(Reader, JsonObject))
+        if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
         {
 	        for(const auto& pair:JsonObject->Values)
 	        {
-
-	        	UE_LOG(LogTemp, Warning, TEXT(" ddddd --------------------------") );
+	        	//UE_LOG(LogTemp, Warning, TEXT(" ddddd --------------------------") );
 	            
-	        	TSharedPtr<FJsonObject> JsonData = JsonObject->GetObjectField(TEXT("data"))
-											                ->GetObjectField(TEXT("stream"));
+				TSharedPtr<FJsonObject> JsonData = JsonObject->GetObjectField(TEXT("data"))
+															->GetObjectField(TEXT("stream"));
 	        												//->GetObjectField(TEXT("branch"));
 
-
-	        	TSharedPtr< FJsonValue > a = JsonData->TryGetField(TEXT("branch"));
-
-	        	   
-	        	
-	        	
-	        	// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&id_mesh);
-				// FJsonSerializer::Serialize((*ArraySubObjPtr).ToSharedRef(), Writer);
-	        	
-	        	if( a->IsNull() )
+				//output json object to ue4 output log for debugging purposes - https://stackoverflow.com/a/50376462
+				/*FString OutputString;
+				TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+				FJsonSerializer::Serialize(JsonData.ToSharedRef(), Writer);
+				UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString); */
+				
+				//possibly always true - consider removing the if/else part
+				if(!JsonData->HasField(TEXT("branch")))
 	        	{
-	        		return;
+					UE_LOG(LogTemp, Warning, TEXT("Stream: %s does not have branch field --------------------------"), *Stream);
+					//continue;
+					return;
 	        	} else
 	        	{
-	        		
-	        		UE_LOG(LogTemp, Warning, TEXT(" Cotnent of a:  ------------------------ %s "), *(a->AsString()) );
+					//UE_LOG(LogTemp, Warning, TEXT(" Entering else path --------------------------"));
+
+					TSharedPtr< FJsonValue > BranchValue = JsonData->TryGetField(TEXT("branch"));
+					if (BranchValue.IsValid() && !(BranchValue->IsNull()) )
+					{
+						//UE_LOG(LogTemp, Warning, TEXT(" branch valid and not null --------------------------"));
+						JsonData = BranchValue->AsObject();
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Stream: %s has null branch field --------------------------"), *Stream);
+					}
+	        		//UE_LOG(LogTemp, Warning, TEXT(" Cotnent of a:  ------------------------ %s "), *(a->AsString()) );
 	        	}
-
-	        	//
-
-	        	JsonData = JsonObject->GetObjectField(TEXT("branch"));
-	        	
-	        	UE_LOG(LogTemp, Warning, TEXT(" eeeee --------------------------") );
+       	        	
+	        	//UE_LOG(LogTemp, Warning, TEXT(" eeeee --------------------------") );
+			
                 const TSharedPtr<FJsonObject>* Commits;
-
+				//BranchValue->AsObject()
 	        	if(!JsonData->TryGetObjectField("commits", Commits))
-	        	{
-	        		OnGlobalsProcessedDynamic.Broadcast(*new FSpeckleGlobals(), Stream);
+	        	{				
 	        		return;
 	        	}
 	        	
@@ -546,7 +558,17 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
          	
                            auto GlobalObject = JsonObject->GetObjectField(TEXT("data"))
 												                           ->GetObjectField(TEXT("stream"))
-												                           ->GetObjectField(TEXT("object"));
+																		   ->GetObjectField(TEXT("object"))
+												                           ->GetObjectField(TEXT("data"));
+
+						   /*GLog->Log("Globals json String:");
+						   GLog->Log(responseStr);
+
+						   FString OutputString;
+						   TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+						   FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+						   UE_LOG(LogTemp, Warning, TEXT("resulting jsonString -> %s"), *OutputString); */
+
                            FString RegionOut = FString("Empty");
                            GlobalObject->TryGetStringField("Region", RegionOut);
                          	
