@@ -151,13 +151,6 @@ public:
 	
 
 	//void OnGlobalStreamItemsResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	void OnCommitJsonParsedFinished(AActor* AOwner,
-								const TSharedPtr<FJsonObject> SpeckleJsonObject,
-								const TSharedPtr<FJsonObject> ParentJsonObject,
-								TMap<FString, FString> ObjectsMapIn,
-								FString Who);
-
 	
 	TMap<FString, FString> ImportObjectFromCacheNew(
 								AActor* AOwner,
@@ -190,10 +183,6 @@ public:
 	
 	void FetchJson(const FString& CustomBearer, const FString& GraphQLPayload,
 			TFunction<void(FHttpRequestPtr, FHttpResponsePtr , bool)> HandleResponse);
-
-	
-	void FetchGlobalItems(FString PostPayload, const FString& RefObjectID);
-
 	
 
 	UPROPERTY(BlueprintAssignable, Category = "SpeckleEvents");
