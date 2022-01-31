@@ -6,10 +6,9 @@
 #include "SpeckleUnrealManager.h"
 #include "Objects/RenderMaterial.h"
 
-void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
 {
-	Super::Parse(Obj, Manager);
-
+	if(!Super::Parse(Obj, Manager)) return false;
 	const float ScaleFactor = Manager->ParseScaleFactor(Units);
 
 	//Parse optional Transform
@@ -45,6 +44,7 @@ void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 				ObjectVertices[j + 2].Get()->AsNumber()
 			) * ScaleFactor ));
 		}
+		DynamicProperties.Remove("vertices");
 	}
 
 	//Parse Faces
@@ -55,6 +55,7 @@ void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 		{
 			Faces.Add(VertIndex->AsNumber());
 		}
+		DynamicProperties.Remove("faces");
 	}
 
 	//Parse TextureCoords
@@ -74,6 +75,7 @@ void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 					TexCoords[i + 1].Get()->AsNumber()
 				)); 
 			}
+			DynamicProperties.Remove("textureCoordinates");
 		}
 	}
 
@@ -90,6 +92,7 @@ void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 			{
 				VertexColors.Add(FColor(Colors[i].Get()->AsNumber()));
 			}
+			DynamicProperties.Remove("colors");
 		}
 	}
 
@@ -98,10 +101,12 @@ void UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 	{
 		RenderMaterial = NewObject<URenderMaterial>();
 		RenderMaterial->Parse(Obj->GetObjectField("renderMaterial"), Manager);
+		DynamicProperties.Remove("renderMaterial");
 	}
-
 	
 	AlignVerticesWithTexCoordsByIndex();
+
+	return Vertices.Num() > 0 && Faces.Num() > 0;
 }
 
 

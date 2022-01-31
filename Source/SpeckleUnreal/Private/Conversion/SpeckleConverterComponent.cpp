@@ -72,16 +72,17 @@ UBase* USpeckleConverterComponent::ConvertToSpeckle(UObject* Object)
 
 AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, ASpeckleUnrealManager* Manager)
 {
-	check(Object != nullptr);
+	if(!IsValid(Object)) return nullptr;
+	
 	const TSubclassOf<UBase> Type = Object->GetClass();
 	UObject* Converter = GetConverter(Type).GetObject();
 	if(Converter == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Skipping Object %s - No conversion functions exist for %s"), *Object->Id, *Type->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("Skipping Object %s: No conversion functions exist for %s"), *Object->Id, *Type->GetName());
 		return nullptr;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Converting object of type: %s id: %s  "), *Object->Id, *Type->GetName());
+	UE_LOG(LogTemp, Log, TEXT("Converting object of type: %s id: %s  "), *Type->GetName(), *Object->Id);
 	
 	FEditorScriptExecutionGuard ScriptGuard;
 	return ISpeckleConverter::Execute_ConvertToNative(Converter, Object, Manager);

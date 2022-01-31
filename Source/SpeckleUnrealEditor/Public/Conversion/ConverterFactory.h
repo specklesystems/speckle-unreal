@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Conversion/Converters/DisplayValueConverter.h"
 #include "Factories/Factory.h"
 #include "Conversion/Converters/ProceduralMeshConverter.h"
 #include "Conversion/Converters/StaticMeshConverter.h"
@@ -60,3 +61,10 @@ public:
 	UPointCloudConverterFactory() : Super( UPointCloudConverter::StaticClass() ) { } 
 }; 
 
+UCLASS() 
+class SPECKLEUNREALEDITOR_API UDisplayValueConverterFactory  : public UConverterFactory
+{ 
+	GENERATED_BODY() 
+public: 
+	UDisplayValueConverterFactory() : Super( UDisplayValueConverter::StaticClass() ) { } 
+}; 

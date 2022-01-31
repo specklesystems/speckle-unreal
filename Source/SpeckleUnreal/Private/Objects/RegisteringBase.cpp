@@ -41,12 +41,16 @@ TSubclassOf<UBase> URegisteringBase::FindClosestType(const FString& SpeckleType)
 
 	while(!TryGetRegisteredType(TypeString, Type))
 	{
-		int32 SplitIndex;
-		if(TypeString.FindLastChar('.', SplitIndex))
-		{
-			TypeString = TypeString.Left(SplitIndex);
-		}
-		else return nullptr;
+		
+		int32 DotSplitIndex;
+		TypeString.FindLastChar('.', DotSplitIndex);
+		int32 ColonSplitIndex;
+		TypeString.FindLastChar(':', ColonSplitIndex);
+		const int32 SplitIndex = FGenericPlatformMath::Max(DotSplitIndex, ColonSplitIndex);
+
+		if(SplitIndex <= 0) return nullptr;
+		
+		TypeString = TypeString.Left(SplitIndex);
 	}
 		
 	return Type;

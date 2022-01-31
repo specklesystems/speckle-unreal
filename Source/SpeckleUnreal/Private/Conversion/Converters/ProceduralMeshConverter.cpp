@@ -25,7 +25,7 @@ AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* Sp
 
 AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
 {
-    AActor* MeshActor = CreateActor(Manager, FTransform(SpeckleMesh->Transform));
+    AActor* MeshActor = CreateEmptyActor(Manager, FTransform(SpeckleMesh->Transform));
     UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));
     MeshComponent->SetupAttachment(MeshActor->GetRootComponent());
     MeshComponent->RegisterComponent();
@@ -80,7 +80,7 @@ AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckl
     return MeshActor;
 }
 
-AActor* UProceduralMeshConverter::CreateActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
+AActor* UProceduralMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
     AActor* Actor = Manager->GetWorld()->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
     USceneComponent* Scene = NewObject<USceneComponent>(Actor, "Root");

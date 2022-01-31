@@ -37,22 +37,32 @@ public:
 	UPROPERTY()
 	FLinearColor Emissive = FLinearColor::Black;
 
-	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override
+	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override
 	{
-		Super::Parse(Obj, Manager);
+		if(!Super::Parse(Obj, Manager)) return false;
 	
-		Obj->TryGetStringField("name", Name);
-		Obj->TryGetNumberField("opacity", Opacity);
-		Obj->TryGetNumberField("metalness", Metalness);
-		Obj->TryGetNumberField("roughness", Roughness);
-	
+		if(Obj->TryGetStringField("name", Name)) DynamicProperties.Remove("name");
+		if(Obj->TryGetNumberField("opacity", Opacity)) DynamicProperties.Remove("opacity");
+		if(Obj->TryGetNumberField("metalness", Metalness)) DynamicProperties.Remove("metalness");
+		if(Obj->TryGetNumberField("roughness", Roughness)) DynamicProperties.Remove("roughness");
+
+		bool IsValid = false;
+		
 		int32 ARGB;
 		if(Obj->TryGetNumberField("diffuse", ARGB))
+		{
 			Diffuse = FColor(ARGB);
+			DynamicProperties.Remove("diffuse");
+			IsValid = true;
+		}
 		
 		if(Obj->TryGetNumberField("emissive", ARGB))
+		{
 			Emissive = FColor(ARGB);
-		
+			DynamicProperties.Remove("emissive");
+		}
+
+		return IsValid;
 	}
 
 	

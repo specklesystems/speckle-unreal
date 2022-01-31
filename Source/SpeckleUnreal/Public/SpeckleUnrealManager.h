@@ -117,7 +117,8 @@ protected:
 	UWorld* World;
 	
 	float WorldToCentimeters;
-	
+
+	bool TryParseSpeckleObjectFromJsonProperty(const TSharedPtr<FJsonValue> JsonValue, UBase*& OutBase) const;
 
 	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
 

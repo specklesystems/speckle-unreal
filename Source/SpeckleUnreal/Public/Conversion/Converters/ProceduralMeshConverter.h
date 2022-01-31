@@ -18,10 +18,6 @@ class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpec
 
 	CONVERTS_SPECKLE_TYPES()
 	
-protected:
-	
-	virtual AActor* CreateActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
-	
 public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -43,4 +39,5 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual UMesh* MeshToSpeckle(const UProceduralMeshComponent* Object, ASpeckleUnrealManager* Manager);
 	
+	virtual AActor* CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 };

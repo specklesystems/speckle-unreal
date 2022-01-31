@@ -5,9 +5,9 @@
 
 #include "SpeckleUnrealManager.h"
 
-void UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+bool UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
 {
-	Super::Parse(Obj, Manager);
+	if(!Super::Parse(Obj, Manager)) return false;
 	
 	const float ScaleFactor = Manager->ParseScaleFactor(Units);
 
@@ -25,6 +25,7 @@ void UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 				ObjectPoints[i].Get()->AsNumber()
 			) * ScaleFactor);
 		}
+		DynamicProperties.Remove("points");
 	}
 
 	
@@ -37,6 +38,7 @@ void UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 		{
 			Colors.Add( FColor(ObjectColors[i].Get()->AsNumber()) );
 		}
+		DynamicProperties.Remove("colors");
 	}
 
 	//Parse Sizes
@@ -48,7 +50,9 @@ void UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 		{
 			Sizes.Add( ObjectSizes[i].Get()->AsNumber() * ScaleFactor);
 		}
+		DynamicProperties.Remove("sizes");
 	}
-	
+
+	return Points.Num() >= 0;
 }
 

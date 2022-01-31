@@ -1,6 +1,5 @@
 #include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealManager.h"
-#include "Objects/Mesh.h"
 
 #include "Objects/RenderMaterial.h"
 
@@ -16,9 +15,8 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	}
 	
 	const UBase* Base = DeserializeBase(SpeckleObject);
-	if(Base == nullptr)
-		return;
-		
+
+	// Convert Base
 	AActor* Native = Converter->ConvertToNative(Base, this);
 	
 	if(IsValid(Native))
@@ -38,9 +36,10 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 		Native = AOwner;
 	}
 	
-	
 	//Convert Children
-	for (const auto& Kv : SpeckleObject->Values)
+	TMap<FString, TSharedPtr<FJsonValue>> PotentialChildren = IsValid(Base)? Base->DynamicProperties : SpeckleObject->Values;
+	
+	for (const auto& Kv : PotentialChildren)
 	{
 		const TSharedPtr<FJsonObject>* SubObjectPtr;
 		if (Kv.Value->TryGetObject(SubObjectPtr))
@@ -116,15 +115,34 @@ UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj)
 	
 	if(BaseType == nullptr)
 	{
-		UE_LOG(LogTemp, Verbose, TEXT("SpeckleType: %s is unknown,%t object: %s will be ignored"), *SpeckleType, *ObjectId );
+		UE_LOG(LogTemp, Verbose, TEXT("Skipping deserialization of %s %s: Unrecognised SpeckleType"), *SpeckleType, *ObjectId );
 		return nullptr; //BaseType = UBase::StaticClass();
 	}
-
 	
 	UBase* Base =  NewObject<UBase>(GetTransientPackage(), BaseType);
-	Base->Parse(Obj, this);
+	if(Base->Parse(Obj, this)) return Base;
+	
+	UE_LOG(LogTemp, Verbose, TEXT("Skipping deserialization of %s %s: Object could not be deserialised to closest type %s"), *SpeckleType, *ObjectId, *BaseType->GetName());
+	return nullptr;
+}
 
-	return Base;
+bool ASpeckleUnrealManager::TryParseSpeckleObjectFromJsonProperty(const TSharedPtr<FJsonValue> JsonValue, UBase*& OutBase) const
+{
+	const TSharedPtr<FJsonObject>* JsonObjectPtr;
+	if(JsonValue->TryGetObject(JsonObjectPtr))
+	{
+		TSharedPtr<FJsonObject> JsonObject;
+		if(!ResolveReference(*JsonObjectPtr, JsonObject))
+			JsonObject = *JsonObjectPtr;
+
+		if(JsonObject.IsValid())
+		{
+			//Handle Speckle object types
+			OutBase = DeserializeBase(JsonObject);
+			return IsValid(OutBase);
+		}		
+	}
+	return false;
 }
 
 bool ASpeckleUnrealManager::HasObject(const FString& Id) const

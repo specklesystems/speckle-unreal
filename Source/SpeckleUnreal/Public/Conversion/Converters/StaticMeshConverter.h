@@ -35,9 +35,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool Transient;
 
-protected:
-
-	virtual AActor* CreateActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 	
 public:
 	// Sets default values for this actor's properties
@@ -51,9 +48,16 @@ public:
 	virtual UStaticMesh* MeshToNative(UObject* Outer, const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager);
 
 	UFUNCTION(BlueprintCallable)
+	virtual UStaticMesh* MeshesToNative(UObject* Outer, const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes, ASpeckleUnrealManager* Manager);
+	
+	UFUNCTION(BlueprintCallable)
 	virtual UMesh* MeshToSpeckle(const UStaticMeshComponent* Object, ASpeckleUnrealManager* Manager);
 	
 	UFUNCTION(BlueprintCallable)
 	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager);
 	
+	virtual AActor* CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform = FTransform::Identity, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+
+protected:
+	virtual void GenerateMeshParams(UStaticMesh::FBuildMeshDescriptionsParams& MeshParams) const;
 };
