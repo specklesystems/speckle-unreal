@@ -6,11 +6,14 @@
 #include "Components/ActorComponent.h"
 #include "SpeckleConverterComponent.generated.h"
 
-class USpeckleConverter;
+class USpeckleTypeConverter;
 class ASpeckleUnrealManager;
 class UBase;
-class ISpeckleConverter;
+class ISpeckleTypeConverter;
 
+/**
+ * This component contains modular conversion functions for converting Speckle Objects <--> Native Unreal Objects.
+ */
 UCLASS(ClassGroup=(Speckle), meta=(BlueprintSpawnableComponent))
 class SPECKLEUNREAL_API USpeckleConverterComponent : public UActorComponent
 {
@@ -19,7 +22,7 @@ class SPECKLEUNREAL_API USpeckleConverterComponent : public UActorComponent
 protected:
 	
 	// A lazily initialised mapping of SpeckleType -> converters.
-	TMap<TSubclassOf<UBase>, TScriptInterface<ISpeckleConverter>> SpeckleTypeMap;
+	TMap<TSubclassOf<UBase>, TScriptInterface<ISpeckleTypeConverter>> SpeckleTypeMap;
 
 public:
 	
@@ -45,7 +48,7 @@ public:
 	AActor* ConvertToNative(const UBase* Object, ASpeckleUnrealManager* Manager);
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);
+	TScriptInterface<ISpeckleTypeConverter> GetConverter(const TSubclassOf<UBase> BaseType);
 };
 
 

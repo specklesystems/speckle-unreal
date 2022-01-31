@@ -6,22 +6,29 @@
 #include "Objects/Base.h"
 #include "UObject/Interface.h"
 
-#include "SpeckleConverter.generated.h"
+#include "SpeckleTypeConverter.generated.h"
 
 class UBase;
 class ASpeckleUnrealManager;
 
 // This class does not need to be modified.
 UINTERFACE()
-class USpeckleConverter : public UInterface
+class USpeckleTypeConverter : public UInterface
 {
 	GENERATED_BODY()
 };
 
 /**
- *  Interfaces for conversion functions (ToSpeckle and ToNative) of a specific native type.
+ *  Interfaces for object conversion functions (ToSpeckle and ToNative) of a specific (most likely single) native type.
+ *  
+ *	Classes implementing this function are responsible for converting one or more UBase types
+ *	to a native AActor. (ToNative)
+ *	And/Or
+ *	Converting one or more AActor types to a UBase type.
+ *  
+ *  Note: This interface is not equivalent to ISpeckleConverter in the .NET SDK.
  */
-class SPECKLEUNREAL_API ISpeckleConverter
+class SPECKLEUNREAL_API ISpeckleTypeConverter
 {
 	GENERATED_BODY()
 

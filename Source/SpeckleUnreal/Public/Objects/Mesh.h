@@ -22,25 +22,56 @@ public:
 	UMesh() : UBase(TEXT("Objects.Geometry.Mesh")) {}
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<FVector> Vertices;
+	TArray<float> Vertices;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	TArray<int32> Faces;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<FVector2D> TextureCoordinates;
+	TArray<float> TextureCoordinates;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<FColor> VertexColors;
+	TArray<int32> Colors;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	FMatrix Transform;
-
+	TArray<float> Transform;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	URenderMaterial* RenderMaterial;
-	
-	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override;
 
-protected:
+public:
+	
+	UFUNCTION(BlueprintPure)
+	FVector GetVert(int32 Index) const;
+	UFUNCTION(BlueprintPure)
+	TArray<FVector> GetVerts() const;
+	UFUNCTION(BlueprintPure)
+	int32 GetVertexCount() const { return Vertices.Num() / 3; }
+	
+	UFUNCTION(BlueprintPure)
+	FVector2D GetTextureCoordinate(int32 Index) const;
+	UFUNCTION(BlueprintPure)
+    TArray<FVector2D> GetTextureCoordinates() const;
+	UFUNCTION(BlueprintPure)
+	int32 GetTexCoordCount() const { return TextureCoordinates.Num() / 2; }
+	
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE FColor GetVertexColor(int32 Index) const;
+	UFUNCTION(BlueprintPure)
+	TArray<FColor> GetVertexColors() const;
+	
+	UFUNCTION(BlueprintPure)
+	FMatrix GetTransform() const;
+	UFUNCTION(BlueprintCallable)
+	void SetTransform(const FMatrix& T);
+	
+	UFUNCTION()
 	virtual void AlignVerticesWithTexCoordsByIndex();
+
+	UFUNCTION()
+	virtual void ApplyScaleFactor(const float ScaleFactor);
+
+	UFUNCTION()
+	virtual void ApplyUnits(const UWorld* World);
+	
 };

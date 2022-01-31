@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Conversion/SpeckleConverter.h"
+#include "Conversion/SpeckleTypeConverter.h"
 
 #include "ProceduralMeshConverter.generated.h"
 
@@ -12,7 +12,7 @@ class UMesh;
 class URenderMaterial;
 
 UCLASS()
-class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpeckleConverter
+class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpeckleTypeConverter
 {
 	GENERATED_BODY()
 
@@ -26,6 +26,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AActor> MeshActorType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCreateCollisions;
 	
 	// Sets default values for this actor's properties
 	UProceduralMeshConverter();

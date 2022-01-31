@@ -14,7 +14,6 @@
 #include "Objects/RenderMaterial.h"
 
 
-
 UStaticMeshConverter::UStaticMeshConverter()
 {
 	Transient = false;
@@ -41,14 +40,20 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 	
 	//Find existing mesh
 	UStaticMesh* Mesh = Cast<UStaticMesh>(Package->FindAssetInPackage());
-	
+
+	FMatrix ActorTransform = FMatrix::Identity;
 	if(!IsValid(Mesh))
 	{
 		//No existing mesh was found, try and convert SpeckleMesh
-		Mesh = MeshToNative(Package, SpeckleMesh, Manager);
+		UMesh* ScaledMesh = DuplicateObject(SpeckleMesh, SpeckleMesh->GetOuter(), SpeckleMesh->GetFName());
+		ScaledMesh->ApplyUnits(Manager->GetWorld());
+		ScaledMesh->AlignVerticesWithTexCoordsByIndex();
+		
+		Mesh = MeshToNative(Package, ScaledMesh, Manager);
+		ActorTransform = ScaledMesh->GetTransform();
 	}
+	AActor* Actor = CreateActor(Manager, FTransform(ActorTransform));
 	
-	AActor* Actor = CreateActor(Manager, FTransform(SpeckleMesh->Transform));
 	TInlineComponentArray<UStaticMeshComponent*> Components;
 	Actor->GetComponents<UStaticMeshComponent>(Components);
 	
@@ -71,7 +76,6 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* SpeckleMesh,
                                                     ASpeckleUnrealManager* Manager)
 {
-	
 	const EObjectFlags ObjectFags = Transient? RF_Transient | RF_Public : RF_Public;
 	UStaticMesh* Mesh = NewObject<UStaticMesh>(Outer, FName(SpeckleMesh->Id), ObjectFags);
 
@@ -108,13 +112,13 @@ UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* Spe
 	const FName MaterialSlotName = Mesh->AddMaterial(Material);;
 	BaseMeshDescription.PolygonGroupAttributes().RegisterAttribute<FName>(MeshAttribute::PolygonGroup::ImportedMaterialSlotName, 1, MaterialSlotName,  EMeshAttributeFlags::None);
 	{
-		const size_t NumberOfVertices = SpeckleMesh->Vertices.Num();
+		const size_t NumberOfVertices = SpeckleMesh->GetVertexCount();
 		StaticMeshDescription->ReserveNewVertices(NumberOfVertices);
 	
 		TArray<FVertexID> Vertices;
 		Vertices.Reserve(NumberOfVertices);
 	
-		for(const FVector VertexPosition : SpeckleMesh->Vertices)
+		for(const FVector VertexPosition : SpeckleMesh->GetVerts())
 		{
 			const FVertexID VertID = StaticMeshDescription->CreateVertex();
 			StaticMeshDescription->SetVertexPosition(VertID, VertexPosition);
@@ -159,8 +163,8 @@ UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer, const UMesh* Spe
 					
 				VertexInstances.Add(VertexInstance);
 				
-				if(SpeckleMesh->TextureCoordinates.Num() > VertIndex)
-					StaticMeshDescription->SetVertexInstanceUV(VertexInstance, SpeckleMesh->TextureCoordinates[VertIndex]);
+				if(SpeckleMesh->GetTexCoordCount() > VertIndex)
+					StaticMeshDescription->SetVertexInstanceUV(VertexInstance, SpeckleMesh->GetTextureCoordinate(VertIndex));
 				
 				//if(SpeckleMesh->VertexColors.Num() > VertIndex)
 				//	//TODO set vertex colors
@@ -257,8 +261,8 @@ UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* Spe
 		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Opacity"), SpeckleMaterial->Opacity);
 		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Metallic"), SpeckleMaterial->Metalness);
 		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Roughness"), SpeckleMaterial->Roughness);
-		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("BaseColor"), SpeckleMaterial->Diffuse);
-		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("EmissiveColor"), SpeckleMaterial->Emissive);
+		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("BaseColor"), FColor(SpeckleMaterial->Diffuse));
+		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("EmissiveColor"), FColor(SpeckleMaterial->Emissive));
 		
 		//ConstMaterial->InitStaticPermutation();
 		
@@ -275,8 +279,8 @@ UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* Spe
 		DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
 		DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
 		DynMaterial->SetScalarParameterValue("Roughness", SpeckleMaterial->Roughness);
-		DynMaterial->SetVectorParameterValue("BaseColor", SpeckleMaterial->Diffuse);
-		DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
+		DynMaterial->SetVectorParameterValue("BaseColor", FColor(SpeckleMaterial->Diffuse));
+		DynMaterial->SetVectorParameterValue("EmissiveColor", FColor(SpeckleMaterial->Emissive));
 		
 		DynMaterial->SetFlags(RF_Public);
 	}

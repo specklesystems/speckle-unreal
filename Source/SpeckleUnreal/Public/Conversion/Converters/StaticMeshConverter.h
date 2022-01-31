@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Conversion/SpeckleConverter.h"
+#include "Conversion/SpeckleTypeConverter.h"
 
 #include "StaticMeshConverter.generated.h"
 
@@ -12,7 +12,7 @@ class UMesh;
 class URenderMaterial;
 
 UCLASS()
-class SPECKLEUNREAL_API UStaticMeshConverter : public UObject, public ISpeckleConverter
+class SPECKLEUNREAL_API UStaticMeshConverter : public UObject, public ISpeckleTypeConverter
 {
 	GENERATED_BODY()
 

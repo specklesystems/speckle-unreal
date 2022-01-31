@@ -43,11 +43,16 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString SpeckleType;
+
+	//TODO this won't be serialised
+	TMap<FString, TSharedPtr<FJsonValue>> DynamicProperties;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
+	TMap<FString, UBase*> Children;
 	
-	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
-	{
-		Obj->TryGetStringField("id", Id);
-		Obj->TryGetStringField("units", Units);
-	}
+	/// Callback called right before serialization of this object 
+	virtual void OnBeforeSerialize();
+	/// Callback called right after deserialization of this object
+	virtual void OnAfterDeserialize();
 };
 

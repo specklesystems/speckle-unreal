@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Conversion/SpeckleConverter.h"
+#include "Conversion/SpeckleTypeConverter.h"
 
 #include "PointCloudConverter.generated.h"
 
@@ -13,7 +13,7 @@ class ULidarPointCloud;
 class UPointCloud;
 
 UCLASS()
-class SPECKLEUNREAL_API UPointCloudConverter :  public UObject, public ISpeckleConverter
+class SPECKLEUNREAL_API UPointCloudConverter :  public UObject, public ISpeckleTypeConverter
 {
 	GENERATED_BODY()
 	

@@ -1,3 +1,4 @@
+#include "JsonObjectConverter.h"
 #include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealManager.h"
 #include "Objects/Mesh.h"
@@ -98,7 +99,7 @@ bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMateria
 }
 
 UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj) const
-{
+{	
 	{ // Handle Detached Objects
 		TSharedPtr<FJsonObject> DetachedObject;
 		if(ResolveReference(Obj, DetachedObject))
@@ -111,20 +112,190 @@ UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj)
 	if (!Obj->TryGetStringField("speckle_type", SpeckleType)) return nullptr;
 	FString ObjectId = "";	
 	Obj->TryGetStringField("id", ObjectId);
-		
-	const TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
+
+	// Get the registered  type from Base register
+	const TSubclassOf<UBase> ObjectType = UBase::FindClosestType(SpeckleType);
 	
-	if(BaseType == nullptr)
+	if(ObjectType == nullptr)
 	{
 		UE_LOG(LogTemp, Verbose, TEXT("SpeckleType: %s is unknown,%t object: %s will be ignored"), *SpeckleType, *ObjectId );
 		return nullptr; //BaseType = UBase::StaticClass();
 	}
 
-	
-	UBase* Base =  NewObject<UBase>(GetTransientPackage(), BaseType);
-	Base->Parse(Obj, this);
 
+	//TODO before we create and deserialised a new object, first check if we have already deserialised this object
+	
+	//Create instance of the ObjectType
+	UBase* Base = NewObject<UBase>(GetTransientPackage(), ObjectType);
+		
+	//Map of all properties with no explicit UProperty to set.
+	//For now we add all values to this map, then remove the ones we find explicit UProperties for.
+	auto DynamicProperties = TMap<FString, TSharedPtr<FJsonValue>>(Obj->Values);
+	
+	//Loop through each UProperty in the UBase and try and set its value from the JSON obj
+	for (TFieldIterator<UProperty> It(ObjectType); It; ++It)
+	{
+		FProperty* Property = *It;
+		void* PropertyValueAddress = Property->ContainerPtrToValuePtr<uint8>(Base);
+
+		// Find a json value matching this property name
+		const FString Key = Property->GetName();
+		const TSharedPtr<FJsonValue>* JsonValuePtr = Obj->Values.Find(Key);
+		
+		
+		//Ensure value is valid
+		if (!JsonValuePtr) continue;
+		TSharedPtr<FJsonValue> JsonValue = *JsonValuePtr;
+		if ( (!JsonValue.IsValid()) || JsonValue->IsNull() ) continue;
+		
+		//Handle chunked values!!!!!
+		if (const FArrayProperty* ArrayProperty = CastField<FArrayProperty>(Property))
+		{
+			const TSharedPtr<FJsonObject>* ChunkedObject;
+			FString ChunkedType;
+			if(JsonValue->TryGetObject(ChunkedObject)
+				&& ChunkedObject->operator->()->TryGetStringField("", ChunkedType)
+				&& ChunkedType == "Speckle.Core.Models.DataChunk")
+			{
+				const TArray<TSharedPtr<FJsonValue>>* ChunkedArray;
+				if(JsonValue->TryGetArray(ChunkedArray))
+				{
+					auto Arr = CombineChunks(*ChunkedArray);
+					if()
+					{
+						
+					}
+				}
+			}
+		}
+		
+		//Check if property is a Speckle Object
+		if (const FObjectProperty* ObjectProperty = CastField<FObjectProperty>(Property))
+		{
+			UBase* SpeckleObject;
+			if(TryParseSpeckleObjectFromJsonProperty(JsonValue, SpeckleObject))
+			{
+				ObjectProperty->SetObjectPropertyValue(PropertyValueAddress, SpeckleObject);
+				DynamicProperties.Remove(Key);
+				continue;
+			}
+		}
+			
+		//Handle primitive types
+		if(FJsonObjectConverter::JsonValueToUProperty(JsonValue, Property, PropertyValueAddress, 0, 0))
+		{
+			DynamicProperties.Remove(Key);
+			continue;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to deserialise a value, object id: %s, property key: %s"), *ObjectId, *Key)
+		}
+	}
+
+	//Find any remaining Speckle objects and add them as children
+	TMap<FString, UBase*> ChildBases;
+	{
+		const auto DynamicPropertiesCopy = TMap<FString, TSharedPtr<FJsonValue>>(DynamicProperties);
+		for(const auto& Kvp : DynamicPropertiesCopy)
+		{
+			UBase* ChildObject;
+			if(TryParseSpeckleObjectFromJsonProperty(Kvp.Value, ChildObject))
+			{
+				DynamicProperties.Remove(Kvp.Key);
+				ChildBases.Add(ChildObject->Id, ChildObject);
+			}		
+		}
+	}
+	
+	Base->DynamicProperties = DynamicProperties;
+	Base->Children = ChildBases;
 	return Base;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+bool ASpeckleUnrealManager::TryParseSpeckleObjectFromJsonProperty(const TSharedPtr<FJsonValue> JsonValue, UBase*& OutBase) const
+{
+	const TSharedPtr<FJsonObject>* JsonObjectPtr;
+	if(JsonValue->TryGetObject(JsonObjectPtr))
+	{
+		TSharedPtr<FJsonObject> JsonObject;
+		if(!ResolveReference(*JsonObjectPtr, JsonObject))
+			JsonObject = *JsonObjectPtr;
+				
+		if(JsonObject.IsValid())
+		{
+			//Handle Speckle object types
+			OutBase = DeserializeBase(JsonObject);
+			return IsValid(OutBase);
+		}		
+	}
+	return false;
+}
+
+
+void Test(const TSharedPtr<FJsonValue> JsonValue, const FProperty* Property, UObject* Base)
+{
+	if (const FNumericProperty* NumericProperty = CastField<FNumericProperty>(Property))
+	{
+		if (NumericProperty->IsFloatingPoint())
+		{
+			NumericProperty->SetFloatingPointPropertyValue(Base, JsonValue->AsNumber());
+		}
+		else if (NumericProperty->IsInteger())
+		{
+			NumericProperty->SetIntPropertyValue(Base, (int64)JsonValue->AsNumber());
+		}
+	}
+	else if (const FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property))
+	{
+		// Export bools as bools
+		BoolProperty->SetPropertyValue(Base, JsonValue->AsBool());
+	}
+	else if (const FStrProperty* StringProperty = CastField<FStrProperty>(Property))
+	{
+		StringProperty->SetPropertyValue(Base, JsonValue->AsString());
+	}
+	else if (const FMapProperty* MapProperty = CastField<FMapProperty>(Property))
+	{
+				
+	}
+	else if (const FSetProperty* SetProperty = CastField<FSetProperty>(Property))
+	{
+				
+	}
+	else if (const FArrayProperty* ArrayProperty = CastField<FArrayProperty>(Property))
+	{
+		if (JsonValue->Type != EJson::Array) return;
+
+		const TArray< TSharedPtr<FJsonValue> > ArrayValue = JsonValue->AsArray();
+		int32 ArrLen = ArrayValue.Num();
+
+		// make the output array size match
+		
+	}
+	else if (const FStructProperty *StructProperty = CastField<FStructProperty>(Property))
+	{
+				
+	}
+	else if (const FObjectProperty *ObjectProperty = CastField<FObjectProperty>(Property))
+	{
+				
+	}
+	else
+	{
+				
+	}
 }
 
 bool ASpeckleUnrealManager::HasObject(const FString& Id) const
@@ -139,7 +310,7 @@ TSharedPtr<FJsonObject, ESPMode::Fast> ASpeckleUnrealManager::GetSpeckleObject(c
 
 bool ASpeckleUnrealManager::ResolveReference(const TSharedPtr<FJsonObject> Object, TSharedPtr<FJsonObject>& OutObject) const
 {
-	FString SpeckleType;	
+	FString SpeckleType;
 	FString ReferenceID;
 	
 	if (Object->TryGetStringField("speckle_type", SpeckleType)

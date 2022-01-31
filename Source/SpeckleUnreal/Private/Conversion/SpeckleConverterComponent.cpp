@@ -6,21 +6,16 @@
 #include "SpeckleUnrealManager.h"
 #include "Conversion/Converters/PointCloudConverter.h"
 #include "Conversion/Converters/StaticMeshConverter.h"
-#include "Objects/Mesh.h"
-#include "Objects/PointCloud.h"
 
 
 // Sets default values for this component's properties
 USpeckleConverterComponent::USpeckleConverterComponent()
 {
+	PrimaryComponentTick.bCanEverTick = false;
+	
 	//TODO consider using an object library for default converters
 	static ConstructorHelpers::FObjectFinder<UStaticMeshConverter> MeshConverter(TEXT("StaticMeshConverter'/SpeckleUnreal/Converters/DefaultStaticMeshConverter.DefaultStaticMeshConverter'"));
 	static ConstructorHelpers::FObjectFinder<UPointCloudConverter> PointCloudConverter(TEXT("PointCloudConverter'/SpeckleUnreal/Converters/DefaultPointCloudConverter.DefaultPointCloudConverter'"));
-
-	PrimaryComponentTick.bCanEverTick = false;
-
-
-
 	
 	//Mesh
 	//Point
@@ -42,9 +37,9 @@ void USpeckleConverterComponent::OnConvertersChangeHandler()
 	for(int i = 0; i < SpeckleConverters.Num(); i++)
 	{
 		const UObject* Converter = SpeckleConverters[i];
-		if(Converter != nullptr && !Converter->GetClass()->ImplementsInterface(USpeckleConverter::StaticClass()))
+		if(Converter != nullptr && !Converter->GetClass()->ImplementsInterface(USpeckleTypeConverter::StaticClass()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Converter {%s} is not a valid converter, Expected to implement interface %s"), *Converter->GetClass()->GetName(), *USpeckleConverter::StaticClass()->GetName())
+			UE_LOG(LogTemp, Warning, TEXT("Converter {%s} is not a valid converter, Expected to implement interface %s"), *Converter->GetClass()->GetName(), *USpeckleTypeConverter::StaticClass()->GetName())
 			SpeckleConverters.RemoveAt(i);
 			i--;
 		}
@@ -80,15 +75,16 @@ AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, ASpeckl
 		UE_LOG(LogTemp, Warning, TEXT("Skipping Object %s - No conversion functions exist for %s"), *Object->Id, *Type->GetName());
 		return nullptr;
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("Converting object of type: %s id: %s  "), *Object->Id, *Type->GetName());
 	
 	FEditorScriptExecutionGuard ScriptGuard;
-	return ISpeckleConverter::Execute_ConvertToNative(Converter, Object, Manager);
-
+	AActor* ReturnObject = ISpeckleTypeConverter::Execute_ConvertToNative(Converter, Object, Manager);
+	
+	UE_LOG(LogTemp, Log, TEXT("Converted object of type: %s id: %s  "), *Object->Id, *Type->GetName());
+	
+	return ReturnObject;
 }
 
-TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(const TSubclassOf<UBase> BaseType)
+TScriptInterface<ISpeckleTypeConverter> USpeckleConverterComponent::GetConverter(const TSubclassOf<UBase> BaseType)
 {
 	// Check if this SpeckleType has a known converter.
 	if(SpeckleTypeMap.Contains(BaseType))
@@ -102,13 +98,13 @@ TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(con
 	{
 		if(Converter == nullptr) continue;
 		
-		if(!Converter->GetClass()->ImplementsInterface(USpeckleConverter::StaticClass()))
+		if(!Converter->GetClass()->ImplementsInterface(USpeckleTypeConverter::StaticClass()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Converter {%s} is not a valid converter, Expected to implement interface {%s}"), *Converter->GetClass()->GetName(), *USpeckleConverter::StaticClass()->GetName())
+			UE_LOG(LogTemp, Warning, TEXT("Converter {%s} is not a valid converter, Expected to implement interface {%s}"), *Converter->GetClass()->GetName(), *USpeckleTypeConverter::StaticClass()->GetName())
 			continue;
 		}
 		
-		if(ISpeckleConverter::Execute_CanConvertToNative(Converter, BaseType))
+		if(ISpeckleTypeConverter::Execute_CanConvertToNative(Converter, BaseType))
 		{
 			//Found a Converter! Save this mapping for next time.
 			SpeckleTypeMap.Add(BaseType, Converter);

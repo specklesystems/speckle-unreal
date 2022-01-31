@@ -32,10 +32,12 @@ public:
 	double Roughness = 1;
 	
 	UPROPERTY()
-	FLinearColor Diffuse = FColor{221,221,221};
+	int32 Diffuse = FColor{221,221,221};
+	
+	
 	
 	UPROPERTY()
-	FLinearColor Emissive = FLinearColor::Black;
+	int32 Emissive = FLinearColor::Black;
 
 	virtual void Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override
 	{

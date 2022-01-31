@@ -12,6 +12,7 @@ UProceduralMeshConverter::UProceduralMeshConverter()
 {
     SpeckleTypes.Add(UMesh::StaticClass());
     MeshActorType = AActor::StaticClass();
+    bCreateCollisions = true;
 }
 
 AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
@@ -19,13 +20,18 @@ AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* Sp
     const UMesh* P = Cast<UMesh>(SpeckleBase);
 	
     if(P == nullptr) return nullptr;
-	
-    return MeshToNative(P, Manager);
+
+    //No existing mesh was found, try and convert SpeckleMesh
+    UMesh* ScaledMesh = DuplicateObject(P, P->GetOuter(), P->GetFName());
+    ScaledMesh->ApplyUnits(Manager->GetWorld());
+    ScaledMesh->AlignVerticesWithTexCoordsByIndex();
+    
+    return MeshToNative(ScaledMesh, Manager);
 }
 
 AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
 {
-    AActor* MeshActor = CreateActor(Manager, FTransform(SpeckleMesh->Transform));
+    AActor* MeshActor = CreateActor(Manager, FTransform(SpeckleMesh->GetTransform()));
     UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));
     MeshComponent->SetupAttachment(MeshActor->GetRootComponent());
     MeshComponent->RegisterComponent();
@@ -61,19 +67,23 @@ AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckl
         
         i += n + 1;
     }
+
+    TArray<FColor> VertexColors;
+    VertexColors.Reserve(SpeckleMesh->Colors.Num());
+    for(const int32& c : SpeckleMesh->Colors) VertexColors.Add(FColor(c));
     
     const TArray<FVector> Normals;
     const TArray<FProcMeshTangent> Tangents;
     
     MeshComponent->CreateMeshSection(
         0,
-        SpeckleMesh->Vertices,
+        SpeckleMesh->GetVerts(),
         Faces,
         Normals,
-        SpeckleMesh->TextureCoordinates,
-        SpeckleMesh->VertexColors,
+        SpeckleMesh->GetTextureCoordinates(),
+        VertexColors,
         Tangents,
-        true);
+        bCreateCollisions);
     
     MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
     
@@ -107,8 +117,8 @@ UMaterialInterface* UProceduralMeshConverter::GetMaterial(const URenderMaterial*
     DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
     DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
     DynMaterial->SetScalarParameterValue("Roughness", SpeckleMaterial->Roughness);
-    DynMaterial->SetVectorParameterValue("BaseColor", SpeckleMaterial->Diffuse);
-    DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
+    DynMaterial->SetVectorParameterValue("BaseColor", FColor(SpeckleMaterial->Diffuse));
+    DynMaterial->SetVectorParameterValue("EmissiveColor", FColor(SpeckleMaterial->Emissive));
 	
     Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
     

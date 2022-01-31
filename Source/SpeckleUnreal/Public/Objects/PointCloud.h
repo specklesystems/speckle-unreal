@@ -19,10 +19,10 @@ public:
 	UPointCloud() : UBase(TEXT("Objects.Other.Pointcloud")) {}
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<FVector> Points;
+	TArray<float> Points;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<FColor> Colors;
+	TArray<int32> Colors;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	TArray<float> Sizes;
