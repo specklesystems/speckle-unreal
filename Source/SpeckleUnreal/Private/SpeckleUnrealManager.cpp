@@ -353,13 +353,13 @@ void ASpeckleUnrealManager::OnCommitsItemsResponseReceived(FHttpRequestPtr Reque
 	//Create a reader pointer to read the json data
 	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(response);
 
-	try
-	{
+	// try
+	// {
 		ArrayOfCommits.Empty();
-	} catch (...)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Could not empty array of commits");
-	}
+	// } catch (...)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, "Could not empty array of commits");
+	// }
 	
 	//Deserialize the json data given Reader and the actual object to deserialize
 	if (FJsonSerializer::Deserialize(Reader, JsonObject))
@@ -569,14 +569,14 @@ void ASpeckleUnrealManager::FetchGlobalVariables(const FString& ServerName, cons
                          											static_cast<float>(HeightOut)
                          											);
 
-                         	try
-                         	{
+                         	// try
+                         	// {
                          		OnGlobalsProcessedDynamic.Broadcast(Global, Stream);
-                         	}catch (...)
-                         	{
-                         		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red,
-                         			"Sorry could not broadcast Globals for parsing");
-                         	}
+                         	// }catch (...)
+                         	// {
+                         	// 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red,
+                         	// 		"Sorry could not broadcast Globals for parsing");
+                         	// }
                          }
                     }
                 };
