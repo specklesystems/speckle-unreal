@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Conversion/SpeckleConverter.h"
+#include "Engine/EngineTypes.h"
 
 #include "StaticMeshConverter.generated.h"
 
@@ -22,6 +23,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AActor> MeshActorType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EComponentMobility::Type> ActorMobility;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseFullBuild;

@@ -91,6 +91,9 @@ public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
+	//BEGIN REGION - This 
+	
 	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const;
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure)

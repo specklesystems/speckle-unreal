@@ -19,13 +19,13 @@ class SPECKLEUNREAL_API UPointCloudConverter :  public UObject, public ISpeckleC
 	
 	CONVERTS_SPECKLE_TYPES()
 	
-protected:
-	UFUNCTION(BlueprintCallable)
-	virtual ALidarPointCloudActor* CreateActor(const ASpeckleUnrealManager* Manager, ULidarPointCloud* PointCloudData);
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ALidarPointCloudActor> PointCloudActorType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EComponentMobility::Type> ActorMobility;
 	
 	UPointCloudConverter();
 	
@@ -37,4 +37,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	virtual UPointCloud* PointCloudToSpeckle(const ULidarPointCloudComponent* Object, ASpeckleUnrealManager* Manager);
+
+protected:
+	UFUNCTION(BlueprintCallable)
+	virtual ALidarPointCloudActor* CreateActor(
+		const ASpeckleUnrealManager* Manager,
+		ULidarPointCloud* PointCloudData);
 };

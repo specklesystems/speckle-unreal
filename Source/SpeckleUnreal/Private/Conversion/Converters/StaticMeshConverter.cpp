@@ -12,22 +12,25 @@
 #include "Materials/MaterialInstanceConstant.h"
 #include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
-
+#include "LogSpeckle.h"
 
 
 UStaticMeshConverter::UStaticMeshConverter()
 {
+	SpeckleTypes.Add(UMesh::StaticClass());
+	
 	Transient = false;
 	UseFullBuild = true;
 	BuildSimpleCollision = true;
-
+	
 	MeshActorType = AStaticMeshActor::StaticClass();
-	SpeckleTypes.Add(UMesh::StaticClass());
+	ActorMobility = EComponentMobility::Static;
 }
 
 AActor* UStaticMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
-	AActor* Actor = Manager->GetWorld()->SpawnActor<AActor>(AStaticMeshActor::StaticClass(), Transform, SpawnParameters);
+	AActor* Actor = Manager->GetWorld()->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
+	Actor->GetRootComponent()->SetMobility(ActorMobility);
 	return Actor;
 }
 
@@ -97,8 +100,8 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 #if WITH_EDITOR
 	{
 		FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
-		SrcModel.BuildSettings.bRecomputeNormals = false;
-		SrcModel.BuildSettings.bRecomputeTangents = false;
+		SrcModel.BuildSettings.bRecomputeNormals = true;
+		SrcModel.BuildSettings.bRecomputeTangents = true;
 		SrcModel.BuildSettings.bRemoveDegenerates = false;
 		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
 		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
@@ -167,7 +170,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 	
 				if(AlreadyInSet)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Invalid Polygon while creating mesh %s - vertex at index %d appears more than once in a face, duplicate vertices will be ignored"), *SpeckleMesh->Id, VertIndex);
+					UE_LOG(LogSpeckle, Warning, TEXT("Invalid Polygon while creating mesh %s - vertex at index %d appears more than once in a face, duplicate vertices will be ignored"), *SpeckleMesh->Id, VertIndex);
 					continue;
 				}
 				FVertexInstanceID VertexInstance = StaticMeshDescription->CreateVertexInstance(Vert);
@@ -207,7 +210,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 		|| StaticMeshDescription->VertexInstances().Num() == 0
 		|| StaticMeshDescription->Triangles().Num() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Skipping %s $s, converted mesh is empty!"), *Parent->SpeckleType, *Parent->Id);
+		UE_LOG(LogSpeckle, Warning, TEXT("Skipping %s $s, converted mesh is empty!"), *Parent->SpeckleType, *Parent->Id);
 		return nullptr;
 	}
 			
@@ -222,7 +225,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 	FStaticMeshOperations::ComputeTriangleTangentsAndNormals(BaseMeshDescription);
 #endif
 	
-	FStaticMeshOperations::ComputeTangentsAndNormals(BaseMeshDescription, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
+	//FStaticMeshOperations::ComputeTangentsAndNormals(BaseMeshDescription, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
 	
 	
 	//Mesh->PreEditChange(nullptr);

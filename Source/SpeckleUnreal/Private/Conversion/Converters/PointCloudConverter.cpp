@@ -12,7 +12,9 @@
 UPointCloudConverter::UPointCloudConverter()
 {
 	SpeckleTypes.Add(UPointCloud::StaticClass());
+	
 	PointCloudActorType = ALidarPointCloudActor::StaticClass();
+	ActorMobility = EComponentMobility::Static;
 }
 
 
@@ -57,6 +59,7 @@ ALidarPointCloudActor* UPointCloudConverter::CreateActor(const ASpeckleUnrealMan
 {
 	ALidarPointCloudActor* Actor = Manager->GetWorld()->SpawnActor<ALidarPointCloudActor>(PointCloudActorType);
 	Actor->SetPointCloud(PointCloudData);
+	Actor->GetRootComponent()->SetMobility(ActorMobility);
 	return Actor;
 }
 

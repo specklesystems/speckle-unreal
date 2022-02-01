@@ -11,7 +11,9 @@
 UProceduralMeshConverter::UProceduralMeshConverter()
 {
     SpeckleTypes.Add(UMesh::StaticClass());
+    
     MeshActorType = AActor::StaticClass();
+    ActorMobility = EComponentMobility::Static;
 }
 
 AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
@@ -86,6 +88,7 @@ AActor* UProceduralMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* 
     USceneComponent* Scene = NewObject<USceneComponent>(Actor, "Root");
     Actor->SetRootComponent(Scene);
     Scene->RegisterComponent();
+    Scene->SetMobility(ActorMobility);
     return Actor;
 }
 

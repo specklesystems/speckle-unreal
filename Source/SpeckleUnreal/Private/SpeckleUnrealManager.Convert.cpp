@@ -1,5 +1,6 @@
 #include "SpeckleUnrealActor.h"
 #include "SpeckleUnrealManager.h"
+#include "LogSpeckle.h"
 
 #include "Objects/RenderMaterial.h"
 
@@ -98,6 +99,8 @@ bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMateria
 
 UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj) const
 {
+	check(Obj != nullptr);
+	
 	{ // Handle Detached Objects
 		TSharedPtr<FJsonObject> DetachedObject;
 		if(ResolveReference(Obj, DetachedObject))
@@ -115,19 +118,21 @@ UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj)
 	
 	if(BaseType == nullptr)
 	{
-		UE_LOG(LogTemp, Verbose, TEXT("Skipping deserialization of %s %s: Unrecognised SpeckleType"), *SpeckleType, *ObjectId );
+		UE_LOG(LogSpeckle, Verbose, TEXT("Skipping deserialization of %s %s: Unrecognised SpeckleType"), *SpeckleType, *ObjectId );
 		return nullptr; //BaseType = UBase::StaticClass();
 	}
 	
 	UBase* Base =  NewObject<UBase>(GetTransientPackage(), BaseType);
 	if(Base->Parse(Obj, this)) return Base;
 	
-	UE_LOG(LogTemp, Verbose, TEXT("Skipping deserialization of %s %s: Object could not be deserialised to closest type %s"), *SpeckleType, *ObjectId, *BaseType->GetName());
+	UE_LOG(LogSpeckle, Verbose, TEXT("Skipping deserialization of %s %s: Object could not be deserialised to closest type %s"), *SpeckleType, *ObjectId, *BaseType->GetName());
 	return nullptr;
 }
 
 bool ASpeckleUnrealManager::TryParseSpeckleObjectFromJsonProperty(const TSharedPtr<FJsonValue> JsonValue, UBase*& OutBase) const
 {
+	check(JsonValue != nullptr);
+	
 	const TSharedPtr<FJsonObject>* JsonObjectPtr;
 	if(JsonValue->TryGetObject(JsonObjectPtr))
 	{
