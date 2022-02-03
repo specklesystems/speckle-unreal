@@ -426,7 +426,7 @@ TMap<FString,FString> ASpeckleUnrealManager::ImportObjectFromCacheNew(AActor* AO
 
 		Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
 		Native->SetOwner(AOwner);
-
+		Native->Tags.Add(FName(*ObjectId));
 		InProgressObjectsCache.Add(Native);
 	}
 	else
