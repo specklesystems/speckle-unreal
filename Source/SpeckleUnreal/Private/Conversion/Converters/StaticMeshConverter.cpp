@@ -9,9 +9,7 @@
 #include "StaticMeshOperations.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/StaticMeshActor.h"
-#include "Materials/MaterialInstanceConstant.h"
 #include "Objects/Mesh.h"
-#include "Objects/RenderMaterial.h"
 #include "LogSpeckle.h"
 #include "Conversion/Converters/RenderMaterialConverter.h"
 
@@ -23,6 +21,8 @@ UStaticMeshConverter::UStaticMeshConverter()
 	Transient = false;
 	UseFullBuild = true;
 	BuildSimpleCollision = true;
+
+	MaterialConverter = CreateDefaultSubobject<URenderMaterialConverter>(TEXT("Material Converter"));
 	
 	MeshActorType = AStaticMeshActor::StaticClass();
 	ActorMobility = EComponentMobility::Static;
@@ -34,6 +34,7 @@ AActor* UStaticMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* Mana
 	Actor->GetRootComponent()->SetMobility(ActorMobility);
 	return Actor;
 }
+
 
 AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
 {
@@ -101,8 +102,8 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 #if WITH_EDITOR
 	{
 		FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
-		SrcModel.BuildSettings.bRecomputeNormals = true;
-		SrcModel.BuildSettings.bRecomputeTangents = true;
+		SrcModel.BuildSettings.bRecomputeNormals = false;
+		SrcModel.BuildSettings.bRecomputeTangents = false;
 		SrcModel.BuildSettings.bRemoveDegenerates = false;
 		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
 		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
@@ -226,7 +227,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 	FStaticMeshOperations::ComputeTriangleTangentsAndNormals(BaseMeshDescription);
 #endif
 	
-	//FStaticMeshOperations::ComputeTangentsAndNormals(BaseMeshDescription, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
+	FStaticMeshOperations::ComputeTangentsAndNormals(BaseMeshDescription, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
 	
 	
 	//Mesh->PreEditChange(nullptr);
@@ -242,7 +243,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 #if WITH_EDITOR
 	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
 
-	if (GIsEditor && !GWorld->HasBegunPlay())
+	if (!FApp::IsGame())
 	{
 		Mesh->MarkPackageDirty();
 		FAssetRegistryModule::AssetCreated(Mesh);
@@ -262,6 +263,10 @@ void UStaticMeshConverter::GenerateMeshParams(UStaticMesh::FBuildMeshDescription
 }
 
 
+void UStaticMeshConverter::CleanUp_Implementation()
+{
+	MaterialConverter->CleanUp();
+}
 
 
 UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)

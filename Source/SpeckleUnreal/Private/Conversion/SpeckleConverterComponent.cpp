@@ -8,6 +8,8 @@
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Objects/Mesh.h"
 #include "LogSpeckle.h"
+#include "Conversion/Converters/BlockConverter.h"
+#include "Conversion/Converters/DisplayValueConverter.h"
 
 
 // Sets default values for this component's properties
@@ -16,23 +18,19 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 	//TODO consider using an object library for default converters
 	static ConstructorHelpers::FObjectFinder<UStaticMeshConverter> MeshConverter(TEXT("StaticMeshConverter'/SpeckleUnreal/Converters/DefaultStaticMeshConverter.DefaultStaticMeshConverter'"));
 	static ConstructorHelpers::FObjectFinder<UPointCloudConverter> PointCloudConverter(TEXT("PointCloudConverter'/SpeckleUnreal/Converters/DefaultPointCloudConverter.DefaultPointCloudConverter'"));
+	static ConstructorHelpers::FObjectFinder<UDisplayValueConverter> DisplayValueConverter(TEXT("DisplayValueConverter'/SpeckleUnreal/Converters/DefaultDisplayValueConverter.DefaultDisplayValueConverter'"));
+	static ConstructorHelpers::FObjectFinder<UBlockConverter> BlockConverter(TEXT("BlockConverter'/SpeckleUnreal/Converters/DefaultBlockConverter.DefaultBlockConverter'"));
+	//static ConstructorHelpers::FObjectFinder<UCameraConverter> CameraConverter(TEXT("CameraConverter'/SpeckleUnreal/Converters/DefaultCameraConverter.DefaultCameraConverter'"));
+	//static ConstructorHelpers::FObjectFinder<ULightConverter> LightConverter(TEXT("LightConverter'/SpeckleUnreal/Converters/DefaultLightConverter.DefaultLightConverter'"));
 
-	PrimaryComponentTick.bCanEverTick = false;
-
-
-
-	
-	//Mesh
-	//Point
-	//Light
-	//BlockDef
-	//BlockInst
-	//Wall
-	//Element
-	
 	SpeckleConverters.Add(MeshConverter.Object);
 	SpeckleConverters.Add(PointCloudConverter.Object);
-	//SpeckleConverter.Add(FLightConverter);
+	SpeckleConverters.Add(BlockConverter.Object);
+	//SpeckleConverter.Add(CameraConverter.Object);
+	//SpeckleConverter.Add(LightConverter.Object);
+	SpeckleConverters.Add(DisplayValueConverter.Object);
+	
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void USpeckleConverterComponent::OnConvertersChangeHandler()
@@ -101,13 +99,7 @@ TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(con
 	FEditorScriptExecutionGuard ScriptGuard;
 	for(UObject* Converter : SpeckleConverters)
 	{
-		if(Converter == nullptr) continue;
-		
-		if(!Converter->GetClass()->ImplementsInterface(USpeckleConverter::StaticClass()))
-		{
-			UE_LOG(LogSpeckle, Warning, TEXT("Converter {%s} is not a valid converter, Expected to implement interface {%s}"), *Converter->GetClass()->GetName(), *USpeckleConverter::StaticClass()->GetName())
-			continue;
-		}
+		if(!CheckValidConverter(Converter)) continue;
 		
 		if(ISpeckleConverter::Execute_CanConvertToNative(Converter, BaseType))
 		{
@@ -120,4 +112,26 @@ TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(con
 	// SpeckleType has no conversions.
 	SpeckleTypeMap.Add(BaseType, nullptr);
 	return nullptr;
+}
+
+void USpeckleConverterComponent::DeleteObjects()
+{
+	for (UObject* Converter : SpeckleConverters)
+	{
+		if(!CheckValidConverter(Converter)) continue;
+		
+		ISpeckleConverter::Execute_CleanUp(Converter);
+	}
+}
+
+bool USpeckleConverterComponent::CheckValidConverter(const UObject* Converter)
+{
+	if(Converter == nullptr) return false;
+		
+	if(!Converter->GetClass()->ImplementsInterface(USpeckleConverter::StaticClass()))
+	{
+		UE_LOG(LogSpeckle, Warning, TEXT("Converter {%s} is not a valid converter, Expected to implement interface {%s}"), *Converter->GetClass()->GetName(), *USpeckleConverter::StaticClass()->GetName())
+		return false;
+	}
+	return true;
 }

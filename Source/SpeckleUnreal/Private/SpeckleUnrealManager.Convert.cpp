@@ -63,39 +63,6 @@ void ASpeckleUnrealManager::ImportObjectFromCache(AActor* AOwner, const TSharedP
 	}
 }
 
-bool ASpeckleUnrealManager::TryGetMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride, UMaterialInterface*& OutMaterial)
-{
-	const auto MaterialID = SpeckleMaterial->Id;
-	
-	if(AcceptMaterialOverride)
-	{
-		//Override by id
-		if(MaterialOverridesById.Contains(MaterialID))
-		{
-			OutMaterial = MaterialOverridesById[MaterialID];
-			return true;
-		}
-		//Override by name
-		const FString Name = SpeckleMaterial->Name;
-		for (const UMaterialInterface* Mat : MaterialOverridesByName)
-		{
-			if(Mat->GetName() == Name)
-			{
-				OutMaterial = MaterialOverridesById[MaterialID];
-				return true;
-			}
-		}
-	}
-
-		
-	if(ConvertedMaterials.Contains(MaterialID))
-	{
-		OutMaterial = ConvertedMaterials[MaterialID];
-		return true;
-	}
-
-	return false;
-}
 
 UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj) const
 {
@@ -114,12 +81,12 @@ UBase* ASpeckleUnrealManager::DeserializeBase(const TSharedPtr<FJsonObject> Obj)
 	FString ObjectId = "";	
 	Obj->TryGetStringField("id", ObjectId);
 		
-	const TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
+	TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
 	
 	if(BaseType == nullptr)
 	{
 		UE_LOG(LogSpeckle, Verbose, TEXT("Skipping deserialization of %s %s: Unrecognised SpeckleType"), *SpeckleType, *ObjectId );
-		return nullptr; //BaseType = UBase::StaticClass();
+		BaseType = UBase::StaticClass();
 	}
 	
 	UBase* Base =  NewObject<UBase>(GetTransientPackage(), BaseType);
@@ -224,55 +191,6 @@ float ASpeckleUnrealManager::ParseScaleFactor(const FString& Units) const
 	return ParseUnits(Units.ToLower()) * WorldToCentimeters;
 }
 
-
-AActor* ASpeckleUnrealManager::CreateBlockInstance(const TSharedPtr<FJsonObject> Obj)
-{
-	//Transform
-    const FString Units = Obj->GetStringField("units");
-	const float ScaleFactor = ParseScaleFactor(Units);
-	
-	const TArray<TSharedPtr<FJsonValue>>* TransformData;
-	if(!Obj->TryGetArrayField("transform", TransformData)) return nullptr;
-	
-	
-	FMatrix TransformMatrix;
-	for(int32 Row = 0; Row < 4; Row++)
-	for(int32 Col = 0; Col < 4; Col++)
-	{
-		TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
-	}
-	TransformMatrix = TransformMatrix.GetTransposed();
-	TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
-	
-	//Block Instance
-	const FString ObjectId = Obj->GetStringField("id"), SpeckleType = Obj->GetStringField("speckle_type");
-
-	ASpeckleUnrealActor* BlockInstance = World->SpawnActor<ASpeckleUnrealActor>(ASpeckleUnrealActor::StaticClass(), FTransform(TransformMatrix));
-
-	
-	//Block Definition
-	const TSharedPtr<FJsonObject>* BlockDefinitionReference;
-	if(!Obj->TryGetObjectField("blockDefinition", BlockDefinitionReference)) return nullptr;
-	
-	const FString RefID = BlockDefinitionReference->operator->()->GetStringField("referencedId");
-	
-	const TSharedPtr<FJsonObject> BlockDefinition = SpeckleObjects[RefID];
-	
-	//For now just recreate mesh, eventually we should use instanced static mesh
-	const auto Geometries = BlockDefinition->GetArrayField("geometry");
-
-	for(const auto Child : Geometries)
-	{
-		const TSharedPtr<FJsonObject> MeshReference = Child->AsObject();
-		const FString MeshID = MeshReference->GetStringField("referencedId");
-		
-		//It is important that ParentObject is the BlockInstance not the BlockDefinition to keep NativeIDs of meshes unique between Block Instances
-		ImportObjectFromCache(BlockInstance, SpeckleObjects[MeshID]);
-	}
-	
-	
-	return BlockInstance;
-}
 
 
 

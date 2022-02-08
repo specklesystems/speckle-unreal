@@ -11,61 +11,75 @@
 
 URenderMaterialConverter::URenderMaterialConverter()
 {
-	//DefaultMeshMaterial
+	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleMaterial(TEXT("Material'/SpeckleUnreal/SpeckleMaterial.SpeckleMaterial'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleGlassMaterial(TEXT("Material'/SpeckleUnreal/SpeckleGlassMaterial.SpeckleGlassMaterial'"));
+
+	DefaultMeshMaterial = SpeckleMaterial.Object;
+	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
+	BaseMeshTransparentMaterial = SpeckleGlassMaterial.Object;
 }
 
-bool URenderMaterialConverter::TryGetExistingMaterial(const URenderMaterial* SpeckleMaterial, const bool AcceptMaterialOverride, UMaterialInterface*& OutMaterial) const
+
+bool URenderMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMaterial, UMaterialInterface*& OutMaterial) const
 {
 	const auto MaterialID = SpeckleMaterial->Id;
 	
-	if(AcceptMaterialOverride)
+
+	//Override by id
+	if(MaterialOverridesById.Contains(MaterialID))
 	{
-		//Override by id
-		if(MaterialOverridesById.Contains(MaterialID))
+		OutMaterial = MaterialOverridesById[MaterialID];
+		return true;
+	}
+	//Override by name
+	const FString Name = SpeckleMaterial->Name;
+	for (const UMaterialInterface* Mat : MaterialOverridesByName)
+	{
+		if(Mat->GetName() == Name)
 		{
 			OutMaterial = MaterialOverridesById[MaterialID];
 			return true;
 		}
-		//Override by name
-		const FString Name = SpeckleMaterial->Name;
-		for (const UMaterialInterface* Mat : MaterialOverridesByName)
-		{
-			if(Mat->GetName() == Name)
-			{
-				OutMaterial = MaterialOverridesById[MaterialID];
-				return true;
-			}
-		}
 	}
 	
-	if(ConvertedMaterials.Contains(MaterialID))
-	{
-		OutMaterial = ConvertedMaterials[MaterialID];
-		return true;
-	}
-
+	
 	return false;
 }
 
-UMaterialInterface* URenderMaterialConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, const ASpeckleUnrealManager* Manager, bool AcceptMaterialOverride, bool UseEditorConstMaterial)
-{
-	UMaterialInterface* NativeMaterial;
-	if(TryGetExistingMaterial(SpeckleMaterial, AcceptMaterialOverride, NativeMaterial))
-		return NativeMaterial;
-	
-	return RenderMaterialToNative(SpeckleMaterial, Manager, UseEditorConstMaterial);
-}
 
-UMaterialInterface* URenderMaterialConverter::RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, const ASpeckleUnrealManager* Manager, bool UseEditorConstMaterial)
+UMaterialInterface* URenderMaterialConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, const ASpeckleUnrealManager* Manager, bool AcceptMaterialOverride, bool UseEditorConstMaterial)
 {
 	if(SpeckleMaterial == nullptr || SpeckleMaterial->Id == "") return DefaultMeshMaterial; //Material is invalid
 
+	// 1. Check Overrides
+	UMaterialInterface* NativeMaterial;
+	if(AcceptMaterialOverride && TryGetOverride(SpeckleMaterial, NativeMaterial))
+		return NativeMaterial;
+
+	// 2. Check transient cache
+	if(ConvertedMaterials.Contains(SpeckleMaterial->Id))
+	{
+		return ConvertedMaterials[SpeckleMaterial->Id];
+	}
 	
+	// 3. Check Assets
+	UPackage* Package = GetPackage(Manager->StreamID, SpeckleMaterial->Id);
+	
+	NativeMaterial = Cast<UMaterialInterface>(Package->FindAssetInPackage());
+	if(IsValid(NativeMaterial))
+	{
+	   return NativeMaterial;
+	}
+	
+	// 4. Convert
+	return RenderMaterialToNative(SpeckleMaterial, Package, UseEditorConstMaterial);
+}
+
+UMaterialInterface* URenderMaterialConverter::RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, UPackage* Package, bool UseEditorConstMaterial)
+{
 	UMaterialInterface* MaterialBase = SpeckleMaterial->Opacity >= 1
 	    ? BaseMeshOpaqueMaterial
 	    : BaseMeshTransparentMaterial;
-	
-	UPackage* Package = GetPackage(Manager->StreamID, SpeckleMaterial->Id);
 	
 	UMaterialInstance* MaterialInstance;
 #if WITH_EDITOR
@@ -111,6 +125,11 @@ UMaterialInterface* URenderMaterialConverter::RenderMaterialToNative(const URend
 	
 	return MaterialInstance;
 	
+}
+
+void URenderMaterialConverter::CleanUp()
+{
+	ConvertedMaterials.Empty();
 }
 
 UPackage* URenderMaterialConverter::GetPackage(const FString& StreamID, const FString& ObjectID ) const

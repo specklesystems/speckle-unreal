@@ -24,7 +24,7 @@ public:
 
 	/// Attempts to find the closest registered TSubclassOf<UBase>
 	/// by recursively stripping away a the most specific name specifier from the given SpeckleType
-	/// until a converter is found or the FString is exhausted.
+	/// until a UBase type is found or the FString is exhausted.
 	///  
 	/// Eg. with an input of "Objects.Elements.Wall"
 	/// Will first look for a registered type of "Objects.Elements.Wall"

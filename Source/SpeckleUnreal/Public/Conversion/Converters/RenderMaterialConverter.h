@@ -11,7 +11,9 @@ class URenderMaterial;
 class ASpeckleUnrealManager;
 
 /**
- * 
+ * Class for converting URenderMaterial.
+ * Note, this class is not a ISpeckleConverter, since it does not create an Actor. //TODO consider allowing ISpeckleConverter to return any UObject
+ * Instead this class is used by ISpeckleConverter implementors.
  */
 UCLASS(BlueprintType, Blueprintable)
 class SPECKLEUNREAL_API URenderMaterialConverter : public UObject
@@ -42,20 +44,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overrides", DisplayName = "By Name")
 	TSet<UMaterialInterface*> MaterialOverridesByName;
 
-	/** Materials converted from stream RenderMaterial objects */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Conversion")
-	TMap<FString, UMaterialInterface*> ConvertedMaterials;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	virtual bool TryGetExistingMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride, UMaterialInterface*& OutMaterial) const;
+	virtual bool TryGetOverride(const URenderMaterial* SpeckleMaterial, UMaterialInterface*& OutMaterial) const;
 
 	UFUNCTION(BlueprintCallable)
 	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, const ASpeckleUnrealManager* Manager, bool AcceptMaterialOverride = true, bool AllowEditorMaterial = false);
 	
 	UFUNCTION(BlueprintCallable)
-	virtual UMaterialInterface* RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, const ASpeckleUnrealManager* Manager, bool AllowEditorMaterial);
+	virtual UMaterialInterface* RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, UPackage* Package, bool AllowEditorMaterial);
 
+	UFUNCTION(BlueprintCallable)
+	virtual void CleanUp();
+	
 protected:
+	
+	/** Transient cache of materials converted from stream RenderMaterial objects */
+	UPROPERTY(AdvancedDisplay, BlueprintReadOnly, Transient, Category = "Conversion")
+	TMap<FString, UMaterialInterface*> ConvertedMaterials;
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	virtual UPackage* GetPackage(const FString& StreamID, const FString& ObjectID) const;
 };

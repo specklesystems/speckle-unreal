@@ -11,6 +11,9 @@
 
 UDisplayValueConverter::UDisplayValueConverter()
 {
+	static ConstructorHelpers::FObjectFinder<UStaticMeshConverter> DefaultMeshConverter(TEXT("StaticMeshConverter'/SpeckleUnreal/Converters/DefaultStaticMeshConverter.DefaultStaticMeshConverter'"));
+	MeshConverter = DefaultMeshConverter.Object;
+	
 	SpeckleTypes.Add(UDisplayValueElement::StaticClass());
 }
 

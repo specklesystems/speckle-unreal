@@ -16,10 +16,6 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
     RootComponent->SetMobility(EComponentMobility::Static);
 
 	Converter = CreateDefaultSubobject<USpeckleConverterComponent>(FName("Converter"));
-	
-	DefaultMeshMaterial = SpeckleMaterial.Object;
-	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
-	BaseMeshTransparentMaterial = SpeckleGlassMaterial.Object;
 }
 
 // Called when the game starts or when spawned
@@ -181,7 +177,7 @@ void ASpeckleUnrealManager::OnStreamTextResponseReceived(FHttpRequestPtr Request
 
 void ASpeckleUnrealManager::DeleteObjects()
 {
-	ConvertedMaterials.Empty();
+	Converter->DeleteObjects();
 	
 	for (const auto& m : CreatedObjectsCache)
 	{

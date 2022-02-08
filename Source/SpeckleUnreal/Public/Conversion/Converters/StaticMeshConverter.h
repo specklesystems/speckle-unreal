@@ -63,6 +63,8 @@ public:
 	
 	virtual AActor* CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform = FTransform::Identity, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 
+	virtual void CleanUp_Implementation() override;
+	
 protected:
 	virtual void GenerateMeshParams(UStaticMesh::FBuildMeshDescriptionsParams& MeshParams) const;
 };

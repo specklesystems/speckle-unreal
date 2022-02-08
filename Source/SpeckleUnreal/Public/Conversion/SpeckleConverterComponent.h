@@ -46,6 +46,12 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);
+	
+	UFUNCTION(BlueprintCallable)
+	void DeleteObjects();
+	
+	
+	static bool CheckValidConverter(const UObject* Converter);
 };
 
 

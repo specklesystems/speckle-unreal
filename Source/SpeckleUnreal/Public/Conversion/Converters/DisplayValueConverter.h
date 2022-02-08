@@ -17,7 +17,7 @@ class SPECKLEUNREAL_API UDisplayValueConverter : public UObject, public ISpeckle
 {
 	GENERATED_BODY()
 	
-	CONVERTS_SPECKLE_TYPES()
+	CONVERTS_SPECKLE_TYPES() //TODO consider converting any type that has a displayValue prop, not just UDisplayValueElement
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

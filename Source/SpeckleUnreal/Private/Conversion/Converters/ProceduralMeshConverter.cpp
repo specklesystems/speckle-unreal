@@ -94,6 +94,10 @@ AActor* UProceduralMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* 
     return Actor;
 }
 
+void UProceduralMeshConverter::CleanUp_Implementation()
+{
+    MaterialConverter->CleanUp();
+}
 
 
 UBase* UProceduralMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)

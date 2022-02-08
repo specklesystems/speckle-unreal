@@ -25,19 +25,23 @@ class SPECKLEUNREAL_API ISpeckleConverter
 {
 	GENERATED_BODY()
 
-public:	
+public:
+	/// Will return true if this converter can convert a given BaseType
 	UFUNCTION(BlueprintNativeEvent)
 	bool CanConvertToNative(TSubclassOf<UBase> BaseType);
-
-	/// Returns the type of Base expected for a given SpeckleType
-	UFUNCTION(BlueprintNativeEvent)
-	TSubclassOf<UBase> ToNativeBase(const FString& SpeckleType);
 	
+	/// Tries to convert a given SpeckleBase into a native Actor
 	UFUNCTION(BlueprintNativeEvent)
 	AActor* ConvertToNative(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager);
 
+	/// Tries to convert a given Actor or Component Object into a Speckle Base
 	UFUNCTION(BlueprintNativeEvent)
 	UBase* ConvertToSpeckle(const UObject* Object, ASpeckleUnrealManager* Manager);
+
+	/// Clean up any cached assets that now may be unused
+	UFUNCTION(BlueprintNativeEvent)
+	void CleanUp();
+	
 };
 
 #define CONVERTS_SPECKLE_TYPES() \
