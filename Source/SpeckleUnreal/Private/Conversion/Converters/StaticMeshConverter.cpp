@@ -13,6 +13,7 @@
 #include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
 #include "LogSpeckle.h"
+#include "Conversion/Converters/RenderMaterialConverter.h"
 
 
 UStaticMeshConverter::UStaticMeshConverter()
@@ -66,7 +67,7 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 	}
 	
 	MeshComponent->SetStaticMesh(Mesh);
-	MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
+	MeshComponent->SetMaterial(0, MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, Manager, true, !FApp::IsGame()));
 	
 	return Actor;
 }
@@ -135,7 +136,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 		}
 		
 		// Convert Material
-		UMaterialInterface* Material = GetMaterial(SpeckleMesh->RenderMaterial, Manager);
+		UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, Manager);
 	
 		const FName MaterialSlotName = Mesh->AddMaterial(Material);;
 		BaseMeshDescription.PolygonGroupAttributes().RegisterAttribute<FName>(MeshAttribute::PolygonGroup::ImportedMaterialSlotName, 1, MaterialSlotName,  EMeshAttributeFlags::None);
@@ -258,69 +259,6 @@ void UStaticMeshConverter::GenerateMeshParams(UStaticMesh::FBuildMeshDescription
 	MeshParams.bCommitMeshDescription = true;
 	MeshParams.bMarkPackageDirty = true;
 	MeshParams.bUseHashAsGuid = false;
-}
-
-UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
-{
-	if(SpeckleMaterial == nullptr || SpeckleMaterial->Id == "") return Manager->DefaultMeshMaterial; //Material is invalid
-	
-	UMaterialInterface* ExistingMaterial;
-	if(Manager->TryGetMaterial(SpeckleMaterial, true, ExistingMaterial))
-		return ExistingMaterial; //Return existing material
-
-	
-	UMaterialInterface* MaterialBase = SpeckleMaterial->Opacity >= 1
-	    ? Manager->BaseMeshOpaqueMaterial
-	    : Manager->BaseMeshTransparentMaterial;
-	
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Materials"), SpeckleMaterial->Id);
-	UPackage* Package = CreatePackage(*PackagePath);
-
-	
-	UMaterialInstance* MaterialInstance;
-#if WITH_EDITOR
-	if (GIsEditor && !GWorld->HasBegunPlay())
-	{
-		const FName Name = MakeUniqueObjectName(Package, UMaterialInstanceConstant::StaticClass(), FName(SpeckleMaterial->Name));
-
-		//TStrongObjectPtr< UMaterialInstanceConstantFactoryNew > MaterialFact( NewObject< UMaterialInstanceConstantFactoryNew >() );
-		//MaterialFact->InitialParent = MaterialBase;
-		//UMaterialInstanceConstant* ConstMaterial = Cast< UMaterialInstanceConstant >( MaterialFact->FactoryCreateNew( UMaterialInstanceConstant::StaticClass(), Package, Name, RF_Public, nullptr, GWarn ) );
-		UMaterialInstanceConstant* ConstMaterial = NewObject<UMaterialInstanceConstant>(Package, Name, RF_Public);
-		
-		MaterialInstance = ConstMaterial;
-		ConstMaterial->SetParentEditorOnly(MaterialBase);
-		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Opacity"), SpeckleMaterial->Opacity);
-		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Metallic"), SpeckleMaterial->Metalness);
-		ConstMaterial->SetScalarParameterValueEditorOnly(FMaterialParameterInfo("Roughness"), SpeckleMaterial->Roughness);
-		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("BaseColor"), SpeckleMaterial->Diffuse);
-		ConstMaterial->SetVectorParameterValueEditorOnly(FMaterialParameterInfo("EmissiveColor"), SpeckleMaterial->Emissive);
-		
-		//ConstMaterial->InitStaticPermutation();
-		
-		ConstMaterial->MarkPackageDirty();
-
-		FAssetRegistryModule::AssetCreated(MaterialInstance);
-	}
-	else
-#endif
-	{
-		UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Package, FName(SpeckleMaterial->Name));
-		MaterialInstance = DynMaterial;
-		
-		DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
-		DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
-		DynMaterial->SetScalarParameterValue("Roughness", SpeckleMaterial->Roughness);
-		DynMaterial->SetVectorParameterValue("BaseColor", SpeckleMaterial->Diffuse);
-		DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
-		
-		DynMaterial->SetFlags(RF_Public);
-	}
-	
-	Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, MaterialInstance);
-	
-	return MaterialInstance;
-	
 }
 
 

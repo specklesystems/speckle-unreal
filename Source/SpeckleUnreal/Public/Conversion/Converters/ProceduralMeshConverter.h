@@ -7,6 +7,7 @@
 
 #include "ProceduralMeshConverter.generated.h"
 
+class URenderMaterialConverter;
 class UProceduralMeshComponent;
 class UMesh;
 class URenderMaterial;
@@ -19,6 +20,9 @@ class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpec
 	CONVERTS_SPECKLE_TYPES()
 	
 public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	URenderMaterialConverter* MaterialConverter;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AActor> MeshActorType;
@@ -35,9 +39,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	virtual AActor* MeshToNative(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager);
-
-	UFUNCTION(BlueprintCallable)
-	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager);
 	
 	UFUNCTION(BlueprintCallable)
 	virtual UMesh* MeshToSpeckle(const UProceduralMeshComponent* Object, ASpeckleUnrealManager* Manager);

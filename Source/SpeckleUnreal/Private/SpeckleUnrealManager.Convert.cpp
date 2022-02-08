@@ -180,7 +180,7 @@ TArray<TSharedPtr<FJsonValue>> ASpeckleUnrealManager::CombineChunks(const TArray
 {
 	TArray<TSharedPtr<FJsonValue>> ObjectPoints;
 		
-	for(int32 i = 0; i < ArrayField.Num(); i++)
+	for(int32 i = 0; i < ArrayField.Num(); i++) 
 	{
 		FString Index;
 		if(ArrayField[i]->AsObject()->TryGetStringField("referencedId", Index))

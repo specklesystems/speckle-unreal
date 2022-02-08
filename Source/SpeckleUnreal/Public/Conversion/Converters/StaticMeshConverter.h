@@ -8,6 +8,7 @@
 
 #include "StaticMeshConverter.generated.h"
 
+class URenderMaterialConverter;
 class AStaticMeshActor;
 class UMesh;
 class URenderMaterial;
@@ -20,6 +21,9 @@ class SPECKLEUNREAL_API UStaticMeshConverter : public UObject, public ISpeckleCo
 	CONVERTS_SPECKLE_TYPES()
 
 public:
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	URenderMaterialConverter* MaterialConverter;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AActor> MeshActorType;
@@ -56,9 +60,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	virtual UMesh* MeshToSpeckle(const UStaticMeshComponent* Object, ASpeckleUnrealManager* Manager);
-	
-	UFUNCTION(BlueprintCallable)
-	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager);
 	
 	virtual AActor* CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform = FTransform::Identity, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 

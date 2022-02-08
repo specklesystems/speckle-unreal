@@ -5,6 +5,7 @@
 #include "ProceduralMeshComponent.h"
 #include "StaticMeshDescription.h"
 #include "SpeckleUnrealManager.h"
+#include "Conversion/Converters/RenderMaterialConverter.h"
 #include "Objects/Mesh.h"
 #include "Objects/RenderMaterial.h"
 
@@ -76,8 +77,9 @@ AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckl
         SpeckleMesh->VertexColors,
         Tangents,
         true);
-    
-    MeshComponent->SetMaterial(0, GetMaterial(SpeckleMesh->RenderMaterial, Manager));
+
+    UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, Manager, true, false);
+    MeshComponent->SetMaterial(0, Material);
     
     return MeshActor;
 }
@@ -92,31 +94,6 @@ AActor* UProceduralMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* 
     return Actor;
 }
 
-
-UMaterialInterface* UProceduralMeshConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, ASpeckleUnrealManager* Manager)
-{
-    UMaterialInterface* ExistingMaterial;
-    if(Manager->TryGetMaterial(SpeckleMaterial, true, ExistingMaterial))
-        return ExistingMaterial; //Return existing material
-		
-    UMaterialInterface* MaterialBase = SpeckleMaterial->Opacity >= 1
-        ? Manager->BaseMeshOpaqueMaterial
-        : Manager->BaseMeshTransparentMaterial;
-	
-    UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(MaterialBase, Manager, FName(SpeckleMaterial->Name));
-    
-    DynMaterial->SetFlags(RF_Public);
-	
-    DynMaterial->SetScalarParameterValue("Opacity", SpeckleMaterial->Opacity);
-    DynMaterial->SetScalarParameterValue("Metallic", SpeckleMaterial->Metalness);
-    DynMaterial->SetScalarParameterValue("Roughness", SpeckleMaterial->Roughness);
-    DynMaterial->SetVectorParameterValue("BaseColor", SpeckleMaterial->Diffuse);
-    DynMaterial->SetVectorParameterValue("EmissiveColor", SpeckleMaterial->Emissive);
-	
-    Manager->ConvertedMaterials.Add(SpeckleMaterial->Id, DynMaterial);
-    
-    return DynMaterial;
-}
 
 
 UBase* UProceduralMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)

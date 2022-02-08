@@ -26,24 +26,22 @@ void FSpeckleUnrealEditorModule::StartupModule()
 		// Register Speckle Category
 		SpeckleAssetCategoryBit = AssetTools.RegisterAdvancedAssetCategory(FName(TEXT("Speckle")), LOCTEXT("SpeckleCategoryText","Speckle"));
 
-		// Finds all class definitions : UConverterFactory and creates a FConverterActions for their supported class.
+		
 		// See UAssetToolsImpl::GetNewAssetFactories() for reference
 		for (TObjectIterator<UClass> It; It; ++It)
 		{
-			const UClass* Class = *It;
-			if (Class->IsChildOf(UConverterFactory::StaticClass()) &&
-				!Class->HasAnyClassFlags(CLASS_Abstract))
-			{
-				const UConverterFactory* Factory = Class->GetDefaultObject<UConverterFactory>();
+			UClass* Class = *It;
 
-				if (Factory->ShouldShowInNewMenu() &&
-					ensure(!Factory->GetDisplayName().IsEmpty()))
-				{
-					AssetTools.RegisterAssetTypeActions(MakeShareable(new FConverterActions(Factory->SupportedClass, SpeckleAssetCategoryBit)));
-				}
+			// Create FConverterActions for USpeckleConverter types
+			if ( Class->ImplementsInterface(USpeckleConverter::StaticClass())
+				&& !Class->HasAnyClassFlags(CLASS_Abstract))
+			{
+				AssetTools.RegisterAssetTypeActions(MakeShareable(new FConverterActions(Class, SpeckleAssetCategoryBit)));
 			}
 		}
-		
+
+		AssetTools.RegisterAssetTypeActions(MakeShareable(new FConverterActions(USpeckleConverter::StaticClass(), SpeckleAssetCategoryBit)));
+
 		
 	}
 #endif

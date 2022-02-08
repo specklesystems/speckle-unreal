@@ -4,6 +4,7 @@
 #include "Conversion/Converters/DisplayValueConverter.h"
 
 #include "SpeckleUnrealManager.h"
+#include "Conversion/Converters/RenderMaterialConverter.h"
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Objects/DisplayValueElement.h"
 #include "Objects/Mesh.h"
@@ -50,7 +51,7 @@ AActor* UDisplayValueConverter::ConvertToNative_Implementation(const UBase* Spec
 	int i = 0;
 	for(const UMesh* DisplayMesh : SpeckleElement->DisplayValue)
 	{
-		MeshComponent->SetMaterial(i, MeshConverter->GetMaterial(DisplayMesh->RenderMaterial, Manager));
+		MeshComponent->SetMaterial(i, MeshConverter->MaterialConverter->GetMaterial(DisplayMesh->RenderMaterial, Manager, true, !FApp::IsGame()));
 		i++;
 	}
 

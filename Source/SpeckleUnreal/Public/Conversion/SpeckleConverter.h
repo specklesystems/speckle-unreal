@@ -13,7 +13,7 @@ class ASpeckleUnrealManager;
 
 // This class does not need to be modified.
 UINTERFACE()
-class USpeckleConverter : public UInterface
+class SPECKLEUNREAL_API USpeckleConverter : public UInterface
 {
 	GENERATED_BODY()
 };
