@@ -17,10 +17,10 @@ UDisplayValueConverter::UDisplayValueConverter()
 	SpeckleTypes.Add(UDisplayValueElement::StaticClass());
 }
 
-AActor* UDisplayValueConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
+AActor* UDisplayValueConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
 {
 
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"), SpeckleBase->Id);
+	const FString PackagePath = FPaths::Combine(TEXT("/Game/SpeckleGeometry"), SpeckleBase->Id);
 	UPackage* Package = CreatePackage(*PackagePath);
 
 	const UDisplayValueElement* SpeckleElement = Cast<UDisplayValueElement>(SpeckleBase);
@@ -32,10 +32,10 @@ AActor* UDisplayValueConverter::ConvertToNative_Implementation(const UBase* Spec
 	if(!IsValid(Mesh))
 	{
 		//No existing mesh was found, try and convert SpeckleMesh
-		Mesh = MeshConverter->MeshesToNative(Package, SpeckleElement, SpeckleElement->DisplayValue, Manager);
+		Mesh = MeshConverter->MeshesToNative(Package, SpeckleElement, SpeckleElement->DisplayValue);
 	}
 
-	AActor* Actor = MeshConverter->CreateEmptyActor(Manager);
+	AActor* Actor = MeshConverter->CreateEmptyActor(World);
 	TInlineComponentArray<UStaticMeshComponent*> Components;
 	Actor->GetComponents<UStaticMeshComponent>(Components);
 
@@ -54,7 +54,7 @@ AActor* UDisplayValueConverter::ConvertToNative_Implementation(const UBase* Spec
 	int i = 0;
 	for(const UMesh* DisplayMesh : SpeckleElement->DisplayValue)
 	{
-		MeshComponent->SetMaterial(i, MeshConverter->MaterialConverter->GetMaterial(DisplayMesh->RenderMaterial, Manager, true, !FApp::IsGame()));
+		MeshComponent->SetMaterial(i, MeshConverter->MaterialConverter->GetMaterial(DisplayMesh->RenderMaterial, true, !FApp::IsGame()));
 		i++;
 	}
 
@@ -62,7 +62,7 @@ AActor* UDisplayValueConverter::ConvertToNative_Implementation(const UBase* Spec
 	
 }
 
-UBase* UDisplayValueConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)
+UBase* UDisplayValueConverter::ConvertToSpeckle_Implementation(const UObject* Object)
 {
 	return nullptr; //TODO implement
 }

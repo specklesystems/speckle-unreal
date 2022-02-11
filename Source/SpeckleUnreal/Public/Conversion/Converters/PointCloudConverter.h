@@ -29,18 +29,16 @@ public:
 	
 	UPointCloudConverter();
 	
-	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager) override;
-	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager) override;
+	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World) override;
+	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
 	UFUNCTION(BlueprintCallable)
-	virtual ALidarPointCloudActor* PointCloudToNative(const UPointCloud* SpecklePointCloud, ASpeckleUnrealManager* Manager);
+	virtual ALidarPointCloudActor* PointCloudToNative(const UPointCloud* SpecklePointCloud, UWorld* World);
 	
 	UFUNCTION(BlueprintCallable)
-	virtual UPointCloud* PointCloudToSpeckle(const ULidarPointCloudComponent* Object, ASpeckleUnrealManager* Manager);
+	virtual UPointCloud* PointCloudToSpeckle(const ULidarPointCloudComponent* Object);
 
 protected:
 	UFUNCTION(BlueprintCallable)
-	virtual ALidarPointCloudActor* CreateActor(
-		const ASpeckleUnrealManager* Manager,
-		ULidarPointCloud* PointCloudData);
+	virtual ALidarPointCloudActor* CreateActor(UWorld* World, ULidarPointCloud* PointCloudData);
 };

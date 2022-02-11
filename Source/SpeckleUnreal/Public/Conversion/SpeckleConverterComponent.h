@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
 #include "SpeckleConverterComponent.generated.h"
 
+class ITransport;
 class USpeckleConverter;
 class ASpeckleUnrealManager;
 class UBase;
@@ -42,7 +44,14 @@ public:
 	UBase* ConvertToSpeckle(UObject* Object);
 
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	AActor* ConvertToNative(const UBase* Object, ASpeckleUnrealManager* Manager);
+	AActor* ConvertToNative(const UBase* Object, UWorld* World);
+
+
+	// Converts the given Base and all children into native actors.
+	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
+	AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
+	                                   const TScriptInterface<ITransport> LocalTransport, TArray<AActor*>& OutActors);
+	
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);

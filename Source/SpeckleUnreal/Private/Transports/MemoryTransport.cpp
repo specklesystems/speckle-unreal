@@ -3,27 +3,23 @@
 
 #include "Transports/MemoryTransport.h"
 
-// UMemoryTransport::UMemoryTransport(TMap<FString, TSharedPtr<FJsonObject>>& Objects)
-// {
-// 	//this->Objects = Objects;
-// }
-//
-// void UMemoryTransport::SaveObject(FString& Id, TSharedPtr<FJsonObject> SerializedObject)
-// {
-// 	//Objects.Emplace(Id, SerializedObject);
-// }
-//
-// void UMemoryTransport::SaveObjectFromTransport(FString& Id, UAbstractTransport* SourceTransport)
-// {
-// 	unimplemented()
-// }
-//
-// TSharedPtr<FJsonObject> UMemoryTransport::GetObject(FString& Id, UAbstractTransport* SourceTransport)
-// {
-// 	//Objects.Find(Id);
-// }
-//
-// TSharedPtr<FJsonObject> UMemoryTransport::CopyObjectAndChildren(FString& Id, UAbstractTransport* SourceTransport)
-// {
-// 	unimplemented()
-// }
+bool UMemoryTransport::HasObject(const FString& ObjectId) const
+{
+	return SpeckleObjects.Contains(ObjectId);
+}
+
+void UMemoryTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction)
+{
+	unimplemented();
+	return;
+}
+
+TSharedPtr<FJsonObject> UMemoryTransport::GetSpeckleObject(const FString& ObjectId) const
+{
+	return SpeckleObjects.FindRef(ObjectId);
+}
+
+void UMemoryTransport::SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject)
+{
+	SpeckleObjects.Add(ObjectId, SerializedObject);
+}

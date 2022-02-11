@@ -5,12 +5,15 @@
 #include "LogSpeckle.h"
 
 #include "SpeckleUnrealManager.h"
+#include "API/SpeckleSerializer.h"
+#include "Conversion/ConversionUtils.h"
+#include "Transports/Transport.h"
 
-bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInterface<ITransport> ReadTransport)
 {
-	if(!Super::Parse(Obj, Manager)) return false;
+	if(!Super::Parse(Obj, ReadTransport)) return false;
 	
-	const float ScaleFactor = Manager->ParseScaleFactor(Units);
+	const float ScaleFactor = UConversionUtils::ParseScaleFactor(Units);
 
 	//Transform
 	const TArray<TSharedPtr<FJsonValue>>* TransformData;
@@ -32,7 +35,7 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnre
 	if(!Obj->TryGetObjectField("blockDefinition", BlockDefinitionPtr)) return false;
 	
 	const FString RefID = BlockDefinitionPtr->operator->()->GetStringField("referencedId");
-	const TSharedPtr<FJsonObject> BlockDefinition = Manager->GetSpeckleObject(RefID);
+	const TSharedPtr<FJsonObject> BlockDefinition = ReadTransport->GetSpeckleObject(RefID);
 	
 	BlockDefinition->TryGetStringField("name", Name);
 
@@ -49,9 +52,9 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnre
 		const TSharedPtr<FJsonObject> MeshReference = Geo->AsObject();
 		const FString ChildId = MeshReference->GetStringField("referencedId");
 
-		if(Manager->HasObject(ChildId))
+		if(ReadTransport->HasObject(ChildId))
 		{
-			UBase* Child = Manager->DeserializeBase(Manager->GetSpeckleObject(ChildId));
+			UBase* Child = FSpeckleSerializer::DeserializeBase(ReadTransport->GetSpeckleObject(ChildId), ReadTransport);
 			if(IsValid(Child))
 				Geometry.Add(Child);
 		}

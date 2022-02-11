@@ -17,18 +17,18 @@ UProceduralMeshConverter::UProceduralMeshConverter()
     ActorMobility = EComponentMobility::Static;
 }
 
-AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
+AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
 {
     const UMesh* P = Cast<UMesh>(SpeckleBase);
 	
     if(P == nullptr) return nullptr;
 	
-    return MeshToNative(P, Manager);
+    return MeshToNative(P, World);
 }
 
-AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager)
+AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld* World)
 {
-    AActor* MeshActor = CreateEmptyActor(Manager, FTransform(SpeckleMesh->Transform));
+    AActor* MeshActor = CreateEmptyActor(World, FTransform(SpeckleMesh->Transform));
     UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));
     MeshComponent->SetupAttachment(MeshActor->GetRootComponent());
     MeshComponent->RegisterComponent();
@@ -78,15 +78,15 @@ AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, ASpeckl
         Tangents,
         true);
 
-    UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, Manager, true, false);
+    UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, true, false);
     MeshComponent->SetMaterial(0, Material);
     
     return MeshActor;
 }
 
-AActor* UProceduralMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
+AActor* UProceduralMeshConverter::CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
-    AActor* Actor = Manager->GetWorld()->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
+    AActor* Actor = World->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
     USceneComponent* Scene = NewObject<USceneComponent>(Actor, "Root");
     Actor->SetRootComponent(Scene);
     Scene->RegisterComponent();
@@ -100,7 +100,7 @@ void UProceduralMeshConverter::CleanUp_Implementation()
 }
 
 
-UBase* UProceduralMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)
+UBase* UProceduralMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object)
 {
     const UProceduralMeshComponent* M = Cast<UProceduralMeshComponent>(Object);
 
@@ -114,11 +114,11 @@ UBase* UProceduralMeshConverter::ConvertToSpeckle_Implementation(const UObject* 
     }
     if(M == nullptr) return nullptr;
 	
-    return MeshToSpeckle(M, Manager);
+    return MeshToSpeckle(M);
 }
 
 
-UMesh* UProceduralMeshConverter::MeshToSpeckle(const UProceduralMeshComponent* Object, ASpeckleUnrealManager* Manager)
+UMesh* UProceduralMeshConverter::MeshToSpeckle(const UProceduralMeshComponent* Object)
 {
     return nullptr; //TODO implement ToSpeckle function
 }

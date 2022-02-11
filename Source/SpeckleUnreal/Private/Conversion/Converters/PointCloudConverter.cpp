@@ -18,17 +18,17 @@ UPointCloudConverter::UPointCloudConverter()
 }
 
 
-AActor* UPointCloudConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
+AActor* UPointCloudConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
 {
 	const UPointCloud* P = Cast<UPointCloud>(SpeckleBase);
 	
 	if(P == nullptr) return nullptr;
 	
-	return PointCloudToNative(P, Manager);
+	return PointCloudToNative(P, World);
 }
 
 
-ALidarPointCloudActor* UPointCloudConverter::PointCloudToNative(const UPointCloud* SpecklePointCloud, ASpeckleUnrealManager* Manager)
+ALidarPointCloudActor* UPointCloudConverter::PointCloudToNative(const UPointCloud* SpecklePointCloud, UWorld* World)
 {
 	TArray<FLidarPointCloudPoint> LidarPoints;
 	
@@ -50,21 +50,21 @@ ALidarPointCloudActor* UPointCloudConverter::PointCloudToNative(const UPointClou
 	PointCloud->CenterPoints();
 	PointCloud->RefreshBounds();
 
-	return CreateActor(Manager, PointCloud);
+	return CreateActor(World, PointCloud);
 	
 }
 
 
-ALidarPointCloudActor* UPointCloudConverter::CreateActor(const ASpeckleUnrealManager* Manager, ULidarPointCloud* PointCloudData)
+ALidarPointCloudActor* UPointCloudConverter::CreateActor(UWorld* World, ULidarPointCloud* PointCloudData)
 {
-	ALidarPointCloudActor* Actor = Manager->GetWorld()->SpawnActor<ALidarPointCloudActor>(PointCloudActorType);
+	ALidarPointCloudActor* Actor = World->SpawnActor<ALidarPointCloudActor>(PointCloudActorType);
 	Actor->SetPointCloud(PointCloudData);
 	Actor->GetRootComponent()->SetMobility(ActorMobility);
 	return Actor;
 }
 
 
-UBase* UPointCloudConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)
+UBase* UPointCloudConverter::ConvertToSpeckle_Implementation(const UObject* Object)
 {
 	const ULidarPointCloudComponent* P = Cast<ULidarPointCloudComponent>(Object);
 
@@ -78,11 +78,11 @@ UBase* UPointCloudConverter::ConvertToSpeckle_Implementation(const UObject* Obje
 	}
 	if(P == nullptr) return nullptr;
 	
-	return PointCloudToSpeckle(P, Manager);
+	return PointCloudToSpeckle(P);
 }
 
 
-UPointCloud* UPointCloudConverter::PointCloudToSpeckle(const ULidarPointCloudComponent* Object, ASpeckleUnrealManager* Manager)
+UPointCloud* UPointCloudConverter::PointCloudToSpeckle(const ULidarPointCloudComponent* Object)
 {
 	return nullptr; //TODO implement ToSpeckle function
 }

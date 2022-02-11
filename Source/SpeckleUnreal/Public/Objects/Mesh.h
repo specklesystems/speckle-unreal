@@ -39,7 +39,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	URenderMaterial* RenderMaterial;
 	
-	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override;
+	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
 
 protected:
 	virtual void AlignVerticesWithTexCoordsByIndex();

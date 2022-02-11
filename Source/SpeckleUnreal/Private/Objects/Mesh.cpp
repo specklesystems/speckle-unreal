@@ -4,12 +4,14 @@
 #include "Objects/Mesh.h"
 
 #include "SpeckleUnrealManager.h"
+#include "Conversion/ConversionUtils.h"
 #include "Objects/RenderMaterial.h"
+#include "Transports/Transport.h"
 
-bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 {
-	if(!Super::Parse(Obj, Manager)) return false;
-	const float ScaleFactor = Manager->ParseScaleFactor(Units);
+	if(!Super::Parse(Obj, ReadTransport)) return false;
+	const float ScaleFactor = UConversionUtils::ParseScaleFactor(Units);
 
 	//Parse optional Transform
 	{
@@ -30,7 +32,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 
 	//Parse Vertices
 	{
-		TArray<TSharedPtr<FJsonValue>> ObjectVertices = Manager->CombineChunks(Obj->GetArrayField("vertices"));
+		TArray<TSharedPtr<FJsonValue>> ObjectVertices = UConversionUtils::CombineChunks(Obj->GetArrayField("vertices"), ReadTransport);
 		const int32 NumberOfVertices = ObjectVertices.Num() / 3;
 
 		Vertices.Reserve(NumberOfVertices);
@@ -49,7 +51,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 
 	//Parse Faces
 	{
-		const TArray<TSharedPtr<FJsonValue>> FaceVertices = Manager->CombineChunks(Obj->GetArrayField("faces"));
+		const TArray<TSharedPtr<FJsonValue>> FaceVertices = UConversionUtils::CombineChunks(Obj->GetArrayField("faces"), ReadTransport);
 		Faces.Reserve(FaceVertices.Num());
 		for(const auto VertIndex : FaceVertices)
 		{
@@ -63,7 +65,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 		const TArray<TSharedPtr<FJsonValue>>* TextCoordArray;
 		if(Obj->TryGetArrayField("textureCoordinates", TextCoordArray))
 		{
-			TArray<TSharedPtr<FJsonValue>> TexCoords = Manager->CombineChunks(*TextCoordArray);
+			TArray<TSharedPtr<FJsonValue>> TexCoords = UConversionUtils::CombineChunks(*TextCoordArray, ReadTransport);
 	
 			TextureCoordinates.Reserve(TexCoords.Num() / 2);
 	
@@ -84,7 +86,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 		const TArray<TSharedPtr<FJsonValue>>* ColorArray;
 		if(Obj->TryGetArrayField("colors", ColorArray))
 		{
-			TArray<TSharedPtr<FJsonValue>> Colors = Manager->CombineChunks(*ColorArray);
+			TArray<TSharedPtr<FJsonValue>> Colors = UConversionUtils::CombineChunks(*ColorArray, ReadTransport);
 	
 			VertexColors.Reserve(Colors.Num());
 	
@@ -100,7 +102,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager
 	if (Obj->HasField("renderMaterial"))
 	{
 		RenderMaterial = NewObject<URenderMaterial>();
-		RenderMaterial->Parse(Obj->GetObjectField("renderMaterial"), Manager);
+		RenderMaterial->Parse(Obj->GetObjectField("renderMaterial"), ReadTransport);
 		DynamicProperties.Remove("renderMaterial");
 	}
 	

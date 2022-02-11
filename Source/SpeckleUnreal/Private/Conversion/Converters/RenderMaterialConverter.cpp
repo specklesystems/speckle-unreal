@@ -47,7 +47,7 @@ bool URenderMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMate
 }
 
 
-UMaterialInterface* URenderMaterialConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, const ASpeckleUnrealManager* Manager, bool AcceptMaterialOverride, bool UseEditorConstMaterial)
+UMaterialInterface* URenderMaterialConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride, bool UseEditorConstMaterial)
 {
 	if(SpeckleMaterial == nullptr || SpeckleMaterial->Id == "") return DefaultMeshMaterial; //Material is invalid
 
@@ -63,7 +63,7 @@ UMaterialInterface* URenderMaterialConverter::GetMaterial(const URenderMaterial*
 	}
 	
 	// 3. Check Assets
-	UPackage* Package = GetPackage(Manager->StreamID, SpeckleMaterial->Id);
+	UPackage* Package = GetPackage(SpeckleMaterial->Id);
 	
 	NativeMaterial = Cast<UMaterialInterface>(Package->FindAssetInPackage());
 	if(IsValid(NativeMaterial))
@@ -132,8 +132,8 @@ void URenderMaterialConverter::CleanUp()
 	ConvertedMaterials.Empty();
 }
 
-UPackage* URenderMaterialConverter::GetPackage(const FString& StreamID, const FString& ObjectID ) const
+UPackage* URenderMaterialConverter::GetPackage(const FString& ObjectID ) const
 {
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), StreamID, TEXT("Materials"), ObjectID);
+	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle/Materials"), ObjectID);
 	return CreatePackage(*PackagePath);
 }

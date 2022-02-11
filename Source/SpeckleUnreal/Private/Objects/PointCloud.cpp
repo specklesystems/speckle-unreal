@@ -4,16 +4,18 @@
 #include "Objects/PointCloud.h"
 
 #include "SpeckleUnrealManager.h"
+#include "Conversion/ConversionUtils.h"
+#include "Transports/Transport.h"
 
-bool UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+bool UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 {
-	if(!Super::Parse(Obj, Manager)) return false;
+	if(!Super::Parse(Obj, ReadTransport)) return false;
 	
-	const float ScaleFactor = Manager->ParseScaleFactor(Units);
+	const float ScaleFactor = UConversionUtils::ParseScaleFactor(Units);
 
 	//Parse Points
 	{
-		TArray<TSharedPtr<FJsonValue>> ObjectPoints = Manager->CombineChunks(Obj->GetArrayField("points"));
+		TArray<TSharedPtr<FJsonValue>> ObjectPoints = UConversionUtils::CombineChunks(Obj->GetArrayField("points"), ReadTransport);
 		
 		Points.Reserve(ObjectPoints.Num() / 3);
 		for (int32 i = 2; i < ObjectPoints.Num(); i += 3) 
@@ -31,7 +33,7 @@ bool UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 	
 	//Parse Colors
 	{
-		TArray<TSharedPtr<FJsonValue>> ObjectColors = Manager->CombineChunks(Obj->GetArrayField("colors"));
+		TArray<TSharedPtr<FJsonValue>> ObjectColors = UConversionUtils::CombineChunks(Obj->GetArrayField("colors"), ReadTransport);
 		
 		Colors.Reserve(ObjectColors.Num());
 		for (int32 i = 0; i < ObjectColors.Num(); i += 1) 
@@ -43,7 +45,7 @@ bool UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealM
 
 	//Parse Sizes
 	{
-		TArray<TSharedPtr<FJsonValue>> ObjectSizes = Manager->CombineChunks(Obj->GetArrayField("sizes"));
+		TArray<TSharedPtr<FJsonValue>> ObjectSizes = UConversionUtils::CombineChunks(Obj->GetArrayField("sizes"), ReadTransport);
 		
 		Sizes.Reserve(ObjectSizes.Num());
 		for (int32 i = 0; i < ObjectSizes.Num(); i += 1) 

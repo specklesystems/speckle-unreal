@@ -4,6 +4,7 @@
 #include "Objects/DisplayValueElement.h"
 
 #include "SpeckleUnrealManager.h"
+#include "API/SpeckleSerializer.h"
 #include "Objects/Mesh.h"
 
 
@@ -15,18 +16,18 @@ TArray<FString> UDisplayValueElement::DisplayValueAliasStrings = {
 };
 
 
-bool UDisplayValueElement::AddDisplayValue(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+bool UDisplayValueElement::AddDisplayValue(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 {
-	UMesh* DisplayMesh = Cast<UMesh>(Manager->DeserializeBase(Obj));
+	UMesh* DisplayMesh = Cast<UMesh>(FSpeckleSerializer::DeserializeBase(Obj, ReadTransport));
 	const bool Valid = IsValid(DisplayMesh);
 	if(Valid)
 		this->DisplayValue.Add(DisplayMesh);
 	return Valid;
 }
 
-bool UDisplayValueElement::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+bool UDisplayValueElement::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 {
-	if(!Super::Parse(Obj, Manager)) return false;
+	if(!Super::Parse(Obj, ReadTransport)) return false;
 
 	//Find display values
 	for(const FString& Alias : DisplayValueAliasStrings)
@@ -34,7 +35,7 @@ bool UDisplayValueElement::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeck
 		const TSharedPtr<FJsonObject>* SubObjectPtr;
 		if (Obj->TryGetObjectField(Alias, SubObjectPtr))
 		{
-			AddDisplayValue(*SubObjectPtr, Manager);
+			AddDisplayValue(*SubObjectPtr, ReadTransport);
 			DynamicProperties.Remove(Alias);
 			continue;
 		}
@@ -47,7 +48,7 @@ bool UDisplayValueElement::Parse(const TSharedPtr<FJsonObject> Obj, const ASpeck
 				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
 				if (ArrayElement->TryGetObject(ArraySubObjPtr))
 				{
-					AddDisplayValue(*ArraySubObjPtr, Manager);
+					AddDisplayValue(*ArraySubObjPtr, ReadTransport);
 				}
 			}
 			DynamicProperties.Remove(Alias);

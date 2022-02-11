@@ -3,15 +3,51 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbstractTransport.h"
+#include "Transport.h"
 
-//#include "ServerTransport.generated.h"
+#include "ServerTransport.generated.h"
 
+
+class FHttpModule;
 /**
  * 
  */
-// UCLASS()
-// class SPECKLEUNREAL_API UServerTransport : public UAbstractTransport
-// {
-// 	GENERATED_BODY()
-// };
+UCLASS( BlueprintType)
+class SPECKLEUNREAL_API UServerTransport : public UObject, public ITransport
+{
+ GENERATED_BODY()
+	
+protected:
+	
+	UPROPERTY()
+	FString ServerUrl;
+	UPROPERTY()
+	FString StreamId;
+	UPROPERTY(meta=(PasswordField))
+	FString AuthToken;
+
+	
+	FTransportCopyObjectCompleteDelegate OnComplete;
+	FTransportErrorDelegate OnError;
+	
+public:
+
+
+	
+	virtual TSharedPtr<FJsonObject> GetSpeckleObject(const FString& ObjectId) const override;
+	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) override;
+	
+	virtual bool HasObject(const FString& ObjectId) const override;
+	
+    virtual void CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction) override;
+
+	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
+	static UServerTransport* CreateServerTransport(UPARAM(ref) FString& _ServerUrl, UPARAM(ref)  FString& _StreamId, UPARAM(ref) FString& _AuthToken)
+	{
+		UServerTransport* Transport = NewObject<UServerTransport>();
+		Transport->ServerUrl = _ServerUrl;
+		Transport->StreamId = _StreamId;
+		Transport->AuthToken = _AuthToken;
+		return Transport;
+	}
+};

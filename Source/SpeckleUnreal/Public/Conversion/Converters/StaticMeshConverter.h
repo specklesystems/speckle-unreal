@@ -48,20 +48,21 @@ public:
 	// Sets default values for this actor's properties
 	UStaticMeshConverter();
 
-	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager) override;
+	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World) override;
 
-	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager) override;
-
-	UFUNCTION(BlueprintCallable)
-	virtual UStaticMesh* MeshToNative(UObject* Outer, const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager);
+	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
 	UFUNCTION(BlueprintCallable)
-	virtual UStaticMesh* MeshesToNative(UObject* Outer, const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes, ASpeckleUnrealManager* Manager);
+	virtual UStaticMesh* MeshToNative(UObject* Outer, const UMesh* SpeckleMesh);
+
+	UFUNCTION(BlueprintCallable)
+	virtual UStaticMesh* MeshesToNative(UObject* Outer, const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes);
 	
 	UFUNCTION(BlueprintCallable)
-	virtual UMesh* MeshToSpeckle(const UStaticMeshComponent* Object, ASpeckleUnrealManager* Manager);
+	virtual UMesh* MeshToSpeckle(const UStaticMeshComponent* Object);
 	
-	virtual AActor* CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform = FTransform::Identity, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+	virtual AActor* CreateEmptyActor(UWorld* World, const FTransform& Transform = FTransform::Identity, const FActorSpawnParameters& SpawnParameters =
+		                                 FActorSpawnParameters());
 
 	virtual void CleanUp_Implementation() override;
 	

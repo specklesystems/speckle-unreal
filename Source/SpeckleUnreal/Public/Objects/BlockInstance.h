@@ -29,6 +29,6 @@ public:
 	
 	UBlockInstance() : UBase(TEXT("Objects.Other.BlockInstance")) {}
 
-	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override;
+	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
 
 };

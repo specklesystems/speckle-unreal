@@ -8,6 +8,7 @@
 
 #include "Base.generated.h"
 
+class ITransport;
 class ASpeckleUnrealManager;
 
 /**
@@ -43,7 +44,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString SpeckleType;
 	
-	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager)
+	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 	{
 		bool IsValid = false;
 		DynamicProperties = Obj->Values;

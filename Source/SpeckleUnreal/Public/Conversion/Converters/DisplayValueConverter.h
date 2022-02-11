@@ -25,8 +25,8 @@ public:
 
 	UDisplayValueConverter();
 	
-	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager) override;
-	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager) override;
+	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World) override;
+	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
 	
 };

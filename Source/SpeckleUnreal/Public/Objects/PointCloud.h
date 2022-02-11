@@ -27,5 +27,5 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	TArray<float> Sizes;
 
-	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override;
+	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
 };

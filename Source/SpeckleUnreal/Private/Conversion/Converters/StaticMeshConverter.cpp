@@ -28,17 +28,16 @@ UStaticMeshConverter::UStaticMeshConverter()
 	ActorMobility = EComponentMobility::Static;
 }
 
-AActor* UStaticMeshConverter::CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
+AActor* UStaticMeshConverter::CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
-	AActor* Actor = Manager->GetWorld()->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
-	Actor->GetRootComponent()->SetMobility(ActorMobility);
+	AActor* Actor = World->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
 	return Actor;
 }
 
 
-AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager)
+AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
 {
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle"), Manager->StreamID, TEXT("Geometry"), SpeckleBase->Id);
+	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle/Geometry"), SpeckleBase->Id);
 	UPackage* Package = CreatePackage(*PackagePath);
 
 	const UMesh* SpeckleMesh = Cast<UMesh>(SpeckleBase);
@@ -50,10 +49,10 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 	if(!IsValid(Mesh))
 	{
 		//No existing mesh was found, try and convert SpeckleMesh
-		Mesh = MeshToNative(Package, SpeckleMesh, Manager);
+		Mesh = MeshToNative(Package, SpeckleMesh);
 	}
 	
-	AActor* Actor = CreateEmptyActor(Manager, FTransform(SpeckleMesh->Transform));
+	AActor* Actor = CreateEmptyActor(World, FTransform(SpeckleMesh->Transform));
 	TInlineComponentArray<UStaticMeshComponent*> Components;
 	Actor->GetComponents<UStaticMeshComponent>(Components);
 	
@@ -68,24 +67,25 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 	}
 	
 	MeshComponent->SetStaticMesh(Mesh);
-	MeshComponent->SetMaterial(0, MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, Manager, true, !FApp::IsGame()));
+	MeshComponent->SetMaterial(0, MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, true, !FApp::IsGame()));
+
+	if(Actor->HasValidRootComponent())
+		Actor->GetRootComponent()->SetMobility(ActorMobility);
 	
 	return Actor;
 }
 
 
 
-UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer,  const UMesh* SpeckleMesh,
-													ASpeckleUnrealManager* Manager)
+UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer,  const UMesh* SpeckleMesh)
 {
 	TArray<UMesh*> Meshes;
 	Meshes.Add(const_cast<UMesh*>(SpeckleMesh));
-	return MeshesToNative(Outer, SpeckleMesh, Meshes, Manager);
+	return MeshesToNative(Outer, SpeckleMesh, Meshes);
 }
 
 
-UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes,
-                                                    ASpeckleUnrealManager* Manager)
+UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes)
 {
 	if(SpeckleMeshes.Num() == 0) return nullptr;
 	
@@ -137,7 +137,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 		}
 		
 		// Convert Material
-		UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, Manager);
+		UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial);
 	
 		const FName MaterialSlotName = Mesh->AddMaterial(Material);;
 		BaseMeshDescription.PolygonGroupAttributes().RegisterAttribute<FName>(MeshAttribute::PolygonGroup::ImportedMaterialSlotName, 1, MaterialSlotName,  EMeshAttributeFlags::None);
@@ -269,7 +269,7 @@ void UStaticMeshConverter::CleanUp_Implementation()
 }
 
 
-UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager)
+UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object)
 {
 	const UStaticMeshComponent* M = Cast<UStaticMeshComponent>(Object);
 
@@ -283,11 +283,11 @@ UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Obje
 	}
 	if(M == nullptr) return nullptr;
 	
-	return MeshToSpeckle(M, Manager);
+	return MeshToSpeckle(M);
 }
 
 
-UMesh* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object, ASpeckleUnrealManager* Manager)
+UMesh* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object)
 {
 	return nullptr; //TODO implement ToSpeckle function
 }

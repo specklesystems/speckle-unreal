@@ -33,16 +33,16 @@ public:
 	// Sets default values for this actor's properties
 	UProceduralMeshConverter();
 	
-	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager) override;
-	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object, ASpeckleUnrealManager* Manager) override;
+	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World) override;
+	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 	
 	UFUNCTION(BlueprintCallable)
-	virtual AActor* MeshToNative(const UMesh* SpeckleMesh, ASpeckleUnrealManager* Manager);
+	virtual AActor* MeshToNative(const UMesh* SpeckleMesh, UWorld* World);
 	
 	UFUNCTION(BlueprintCallable)
-	virtual UMesh* MeshToSpeckle(const UProceduralMeshComponent* Object, ASpeckleUnrealManager* Manager);
+	virtual UMesh* MeshToSpeckle(const UProceduralMeshComponent* Object);
 	
-	virtual AActor* CreateEmptyActor(const ASpeckleUnrealManager* Manager, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+	virtual AActor* CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 
 	virtual void CleanUp_Implementation() override;
 };

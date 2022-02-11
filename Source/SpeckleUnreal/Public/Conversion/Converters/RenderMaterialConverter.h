@@ -49,7 +49,7 @@ public:
 	virtual bool TryGetOverride(const URenderMaterial* SpeckleMaterial, UMaterialInterface*& OutMaterial) const;
 
 	UFUNCTION(BlueprintCallable)
-	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, const ASpeckleUnrealManager* Manager, bool AcceptMaterialOverride = true, bool AllowEditorMaterial = false);
+	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride = true, bool AllowEditorMaterial = false);
 	
 	UFUNCTION(BlueprintCallable)
 	virtual UMaterialInterface* RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, UPackage* Package, bool AllowEditorMaterial);
@@ -64,5 +64,5 @@ protected:
 	TMap<FString, UMaterialInterface*> ConvertedMaterials;
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	virtual UPackage* GetPackage(const FString& StreamID, const FString& ObjectID) const;
+	virtual UPackage* GetPackage(const FString& ObjectID) const;
 };

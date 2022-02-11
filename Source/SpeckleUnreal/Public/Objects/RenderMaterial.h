@@ -37,9 +37,9 @@ public:
 	UPROPERTY()
 	FLinearColor Emissive = FLinearColor::Black;
 
-	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const ASpeckleUnrealManager* Manager) override
+	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override
 	{
-		if(!Super::Parse(Obj, Manager)) return false;
+		if(!Super::Parse(Obj, ReadTransport)) return false;
 	
 		if(Obj->TryGetStringField("name", Name)) DynamicProperties.Remove("name");
 		if(Obj->TryGetNumberField("opacity", Opacity)) DynamicProperties.Remove("opacity");

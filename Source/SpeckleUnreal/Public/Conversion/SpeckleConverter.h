@@ -32,11 +32,11 @@ public:
 	
 	/// Tries to convert a given SpeckleBase into a native Actor
 	UFUNCTION(BlueprintNativeEvent)
-	AActor* ConvertToNative(const UBase* SpeckleBase, ASpeckleUnrealManager* Manager);
+	AActor* ConvertToNative(const UBase* SpeckleBase, UWorld* World);
 
 	/// Tries to convert a given Actor or Component Object into a Speckle Base
 	UFUNCTION(BlueprintNativeEvent)
-	UBase* ConvertToSpeckle(const UObject* Object, ASpeckleUnrealManager* Manager);
+	UBase* ConvertToSpeckle(const UObject* Object);
 
 	/// Clean up any cached assets that now may be unused
 	UFUNCTION(BlueprintNativeEvent)

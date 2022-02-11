@@ -8,6 +8,7 @@
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Objects/Mesh.h"
 #include "LogSpeckle.h"
+#include "API/SpeckleSerializer.h"
 #include "Conversion/Converters/BlockConverter.h"
 #include "Conversion/Converters/DisplayValueConverter.h"
 
@@ -68,8 +69,10 @@ UBase* USpeckleConverterComponent::ConvertToSpeckle(UObject* Object)
 }
 
 
-AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, ASpeckleUnrealManager* Manager)
+AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, UWorld* World)
 {
+	check(IsInGameThread());
+	
 	if(!IsValid(Object)) return nullptr;
 	
 	const TSubclassOf<UBase> Type = Object->GetClass();
@@ -83,8 +86,65 @@ AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, ASpeckl
 	UE_LOG(LogSpeckle, Log, TEXT("Converting object of type: %s id: %s  "), *Type->GetName(), *Object->Id);
 	
 	FEditorScriptExecutionGuard ScriptGuard;
-	return ISpeckleConverter::Execute_ConvertToNative(Converter, Object, Manager);
+	return ISpeckleConverter::Execute_ConvertToNative(Converter, Object, World);
 
+}
+
+
+AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
+                                                               const TScriptInterface<ITransport> LocalTransport,
+                                                               TArray<AActor*>& OutActors)
+{
+	if(!IsValid(Base)) return nullptr;
+	
+	// Convert Base
+	AActor* Native = ConvertToNative(Base, AOwner->GetWorld());
+	
+	if(IsValid(Native))
+	{
+
+#if WITH_EDITOR
+		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id));
+#endif
+		
+		Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
+		Native->SetOwner(AOwner);
+
+		OutActors.Add(Native);
+	}
+	else
+	{
+		Native = AOwner;
+	}
+	
+	//Convert Children
+	TMap<FString, TSharedPtr<FJsonValue>> PotentialChildren = Base->DynamicProperties;
+	
+	for (const auto& Kv : PotentialChildren)
+	{
+		const TSharedPtr<FJsonObject>* SubObjectPtr;
+		if (Kv.Value->TryGetObject(SubObjectPtr))
+		{
+			const UBase* Child = FSpeckleSerializer::DeserializeBase(*SubObjectPtr, LocalTransport);
+			RecursivelyConvertToNative(Native, Child, LocalTransport,OutActors);
+			continue;
+		}
+
+		const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
+		if (Kv.Value->TryGetArray(SubArrayPtr))
+		{
+			for (const auto ArrayElement : *SubArrayPtr)
+			{
+				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
+				if (!ArrayElement->TryGetObject(ArraySubObjPtr)) continue;
+				
+				const UBase* Child = FSpeckleSerializer::DeserializeBase(*ArraySubObjPtr, LocalTransport);
+				RecursivelyConvertToNative(Native, Child, LocalTransport,OutActors);
+			}
+		}
+	}
+	
+	return Native;
 }
 
 TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(const TSubclassOf<UBase> BaseType)

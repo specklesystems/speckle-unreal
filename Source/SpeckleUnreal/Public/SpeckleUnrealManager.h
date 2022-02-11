@@ -7,28 +7,22 @@
 // web requests
 #include "Runtime/Online/HTTP/Public/Http.h"
 
-#include "SpeckleUnrealLayer.h"
 #include "Conversion/SpeckleConverterComponent.h"
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
 
-
+class UMemoryTransport;
 class URenderMaterial;
 
 UCLASS(ClassGroup=(Speckle), BlueprintType)
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
 	GENERATED_BODY()
-
+	
+private:
+	TScriptInterface<ITransport> MemoryTransport;
+	
 public:
-	FHttpModule* Http;
-
-	/* The actual HTTP call */
-	UFUNCTION(CallInEditor, Category = "Speckle")
-		void ImportSpeckleObject();
-
-	UFUNCTION(CallInEditor, Category = "Speckle")
-		void DeleteObjects();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USpeckleConverterComponent* Converter;
@@ -57,47 +51,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
 	bool ImportAtRuntime;
 	
-	void OnStreamTextResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-
-	//BEGIN REGION - This 
+	UFUNCTION(CallInEditor)
+	void ReceiveCPP();
 	
-	TArray<TSharedPtr<FJsonValue>> CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField) const;
+	void HandleReceive(TSharedPtr<FJsonObject> Object);
 	
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	float ParseScaleFactor(const FString& Units) const;
-	
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	bool HasObject(const FString& Id) const;
-	
-	UBase* DeserializeBase(const TSharedPtr<FJsonObject> Obj) const;
-	bool ResolveReference(const TSharedPtr<FJsonObject> Object, TSharedPtr<FJsonObject>& OutObject) const;
-	
-	TSharedPtr<FJsonObject, ESPMode::Fast> GetSpeckleObject(const FString& Id) const;
-	
-	
-protected:
-
-	
-	UWorld* World;
-	
-	float WorldToCentimeters;
-
-	bool TryParseSpeckleObjectFromJsonProperty(const TSharedPtr<FJsonValue> JsonValue, UBase*& OutBase) const;
-
-	TMap<FString, TSharedPtr<FJsonObject>> SpeckleObjects;
-
-	UPROPERTY()
-	TArray<UObject*> CreatedObjectsCache;
-	TArray<UObject*> InProgressObjectsCache;
-	
-	void ImportObjectFromCache(AActor* AOwner, const TSharedPtr<FJsonObject> SpeckleObject);
-	
-	
+	void HandleError(FString& Message);
 };
