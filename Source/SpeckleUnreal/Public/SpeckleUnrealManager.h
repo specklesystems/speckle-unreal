@@ -56,8 +56,15 @@ public:
 
 	UFUNCTION(CallInEditor)
 	void ReceiveCPP();
+
+	UFUNCTION(CallInEditor)
+	void DeleteObjects();
+protected:
 	
-	void HandleReceive(TSharedPtr<FJsonObject> Object);
+	UPROPERTY()
+	TArray<AActor*> CreatedObjectsCache;
+	
+	void HandleReceive(TSharedPtr<FJsonObject> RootObject);
 	
 	void HandleError(FString& Message);
 };

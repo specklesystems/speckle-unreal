@@ -6,6 +6,7 @@
 #include "Transports/Transport.h"
 #include "API/SpeckleSerializer.h"
 #include "Objects/Base.h"
+#include "LogSpeckle.h"
 
 
 UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObject, const FString& ObjectId, TScriptInterface<ITransport> RemoteTransport, TScriptInterface<ITransport> LocalTransport)
@@ -23,6 +24,7 @@ UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObje
 void UReceiveOperation::Activate()
 {
 	//Async(EAsyncExecution::Thread, [this]{Receive();});
+	
 	Receive();
 }
 
@@ -56,6 +58,7 @@ void UReceiveOperation::Receive()
 
 void UReceiveOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 {
+	FEditorScriptExecutionGuard ScriptGuard;
 	check(IsInGameThread())
 	if(Object == nullptr)
 	{
@@ -68,12 +71,15 @@ void UReceiveOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 	else
 		OnError.Broadcast(nullptr, FString::Printf(TEXT("Root Speckle Object %s failed to deserialize"), *ObjectId));
 
+	UE_LOG(LogSpeckle, Log, TEXT("HandleReceive called"));
 	SetReadyToDestroy();
 }
 
 void UReceiveOperation::HandleError(FString& Message)
 {
+	FEditorScriptExecutionGuard ScriptGuard;
 	OnError.Broadcast(nullptr, Message);
+	UE_LOG(LogSpeckle, Log, TEXT("HandleError called"));
 	SetReadyToDestroy();
 }
 

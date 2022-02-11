@@ -13,7 +13,7 @@
 ASpeckleUnrealManager::ASpeckleUnrealManager()
 {
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
-	RootComponent->SetRelativeScale3D(FVector(-1,1,1));
+	RootComponent->SetRelativeScale3D(FVector(-1,1,1)); // Flip the X because Speckle uses right handed coordinates, unreal uses left handed
     RootComponent->SetMobility(EComponentMobility::Static);
 
 	Converter = CreateDefaultSubobject<USpeckleConverterComponent>(FName("Converter"));
@@ -21,9 +21,11 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 
 void ASpeckleUnrealManager::ReceiveCPP()
 {
-	TScriptInterface<ITransport> ServerTransport = UServerTransport::CreateServerTransport(ServerUrl,StreamID,AuthToken);
+	DeleteObjects();
 
+	// Setup Transports
 	MemoryTransport = UMemoryTransport::CreateEmptyMemoryTransport();
+	TScriptInterface<ITransport> ServerTransport = UServerTransport::CreateServerTransport(ServerUrl,StreamID,AuthToken);
 
 	FTransportCopyObjectCompleteDelegate CompleteDelegate;
 	CompleteDelegate.BindUObject(this, &ASpeckleUnrealManager::HandleReceive);
@@ -34,14 +36,15 @@ void ASpeckleUnrealManager::ReceiveCPP()
 	
 }
 
+
 void ASpeckleUnrealManager::HandleError(FString& Message)
 {
 	UE_LOG(LogSpeckle, Error, TEXT("%s"), *Message);
 }
 
-void ASpeckleUnrealManager::HandleReceive(TSharedPtr<FJsonObject> Object)
+void ASpeckleUnrealManager::HandleReceive(TSharedPtr<FJsonObject> RootObject)
 {
-	UBase* Res = FSpeckleSerializer::DeserializeBase(Object, MemoryTransport);
+	UBase* Res = FSpeckleSerializer::DeserializeBase(RootObject, MemoryTransport);
 	if(IsValid(Res))
 	{
 		TArray<AActor*> Actors;
@@ -49,10 +52,24 @@ void ASpeckleUnrealManager::HandleReceive(TSharedPtr<FJsonObject> Object)
 	}
 	else
 	{
-		UE_LOG(LogSpeckle, Error, TEXT("Failed to deserialise root object"));
+		FString Id;
+		RootObject->TryGetStringField("id", Id);
+		UE_LOG(LogSpeckle, Error, TEXT("Failed to deserialise root object: %s"), *Id);
 	}
 }
 
+void ASpeckleUnrealManager::DeleteObjects()
+{
+	Converter->DeleteObjects();
+	
+	for (const auto m : CreatedObjectsCache)
+	{
+		if(AActor* a = Cast<AActor>(m))
+			a->Destroy();
+		else
+			m->ConditionalBeginDestroy();
+		
+	}
 
-
-
+	CreatedObjectsCache.Empty();
+}
