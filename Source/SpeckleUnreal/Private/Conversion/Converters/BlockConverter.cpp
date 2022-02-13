@@ -1,6 +1,5 @@
 ﻿#include "Conversion/Converters/BlockConverter.h"
 
-#include "SpeckleUnrealManager.h"
 #include "Objects/BlockInstance.h"
 
 UBlockConverter::UBlockConverter()

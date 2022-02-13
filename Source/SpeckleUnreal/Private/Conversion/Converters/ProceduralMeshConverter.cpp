@@ -3,11 +3,8 @@
 #include "Conversion/Converters/ProceduralMeshConverter.h"
 
 #include "ProceduralMeshComponent.h"
-#include "StaticMeshDescription.h"
-#include "SpeckleUnrealManager.h"
 #include "Conversion/Converters/RenderMaterialConverter.h"
 #include "Objects/Mesh.h"
-#include "Objects/RenderMaterial.h"
 
 UProceduralMeshConverter::UProceduralMeshConverter()
 {

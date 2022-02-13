@@ -12,7 +12,7 @@
 class ITransport;
 class UBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FRecieveOperationHandler, UBase*, Base, FString, ErrorMessage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FRecieveOperationHandler, UBase*, RootBase, FString, ErrorMessage);
 
 /**
  * 

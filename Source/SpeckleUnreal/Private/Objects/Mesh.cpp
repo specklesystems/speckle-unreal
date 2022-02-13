@@ -3,7 +3,6 @@
 
 #include "Objects/Mesh.h"
 
-#include "SpeckleUnrealManager.h"
 #include "Conversion/ConversionUtils.h"
 #include "Objects/RenderMaterial.h"
 #include "Transports/Transport.h"

@@ -3,7 +3,6 @@
 
 #include "Conversion/Converters/DisplayValueConverter.h"
 
-#include "SpeckleUnrealManager.h"
 #include "Conversion/Converters/RenderMaterialConverter.h"
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Objects/DisplayValueElement.h"

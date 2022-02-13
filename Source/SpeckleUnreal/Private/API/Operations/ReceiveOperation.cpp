@@ -58,20 +58,23 @@ void UReceiveOperation::Receive()
 
 void UReceiveOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 {
-	FEditorScriptExecutionGuard ScriptGuard;
 	check(IsInGameThread())
+	
+	FEditorScriptExecutionGuard ScriptGuard;
 	if(Object == nullptr)
 	{
 		OnError.Broadcast(nullptr, FString::Printf(TEXT("Failed to get object %s from transport"), *ObjectId));
 	}
-		
-	UBase* Res = FSpeckleSerializer::DeserializeBase(Object, LocalTransport);
-	if(IsValid(Res))
-		OnReceiveSuccessfully.Broadcast(Res, "");
 	else
-		OnError.Broadcast(nullptr, FString::Printf(TEXT("Root Speckle Object %s failed to deserialize"), *ObjectId));
-
-	UE_LOG(LogSpeckle, Log, TEXT("HandleReceive called"));
+	{
+		UBase* Res = FSpeckleSerializer::DeserializeBase(Object, LocalTransport);
+		if(IsValid(Res))
+			OnReceiveSuccessfully.Broadcast(Res, "");
+		else
+			OnError.Broadcast(nullptr, FString::Printf(TEXT("Root Speckle Object %s failed to deserialize"), *ObjectId));
+	}
+		
+	
 	SetReadyToDestroy();
 }
 
@@ -79,7 +82,6 @@ void UReceiveOperation::HandleError(FString& Message)
 {
 	FEditorScriptExecutionGuard ScriptGuard;
 	OnError.Broadcast(nullptr, Message);
-	UE_LOG(LogSpeckle, Log, TEXT("HandleError called"));
 	SetReadyToDestroy();
 }
 

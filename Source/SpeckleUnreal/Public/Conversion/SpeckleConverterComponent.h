@@ -49,14 +49,14 @@ public:
 
 	// Converts the given Base and all children into native actors.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
+	UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
 	                                   const TScriptInterface<ITransport> LocalTransport, TArray<AActor*>& OutActors);
 	
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	void DeleteObjects();
 	
 	

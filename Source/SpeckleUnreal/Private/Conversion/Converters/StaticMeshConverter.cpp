@@ -5,7 +5,6 @@
 #include "MeshDescriptionBase.h"
 #include "StaticMeshDescription.h"
 #include "MeshTypes.h"
-#include "SpeckleUnrealManager.h"
 #include "StaticMeshOperations.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/StaticMeshActor.h"
@@ -31,6 +30,8 @@ UStaticMeshConverter::UStaticMeshConverter()
 AActor* UStaticMeshConverter::CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters)
 {
 	AActor* Actor = World->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
+	if(Actor->HasValidRootComponent())
+		Actor->GetRootComponent()->SetMobility(ActorMobility);
 	return Actor;
 }
 
@@ -68,9 +69,6 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 	
 	MeshComponent->SetStaticMesh(Mesh);
 	MeshComponent->SetMaterial(0, MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, true, !FApp::IsGame()));
-
-	if(Actor->HasValidRootComponent())
-		Actor->GetRootComponent()->SetMobility(ActorMobility);
 	
 	return Actor;
 }
@@ -137,7 +135,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 		}
 		
 		// Convert Material
-		UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial);
+		UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, true, !FApp::IsGame());
 	
 		const FName MaterialSlotName = Mesh->AddMaterial(Material);;
 		BaseMeshDescription.PolygonGroupAttributes().RegisterAttribute<FName>(MeshAttribute::PolygonGroup::ImportedMaterialSlotName, 1, MaterialSlotName,  EMeshAttributeFlags::None);

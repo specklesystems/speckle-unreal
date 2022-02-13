@@ -3,7 +3,6 @@
 
 #include "Objects/DisplayValueElement.h"
 
-#include "SpeckleUnrealManager.h"
 #include "API/SpeckleSerializer.h"
 #include "Objects/Mesh.h"
 

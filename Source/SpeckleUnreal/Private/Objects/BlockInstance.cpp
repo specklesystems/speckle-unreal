@@ -4,7 +4,6 @@
 #include "Objects/BlockInstance.h"
 #include "LogSpeckle.h"
 
-#include "SpeckleUnrealManager.h"
 #include "API/SpeckleSerializer.h"
 #include "Conversion/ConversionUtils.h"
 #include "Transports/Transport.h"

@@ -3,7 +3,6 @@
 
 #include "Conversion/Converters/RenderMaterialConverter.h"
 
-#include "SpeckleUnrealManager.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Objects/RenderMaterial.h"

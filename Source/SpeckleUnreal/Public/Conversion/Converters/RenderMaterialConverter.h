@@ -45,7 +45,7 @@ public:
 	TSet<UMaterialInterface*> MaterialOverridesByName;
 
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintCallable)
 	virtual bool TryGetOverride(const URenderMaterial* SpeckleMaterial, UMaterialInterface*& OutMaterial) const;
 
 	UFUNCTION(BlueprintCallable)

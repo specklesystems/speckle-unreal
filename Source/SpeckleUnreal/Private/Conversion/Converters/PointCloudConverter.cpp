@@ -5,7 +5,6 @@
 
 #include "LidarPointCloudActor.h"
 #include "LidarPointCloudComponent.h"
-#include "SpeckleUnrealManager.h"
 #include "Objects/PointCloud.h"
 
 

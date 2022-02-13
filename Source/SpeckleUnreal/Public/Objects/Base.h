@@ -62,31 +62,31 @@ public:
 
 protected:
 
-	UFUNCTION(BlueprintCallable)
-	int32 RemoveDynamicProperty(const FString& Key)
+	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
+	int32 RemoveDynamicProperty(UPARAM(ref) const FString& Key)
 	{
 		return DynamicProperties.Remove(Key);
 	}
 
 public:
-	UFUNCTION(BlueprintCallable)
-	bool TryGetDynamicString(const FString& Key, FString& OutString)
+	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
+	bool TryGetDynamicString(UPARAM(ref) const FString& Key, FString& OutString)
 	{
 		const TSharedPtr<FJsonValue> Value = *DynamicProperties.Find(Key);
 		if(Value == nullptr) return false;
 		return Value->TryGetString(OutString);
 	}
 
-	UFUNCTION(BlueprintCallable)
-	bool TryGetDynamicNumber(const FString& Key, float& OutNumber)
+	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
+	bool TryGetDynamicNumber(UPARAM(ref) const FString& Key, float& OutNumber)
 	{
 		const TSharedPtr<FJsonValue> Value = *DynamicProperties.Find(Key);
 		if(Value == nullptr) return false;
 		return Value->TryGetNumber(OutNumber);
 	}
 
-	UFUNCTION(BlueprintCallable)
-	bool TryGetDynamicBool(const FString& Key, bool& OutBool)
+	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
+	bool TryGetDynamicBool(UPARAM(ref) const FString& Key, bool& OutBool)
 	{
 		const TSharedPtr<FJsonValue> Value = *DynamicProperties.Find(Key);
 		if(Value == nullptr) return false;

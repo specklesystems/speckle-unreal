@@ -3,7 +3,6 @@
 
 #include "Objects/PointCloud.h"
 
-#include "SpeckleUnrealManager.h"
 #include "Conversion/ConversionUtils.h"
 #include "Transports/Transport.h"
 

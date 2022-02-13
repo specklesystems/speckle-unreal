@@ -3,14 +3,12 @@
 
 #include "Conversion/SpeckleConverterComponent.h"
 
-#include "SpeckleUnrealManager.h"
-#include "Conversion/Converters/PointCloudConverter.h"
-#include "Conversion/Converters/StaticMeshConverter.h"
-#include "Objects/Mesh.h"
 #include "LogSpeckle.h"
 #include "API/SpeckleSerializer.h"
 #include "Conversion/Converters/BlockConverter.h"
 #include "Conversion/Converters/DisplayValueConverter.h"
+#include "Conversion/Converters/PointCloudConverter.h"
+#include "Conversion/Converters/StaticMeshConverter.h"
 
 
 // Sets default values for this component's properties
@@ -106,6 +104,20 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 #if WITH_EDITOR
 		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id));
 #endif
+		
+		// Ensure actor has a valid mobility for it's owner
+		if(Native->HasValidRootComponent())
+		{
+			uint8 CurrentMobility = Native->GetRootComponent()->Mobility;
+			uint8 OwnerMobility = AOwner->GetRootComponent()->Mobility;
+			
+			if(CurrentMobility < OwnerMobility)
+			{
+				Native->GetRootComponent()->SetMobility(AOwner->GetRootComponent()->Mobility);
+			}
+		}
+			
+		
 		
 		Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
 		Native->SetOwner(AOwner);

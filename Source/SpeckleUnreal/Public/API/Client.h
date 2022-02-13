@@ -19,10 +19,10 @@
 //
 // 	static int DefaultBranchLimit = 10;
 // 	
-// 	//UFUNCTION(BlueprintPure, Category="Speckle")
+// 	//UFUNCTION(BlueprintCallable, Category="Speckle")
 // 	//void GetAccounts();
 // 	
-// 	//UFUNCTION(BlueprintPure, Category="Speckle")
+// 	//UFUNCTION(BlueprintCallable, Category="Speckle")
 //     //Branch StreamGetBranches(FString StreamID, int BranchesLimit = DefaultBranchLimit, int CommitLimit = DefaultBranchLimit);
 // 	
 //  
