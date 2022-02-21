@@ -1,11 +1,14 @@
-﻿#pragma once
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
+
+#pragma once
 
 #include "ClassViewerModule.h"
 #include "ClassViewerFilter.h"
 
 
 /**
- * Class filter based on FPropertyEditorClassFilter 
+ * Class filter for classes that implement a given interface
+ * based on FPropertyEditorClassFilter
  */
 class FInterfaceClassFilter : public IClassViewerFilter
 {

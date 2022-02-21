@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-#include "Interfaces/IHttpRequest.h"
 
 #include "ReceiveOperation.generated.h"
 

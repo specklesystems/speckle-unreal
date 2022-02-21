@@ -5,7 +5,7 @@
 
 
 /**
- * 
+ * Asset action for ISpeckleConverter implementors.
  */
 class FConverterActions : public FAssetTypeActions_Base
 {

@@ -53,7 +53,7 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 
 		if(ReadTransport->HasObject(ChildId))
 		{
-			UBase* Child = FSpeckleSerializer::DeserializeBase(ReadTransport->GetSpeckleObject(ChildId), ReadTransport);
+			UBase* Child = USpeckleSerializer::DeserializeBase(ReadTransport->GetSpeckleObject(ChildId), ReadTransport);
 			if(IsValid(Child))
 				Geometry.Add(Child);
 		}

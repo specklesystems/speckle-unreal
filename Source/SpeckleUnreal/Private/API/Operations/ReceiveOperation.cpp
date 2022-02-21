@@ -67,7 +67,7 @@ void UReceiveOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 	}
 	else
 	{
-		UBase* Res = FSpeckleSerializer::DeserializeBase(Object, LocalTransport);
+		UBase* Res = USpeckleSerializer::DeserializeBase(Object, LocalTransport);
 		if(IsValid(Res))
 			OnReceiveSuccessfully.Broadcast(Res, "");
 		else

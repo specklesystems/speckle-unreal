@@ -137,7 +137,7 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 		const TSharedPtr<FJsonObject>* SubObjectPtr;
 		if (Kv.Value->TryGetObject(SubObjectPtr))
 		{
-			const UBase* Child = FSpeckleSerializer::DeserializeBase(*SubObjectPtr, LocalTransport);
+			const UBase* Child = USpeckleSerializer::DeserializeBase(*SubObjectPtr, LocalTransport);
 			RecursivelyConvertToNative(Native, Child, LocalTransport,OutActors);
 			continue;
 		}
@@ -150,7 +150,7 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
 				if (!ArrayElement->TryGetObject(ArraySubObjPtr)) continue;
 				
-				const UBase* Child = FSpeckleSerializer::DeserializeBase(*ArraySubObjPtr, LocalTransport);
+				const UBase* Child = USpeckleSerializer::DeserializeBase(*ArraySubObjPtr, LocalTransport);
 				RecursivelyConvertToNative(Native, Child, LocalTransport,OutActors);
 			}
 		}

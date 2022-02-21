@@ -36,7 +36,7 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInt
 	
 	const FString Endpoint = ServerUrl + "/objects/" + StreamId + "/" + ObjectId;
 	const FString UserAgent = FString::Printf(TEXT("Unreal Engine (%s) / %d.%d.%d"), *UGameplayStatics::GetPlatformName(), ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION, ENGINE_PATCH_VERSION);
-
+	
 	// Create Request
 	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 	Request->SetVerb("GET");
@@ -44,7 +44,7 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInt
 	Request->SetHeader("Accept", TEXT("text/plain"));
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
 	Request->SetHeader("User-Agent", UserAgent);
-
+	
 	
 	// Response Callback
 	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 

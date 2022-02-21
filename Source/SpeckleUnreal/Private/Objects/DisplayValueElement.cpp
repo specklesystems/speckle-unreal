@@ -17,7 +17,7 @@ TArray<FString> UDisplayValueElement::DisplayValueAliasStrings = {
 
 bool UDisplayValueElement::AddDisplayValue(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 {
-	UMesh* DisplayMesh = Cast<UMesh>(FSpeckleSerializer::DeserializeBase(Obj, ReadTransport));
+	UMesh* DisplayMesh = Cast<UMesh>(USpeckleSerializer::DeserializeBase(Obj, ReadTransport));
 	const bool Valid = IsValid(DisplayMesh);
 	if(Valid)
 		this->DisplayValue.Add(DisplayMesh);

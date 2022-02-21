@@ -100,8 +100,8 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 #if WITH_EDITOR
 	{
 		FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
-		SrcModel.BuildSettings.bRecomputeNormals = false;
-		SrcModel.BuildSettings.bRecomputeTangents = false;
+		SrcModel.BuildSettings.bRecomputeNormals = true;
+		SrcModel.BuildSettings.bRecomputeTangents = true;
 		SrcModel.BuildSettings.bRemoveDegenerates = false;
 		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
 		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
@@ -117,10 +117,10 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 	for(const UMesh* SpeckleMesh : SpeckleMeshes)
 	{
 		const size_t NumberOfVertices = SpeckleMesh->Vertices.Num();
-		const size_t NumberOfFaces = SpeckleMesh->Faces.Num();
+		const size_t NumberOfFacesIndices = SpeckleMesh->Faces.Num();
 		
 		// Convert Vertices
-		if(NumberOfVertices == 0 || NumberOfFaces == 0) continue;
+		if(NumberOfVertices == 0 || NumberOfFacesIndices == 0) continue;
 		
 		StaticMeshDescription->ReserveNewVertices(NumberOfVertices);
 		
@@ -147,12 +147,16 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 	
 		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::None);
 
-		StaticMeshDescription->ReserveNewTriangles(SpeckleMesh->Faces.Num() * 3); //Reserve space assuming faces will all be triangles
-		StaticMeshDescription->ReserveNewPolygons(SpeckleMesh->Faces.Num());
-		StaticMeshDescription->ReserveNewVertexInstances(SpeckleMesh->Faces.Num() * 3); //Reserve space assuming faces will all be triangles
+		{
+			// Reserve space assuming faces will all be triangles //TODO (maybe it's better to assume something higher?)
+			const int32 EstimatedNumberOfFaces = SpeckleMesh->Faces.Num() / 4 * 3;
+			StaticMeshDescription->ReserveNewTriangles(EstimatedNumberOfFaces); 
+			StaticMeshDescription->ReserveNewPolygons(EstimatedNumberOfFaces);
+			StaticMeshDescription->ReserveNewVertexInstances(FGenericPlatformMath::Max(EstimatedNumberOfFaces * 3, SpeckleMesh->Vertices.Num()));
+		}
 
 		int32 i = 0;
-		while (i < NumberOfFaces)
+		while (i < NumberOfFacesIndices)
 		{
 			int32 n = SpeckleMesh->Faces[i];
 			if(n < 3) n += 3; // 0 -> 3, 1 -> 4
