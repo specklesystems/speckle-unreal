@@ -38,7 +38,7 @@ public:
     UPROPERTY(BlueprintAssignable)
     FRecieveOperationHandler OnError;
 
-	UFUNCTION(BlueprintCallable, Category = "Speckle|Operations", meta = (WorldContext = "WorldContextObject"))
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations", meta = (WorldContext = "WorldContextObject"))
 	static UReceiveOperation* ReceiveOperation(UObject* WorldContextObject, const FString& ObjectId, TScriptInterface<ITransport> RemoteTransport, TScriptInterface<ITransport> LocalTransport);
 
 

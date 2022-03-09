@@ -30,7 +30,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EComponentMobility::Type> ActorMobility;
-	
+
+	// If true, will use the full Editor Only build process
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseFullBuild;
 	

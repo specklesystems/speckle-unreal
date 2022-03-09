@@ -16,7 +16,7 @@ class SPECKLEUNREAL_API UPointCloud : public UBase
 
 public:
 
-	UPointCloud() : UBase(TEXT("Objects.Other.Pointcloud")) {}
+	UPointCloud() : UBase(TEXT("Objects.Geometry.Pointcloud")) {}
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
 	TArray<FVector> Points;

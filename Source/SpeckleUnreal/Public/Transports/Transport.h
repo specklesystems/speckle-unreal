@@ -13,7 +13,7 @@ DECLARE_DELEGATE_OneParam(FTransportCopyObjectCompleteDelegate, TSharedPtr<FJson
 DECLARE_DELEGATE_OneParam(FTransportErrorDelegate, FString&);
 
 // This class does not need to be modified.
-UINTERFACE()
+UINTERFACE(Blueprintable)
 class UTransport : public UInterface
 {
 	GENERATED_BODY()

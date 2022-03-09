@@ -21,7 +21,7 @@ bool UPointCloud::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterfac
 		{
 			Points.Add(FVector
 			(
-				-ObjectPoints[i - 2].Get()->AsNumber(),
+				ObjectPoints[i - 2].Get()->AsNumber(),
 				ObjectPoints[i - 1].Get()->AsNumber(),
 				ObjectPoints[i].Get()->AsNumber()
 			) * ScaleFactor);

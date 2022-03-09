@@ -26,7 +26,11 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 			TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
 		}
 	TransformMatrix = TransformMatrix.GetTransposed();
+	//TransformMatrix.Mirror(EAxis::None, EAxis::Z); //Convert between Speckle's RH  and UE's LH coordinate system
+	//TransformMatrix.ScaleTranslation(FVector(ScaleFactor, -ScaleFactor, ScaleFactor));
+	
 	TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
+
 	Transform = TransformMatrix;
 
 	//Geometries

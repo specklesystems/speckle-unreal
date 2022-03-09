@@ -33,8 +33,8 @@ public:
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
 	UFUNCTION(BlueprintCallable)
-	virtual AActor* BlockToNative(const UBlockInstance* Block);
+	virtual AActor* BlockToNative(const UBlockInstance* Block, UWorld* World);
 	
 protected:
-	virtual AActor* CreateEmptyActor(const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+	virtual AActor* CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 };

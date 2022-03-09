@@ -14,7 +14,7 @@
 ASpeckleUnrealManager::ASpeckleUnrealManager()
 {
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
-	RootComponent->SetRelativeScale3D(FVector(-1,1,1)); // Flip the X because Speckle uses right handed coordinates, unreal uses left handed
+	RootComponent->SetRelativeScale3D(FVector(1,-1,1)); // Flip the Y because Speckle uses right handed coordinates, unreal uses left handed
     RootComponent->SetMobility(EComponentMobility::Static);
 
 	Converter = CreateDefaultSubobject<USpeckleConverterComponent>(FName("Converter"));
@@ -22,16 +22,36 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 	ServerUrl = "https://speckle.xyz";
 }
 
+void ASpeckleUnrealManager::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if(ImportAtRuntime) Receive();
+}
+
 void ASpeckleUnrealManager::Receive()
 {
 	DeleteObjects();
 
-	// Setup Transports
-	if(LocalObjectCache.GetInterface() != nullptr)
+	// Trim parameters
+	ServerUrl.TrimEndInline();
+	while(ServerUrl.RemoveFromEnd("/")) { }
+	StreamID.TrimEndInline();
+	ObjectID.TrimEndInline();
+	AuthToken.TrimEndInline();
+	
+	// Try and get object from local cache
+	if(LocalObjectCache.GetInterface() == nullptr) LocalObjectCache = UMemoryTransport::CreateEmptyMemoryTransport();
+	
+	auto Obj = LocalObjectCache->GetSpeckleObject(ObjectID);
+	if (Obj != nullptr )
 	{
-		LocalObjectCache = UMemoryTransport::CreateEmptyMemoryTransport();
+		HandleReceive(Obj);
+		return;
 	}
 	
+	
+	// Try and get object from server
 	TScriptInterface<ITransport> ServerTransport = UServerTransport::CreateServerTransport(ServerUrl,StreamID,AuthToken);
 
 	FTransportCopyObjectCompleteDelegate CompleteDelegate;
@@ -44,30 +64,50 @@ void ASpeckleUnrealManager::Receive()
 }
 
 
-void ASpeckleUnrealManager::HandleError(FString& Message)
-{
-	UE_LOG(LogSpeckle, Error, TEXT("%s"), *Message);
-}
-
 void ASpeckleUnrealManager::HandleReceive(TSharedPtr<FJsonObject> RootObject)
 {
 	if(RootObject == nullptr) return;
-	UBase* Res = USpeckleSerializer::DeserializeBase(RootObject, LocalObjectCache);
+	
+	const UBase* Res = USpeckleSerializer::DeserializeBase(RootObject, LocalObjectCache);
 	if(IsValid(Res))
 	{
 		Converter->RecursivelyConvertToNative(this, Res, LocalObjectCache, Actors);
+		FString Message = FString::Printf(TEXT("Converted %d Actors"), Actors.Num());
+		PrintMessage(Message, false);
 	}
 	else
 	{
 		FString Id;
 		RootObject->TryGetStringField("id", Id);
-		UE_LOG(LogSpeckle, Error, TEXT("Failed to deserialise root object: %s"), *Id);
+		FString Message = FString::Printf(TEXT("Failed to deserialise root object: %s"), *Id);
+		HandleError(Message);
 	}
 }
 
+void ASpeckleUnrealManager::HandleError(FString& Message)
+{
+	PrintMessage(Message, true);
+}
+
+void ASpeckleUnrealManager::PrintMessage(FString& Message, bool IsError)
+{
+	if(IsError)
+	{
+		UE_LOG(LogSpeckle, Error, TEXT("%s"), *Message);
+	}
+	else
+	{
+		UE_LOG(LogSpeckle, Log, TEXT("%s"), *Message);
+	}
+
+	FColor Color = IsError? FColor::Red : FColor::Green;
+	GEngine->AddOnScreenDebugMessage(0, 5.0f, Color, Message);
+}
+
+
 void ASpeckleUnrealManager::DeleteObjects()
 {
-	Converter->DeleteObjects();
+	Converter->CleanUp();
 	
 	for (AActor* a : Actors)
 	{
@@ -75,11 +115,4 @@ void ASpeckleUnrealManager::DeleteObjects()
 	}
 
 	Actors.Empty();
-}
-
-void ASpeckleUnrealManager::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if(ImportAtRuntime) Receive();
 }

@@ -104,6 +104,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 		SrcModel.BuildSettings.bRecomputeTangents = true;
 		SrcModel.BuildSettings.bRemoveDegenerates = false;
 		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
+		SrcModel.BuildSettings.bBuildReversedIndexBuffer = true;
 		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
 		SrcModel.BuildSettings.bGenerateLightmapUVs = GenerateLightmapUV;
 		SrcModel.BuildSettings.SrcLightmapIndex = 0;

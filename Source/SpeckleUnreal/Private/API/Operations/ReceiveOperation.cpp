@@ -38,6 +38,7 @@ void UReceiveOperation::Receive()
 	if (Obj != nullptr )
 	{
 		HandleReceive(Obj);
+		return;
 	}
 
 	// 2. Try and get object from remote transport

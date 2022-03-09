@@ -67,7 +67,7 @@ UBase* USpeckleConverterComponent::ConvertToSpeckle(UObject* Object)
 }
 
 
-AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, UWorld* World)
+UObject* USpeckleConverterComponent::ConvertToNative(const UBase* Object, UWorld* World)
 {
 	check(IsInGameThread());
 	
@@ -77,7 +77,10 @@ AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, UWorld*
 	UObject* Converter = GetConverter(Type).GetObject();
 	if(Converter == nullptr)
 	{
-		UE_LOG(LogSpeckle, Warning, TEXT("Skipping Object %s: No actor conversion functions exist for %s"), *Object->Id, *Type->GetName());
+	    if(Type != UBase::StaticClass())
+	    {
+		    UE_LOG(LogSpeckle, Warning, TEXT("Skipping Object %s: No actor conversion functions exist for %s"), *Object->Id, *Type->GetName());
+	    }
 		return nullptr;
 	}
 
@@ -89,46 +92,8 @@ AActor* USpeckleConverterComponent::ConvertToNative(const UBase* Object, UWorld*
 }
 
 
-AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
-                                                               const TScriptInterface<ITransport> LocalTransport,
-                                                               TArray<AActor*>& OutActors)
+void USpeckleConverterComponent::ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport> LocalTransport, TArray<AActor*>& OutActors)
 {
-	if(!IsValid(Base)) return nullptr;
-	
-	// Convert Base
-	AActor* Native = ConvertToNative(Base, AOwner->GetWorld());
-	
-	if(IsValid(Native))
-	{
-
-#if WITH_EDITOR
-		Native->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id));
-#endif
-		
-		// Ensure actor has a valid mobility for it's owner
-		if(Native->HasValidRootComponent())
-		{
-			uint8 CurrentMobility = Native->GetRootComponent()->Mobility;
-			uint8 OwnerMobility = AOwner->GetRootComponent()->Mobility;
-			
-			if(CurrentMobility < OwnerMobility)
-			{
-				Native->GetRootComponent()->SetMobility(AOwner->GetRootComponent()->Mobility);
-			}
-		}
-			
-		
-		
-		Native->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
-		Native->SetOwner(AOwner);
-
-		OutActors.Add(Native);
-	}
-	else
-	{
-		Native = AOwner;
-	}
-	
 	//Convert Children
 	TMap<FString, TSharedPtr<FJsonValue>> PotentialChildren = Base->DynamicProperties;
 	
@@ -138,7 +103,7 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 		if (Kv.Value->TryGetObject(SubObjectPtr))
 		{
 			const UBase* Child = USpeckleSerializer::DeserializeBase(*SubObjectPtr, LocalTransport);
-			RecursivelyConvertToNative(Native, Child, LocalTransport,OutActors);
+			RecursivelyConvertToNative(AOwner, Child, LocalTransport,OutActors);
 			continue;
 		}
 
@@ -151,12 +116,68 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 				if (!ArrayElement->TryGetObject(ArraySubObjPtr)) continue;
 				
 				const UBase* Child = USpeckleSerializer::DeserializeBase(*ArraySubObjPtr, LocalTransport);
-				RecursivelyConvertToNative(Native, Child, LocalTransport,OutActors);
+				RecursivelyConvertToNative(AOwner, Child, LocalTransport,OutActors);
 			}
 		}
 	}
+}
+
+AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
+                                                               const TScriptInterface<ITransport> LocalTransport,
+                                                               TArray<AActor*>& OutActors)
+{
+	if(!IsValid(Base)) return nullptr;
 	
-	return Native;
+	// Convert Base
+	UObject* Converted = ConvertToNative(Base, AOwner->GetWorld());
+	AActor* Owner = AOwner;
+		
+	if(IsValid(Converted))
+	{
+		// Handle Converted Object being an Actor
+		AActor* NativeActor = Cast<AActor>(Converted);
+		if(IsValid(NativeActor))
+		{
+#if WITH_EDITOR
+			NativeActor->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id));
+#endif
+		
+			// Ensure actor has a valid mobility for it's owner
+			if(NativeActor->HasValidRootComponent())
+			{
+				uint8 CurrentMobility = NativeActor->GetRootComponent()->Mobility;
+				uint8 OwnerMobility = AOwner->GetRootComponent()->Mobility;
+			
+				if(CurrentMobility < OwnerMobility)
+				{
+					NativeActor->GetRootComponent()->SetMobility(AOwner->GetRootComponent()->Mobility);
+				}
+			}
+		
+			NativeActor->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
+			NativeActor->SetOwner(AOwner);
+
+			OutActors.Add(NativeActor);
+			Owner = NativeActor;
+		}
+
+		// Handle Converted Object being a Component
+		UActorComponent* NativeComponent = Cast<UActorComponent>(Converted);
+		if(IsValid(NativeComponent))
+		{
+			if(!Owner->HasValidRootComponent()) Owner->SetRootComponent(NewObject<USceneComponent>(Owner));
+
+			USceneComponent* SceneComponent = Cast<USceneComponent>(Converted);
+			if(IsValid(SceneComponent)) SceneComponent->SetupAttachment(Owner->GetRootComponent());
+
+			NativeComponent->RegisterComponent();
+		}
+		
+	}
+	
+	ConvertChildren(Owner, Base, LocalTransport, OutActors);
+	
+	return Owner;
 }
 
 TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(const TSubclassOf<UBase> BaseType)
@@ -186,7 +207,7 @@ TScriptInterface<ISpeckleConverter> USpeckleConverterComponent::GetConverter(con
 	return nullptr;
 }
 
-void USpeckleConverterComponent::DeleteObjects()
+void USpeckleConverterComponent::CleanUp()
 {
 	for (UObject* Converter : SpeckleConverters)
 	{
@@ -196,14 +217,16 @@ void USpeckleConverterComponent::DeleteObjects()
 	}
 }
 
-bool USpeckleConverterComponent::CheckValidConverter(const UObject* Converter)
+bool USpeckleConverterComponent::CheckValidConverter(const UObject* Converter, bool LogWarning)
 {
 	if(Converter == nullptr) return false;
 		
-	if(!Converter->GetClass()->ImplementsInterface(USpeckleConverter::StaticClass()))
+	if(Converter->GetClass()->ImplementsInterface(USpeckleConverter::StaticClass())) return true;
+	
+	if(LogWarning)
 	{
 		UE_LOG(LogSpeckle, Warning, TEXT("Converter {%s} is not a valid converter, Expected to implement interface {%s}"), *Converter->GetClass()->GetName(), *USpeckleConverter::StaticClass()->GetName())
-		return false;
 	}
-	return true;
+	
+	return false;
 }

@@ -41,26 +41,30 @@ public:
 #endif
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	UBase* ConvertToSpeckle(UObject* Object);
-
+	virtual UBase* ConvertToSpeckle(UObject* Object);
+	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	AActor* ConvertToNative(const UBase* Object, UWorld* World);
+	virtual UObject* ConvertToNative(const UBase* Object, UWorld* World);
 
 
 	// Converts the given Base and all children into native actors.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
-	                                   const TScriptInterface<ITransport> LocalTransport, TArray<AActor*>& OutActors);
+	virtual UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport> LocalTransport, TArray<AActor*>& OutActors);
 	
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);
+	virtual TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	void DeleteObjects();
+	virtual void CleanUp();
 	
-	
-	static bool CheckValidConverter(const UObject* Converter);
+	static bool CheckValidConverter(const UObject* Converter, bool LogWarning = true);
+
+protected:
+
+	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
+	virtual void ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport> LocalTransport, TArray<AActor*>& OutActors);
+
 };
 
 
