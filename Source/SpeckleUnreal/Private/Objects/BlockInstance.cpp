@@ -16,7 +16,12 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 
 	//Transform
 	const TArray<TSharedPtr<FJsonValue>>* TransformData;
-	if(!Obj->TryGetArrayField("transform", TransformData)) return false;
+	if()
+	{
+	
+	}
+	else if(Obj->TryGetArrayField("transform", TransformData))
+	return false
 	DynamicProperties.Remove("transform");
 	
 	FMatrix TransformMatrix;

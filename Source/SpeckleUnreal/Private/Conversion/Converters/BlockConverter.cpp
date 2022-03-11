@@ -10,7 +10,7 @@ UBlockConverter::UBlockConverter()
 	ActorMobility = EComponentMobility::Static;
 }
 
-AActor* UBlockConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
+UObject* UBlockConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>&)
 {
 	const UBlockInstance* Block = Cast<UBlockInstance>(SpeckleBase);
 	if(Block == nullptr) return nullptr;

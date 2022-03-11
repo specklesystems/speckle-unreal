@@ -29,7 +29,7 @@ public:
 	
 	UPointCloudConverter();
 	
-	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World) override;
+	virtual UObject* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>&) override;
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
 	UFUNCTION(BlueprintCallable)

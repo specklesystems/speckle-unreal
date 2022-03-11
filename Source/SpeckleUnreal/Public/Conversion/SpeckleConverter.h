@@ -10,8 +10,8 @@
 
 class UBase;
 class ASpeckleUnrealManager;
+class ISpeckleConverter;
 
-// This class does not need to be modified.
 UINTERFACE()
 class SPECKLEUNREAL_API USpeckleConverter : public UInterface
 {
@@ -19,7 +19,7 @@ class SPECKLEUNREAL_API USpeckleConverter : public UInterface
 };
 
 /**
- *  Interfaces for conversion functions (ToSpeckle and ToNative) of a specific native type.
+ *  Interface for conversion functions (ToSpeckle and ToNative) of a specific speckle type(s).
  */
 class SPECKLEUNREAL_API ISpeckleConverter
 {
@@ -32,9 +32,9 @@ public:
 	
 	/// Tries to convert a given SpeckleBase into a native Actor
 	UFUNCTION(BlueprintNativeEvent)
-	AActor* ConvertToNative(const UBase* SpeckleBase, UWorld* World);
+	UObject* ConvertToNative(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters);
 
-	/// Tries to convert a given Actor or Component Object into a Speckle Base
+	/// Tries to convert a given Actor or Component into a Speckle Base
 	UFUNCTION(BlueprintNativeEvent)
 	UBase* ConvertToSpeckle(const UObject* Object);
 

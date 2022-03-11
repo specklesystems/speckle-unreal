@@ -1,14 +1,14 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Conversion/Converters/RenderMaterialConverter.h"
+#include "Conversion/Converters/MaterialConverter.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Objects/RenderMaterial.h"
 
 
-URenderMaterialConverter::URenderMaterialConverter()
+UMaterialConverter::UMaterialConverter()
 {
 	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleMaterial(TEXT("Material'/SpeckleUnreal/SpeckleMaterial.SpeckleMaterial'"));
 	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleGlassMaterial(TEXT("Material'/SpeckleUnreal/SpeckleGlassMaterial.SpeckleGlassMaterial'"));
@@ -16,10 +16,52 @@ URenderMaterialConverter::URenderMaterialConverter()
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;
 	BaseMeshTransparentMaterial = SpeckleGlassMaterial.Object;
+	
+#if WITH_EDITORONLY_DATA
+	UseConstMaterials = NotPlay;
+#endif
+	
+	SpeckleTypes.Add(URenderMaterial::StaticClass());
 }
 
+UObject* UMaterialConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld*, TScriptInterface<ISpeckleConverter>&)
+{
+	const URenderMaterial* m = Cast<URenderMaterial>(SpeckleBase);
+	
+	if(m == nullptr) return nullptr;
+	
+	return GetMaterial(m);
+}
 
-bool URenderMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMaterial, UMaterialInterface*& OutMaterial) const
+UMaterialInterface* UMaterialConverter::GetMaterial(const URenderMaterial* SpeckleMaterial)
+{
+	if(SpeckleMaterial == nullptr || SpeckleMaterial->Id == "") return DefaultMeshMaterial; //Material is invalid
+
+	// 1. Check Overrides
+	UMaterialInterface* NativeMaterial;
+	if(TryGetOverride(SpeckleMaterial, NativeMaterial))
+		return NativeMaterial;
+
+	// 2. Check transient cache
+	if(ConvertedMaterials.Contains(SpeckleMaterial->Id))
+	{
+		return ConvertedMaterials[SpeckleMaterial->Id];
+	}
+	
+	// 3. Check Assets
+	UPackage* Package = GetPackage(SpeckleMaterial->Id);
+	
+	NativeMaterial = Cast<UMaterialInterface>(Package->FindAssetInPackage());
+	if(IsValid(NativeMaterial))
+	{
+	   return NativeMaterial;
+	}
+	
+	// 4. Convert
+	return RenderMaterialToNative(SpeckleMaterial, Package);
+}
+
+bool UMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMaterial, UMaterialInterface*& OutMaterial) const
 {
 	const auto MaterialID = SpeckleMaterial->Id;
 	
@@ -46,35 +88,8 @@ bool URenderMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMate
 }
 
 
-UMaterialInterface* URenderMaterialConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, bool AcceptMaterialOverride, bool UseEditorConstMaterial)
-{
-	if(SpeckleMaterial == nullptr || SpeckleMaterial->Id == "") return DefaultMeshMaterial; //Material is invalid
 
-	// 1. Check Overrides
-	UMaterialInterface* NativeMaterial;
-	if(AcceptMaterialOverride && TryGetOverride(SpeckleMaterial, NativeMaterial))
-		return NativeMaterial;
-
-	// 2. Check transient cache
-	if(ConvertedMaterials.Contains(SpeckleMaterial->Id))
-	{
-		return ConvertedMaterials[SpeckleMaterial->Id];
-	}
-	
-	// 3. Check Assets
-	UPackage* Package = GetPackage(SpeckleMaterial->Id);
-	
-	NativeMaterial = Cast<UMaterialInterface>(Package->FindAssetInPackage());
-	if(IsValid(NativeMaterial))
-	{
-	   return NativeMaterial;
-	}
-	
-	// 4. Convert
-	return RenderMaterialToNative(SpeckleMaterial, Package, UseEditorConstMaterial);
-}
-
-UMaterialInterface* URenderMaterialConverter::RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, UPackage* Package, bool UseEditorConstMaterial)
+UMaterialInterface* UMaterialConverter::RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, UPackage* Package)
 {
 	UMaterialInterface* MaterialBase = SpeckleMaterial->Opacity >= 1
 	    ? BaseMeshOpaqueMaterial
@@ -82,9 +97,9 @@ UMaterialInterface* URenderMaterialConverter::RenderMaterialToNative(const URend
 	
 	UMaterialInstance* MaterialInstance;
 #if WITH_EDITOR
-	if (UseEditorConstMaterial && GIsEditor)
+	if (ShouldCreateConstMaterial(UseConstMaterials))
 	{
-		const FName Name = MakeUniqueObjectName(Package, UMaterialInstanceConstant::StaticClass(), FName(SpeckleMaterial->Name));
+		const FName Name = MakeUniqueObjectName(Package, UMaterialInstanceConstant::StaticClass(), *FPaths::MakeValidFileName(SpeckleMaterial->Name));
 
 		//TStrongObjectPtr< UMaterialInstanceConstantFactoryNew > MaterialFact( NewObject< UMaterialInstanceConstantFactoryNew >() );
 		//MaterialFact->InitialParent = MaterialBase;
@@ -126,13 +141,34 @@ UMaterialInterface* URenderMaterialConverter::RenderMaterialToNative(const URend
 	
 }
 
-void URenderMaterialConverter::CleanUp()
+void UMaterialConverter::CleanUp_Implementation()
 {
 	ConvertedMaterials.Empty();
 }
 
-UPackage* URenderMaterialConverter::GetPackage(const FString& ObjectID ) const
+UPackage* UMaterialConverter::GetPackage(const FString& ObjectID ) const
 {
 	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle/Materials"), ObjectID);
 	return CreatePackage(*PackagePath);
 }
+
+
+#if WITH_EDITOR
+bool UMaterialConverter::ShouldCreateConstMaterial(TEnumAsByte<EConstMaterialOptions> Options)
+{
+	if(!GIsEditor) return false;
+	
+	switch(Options)
+	{
+		case Never:
+			return false;
+		case NotPlay:
+			return !FApp::IsGame();
+		case Always:
+			return true;
+		default:
+			unimplemented();
+			return false;
+	}
+}
+#endif

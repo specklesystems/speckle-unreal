@@ -7,7 +7,7 @@
 
 #include "ProceduralMeshConverter.generated.h"
 
-class URenderMaterialConverter;
+class UMaterialConverter;
 class UProceduralMeshComponent;
 class UMesh;
 class URenderMaterial;
@@ -20,9 +20,6 @@ class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpec
 	CONVERTS_SPECKLE_TYPES()
 	
 public:
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	URenderMaterialConverter* MaterialConverter;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AActor> MeshActorType;
@@ -33,16 +30,15 @@ public:
 	// Sets default values for this actor's properties
 	UProceduralMeshConverter();
 	
-	virtual AActor* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World) override;
+	virtual UObject* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters) override;
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 	
 	UFUNCTION(BlueprintCallable)
-	virtual AActor* MeshToNative(const UMesh* SpeckleMesh, UWorld* World);
+	virtual AActor* MeshToNative(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter);
 	
 	UFUNCTION(BlueprintCallable)
 	virtual UMesh* MeshToSpeckle(const UProceduralMeshComponent* Object);
 	
 	virtual AActor* CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
-
-	virtual void CleanUp_Implementation() override;
+	
 };

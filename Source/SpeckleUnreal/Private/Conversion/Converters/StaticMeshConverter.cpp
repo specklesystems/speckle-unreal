@@ -10,19 +10,19 @@
 #include "Engine/StaticMeshActor.h"
 #include "Objects/Mesh.h"
 #include "LogSpeckle.h"
-#include "Conversion/Converters/RenderMaterialConverter.h"
-
+#include "Conversion/Converters/MaterialConverter.h"
+#include "Objects/DisplayValueElement.h"
+#include "Objects/RenderMaterial.h"
 
 UStaticMeshConverter::UStaticMeshConverter()
 {
 	SpeckleTypes.Add(UMesh::StaticClass());
+	SpeckleTypes.Add(UDisplayValueElement::StaticClass());
 	
 	Transient = false;
 	UseFullBuild = true;
 	BuildSimpleCollision = true;
-
-	MaterialConverter = CreateDefaultSubobject<URenderMaterialConverter>(TEXT("Material Converter"));
-	
+		
 	MeshActorType = AStaticMeshActor::StaticClass();
 	ActorMobility = EComponentMobility::Static;
 }
@@ -35,14 +35,40 @@ AActor* UStaticMeshConverter::CreateEmptyActor(UWorld* World, const FTransform& 
 	return Actor;
 }
 
-
-AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
+UObject* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters)
 {
-	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle/Geometry"), SpeckleBase->Id);
-	UPackage* Package = CreatePackage(*PackagePath);
+	const UMesh* m = Cast<UMesh>(SpeckleBase);
+	if(m != nullptr)
+	{
+		//Handle Single Mesh
+		return MeshToNativeActor(m, World, AvailableConverters);
+	}
+	
+	const UDisplayValueElement* d = Cast<UDisplayValueElement>(SpeckleBase);
+	if(d != nullptr)
+	{
+		//Handle Element with Display Values
+		return MeshesToNativeActor(d, d->DisplayValue, World, AvailableConverters);
+	}
+	
+	return nullptr;
+}
 
-	const UMesh* SpeckleMesh = Cast<UMesh>(SpeckleBase);
-	if(SpeckleMesh == nullptr) return nullptr;
+
+AActor* UStaticMeshConverter::MeshToNativeActor(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter)
+{
+	TArray<UMesh*> Meshes = {const_cast<UMesh*>(SpeckleMesh)};
+	return MeshesToNativeActor(SpeckleMesh, Meshes, World, MaterialConverter);
+}
+
+AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes, UWorld* World, TScriptInterface<ISpeckleConverter>& RenderMaterialConverter)
+{
+	check(RenderMaterialConverter.GetInterface() != nullptr);
+	ensureMsgf(Execute_CanConvertToNative(RenderMaterialConverter.GetObject(), URenderMaterial::StaticClass()), TEXT("StaticMeshConverter expects a valid RenderMaterial converter to be avaiable"));
+
+	
+	const FString PackagePath = FPaths::Combine(TEXT("/Game/Speckle/Geometry"), Parent->Id);
+	UPackage* Package = CreatePackage(*PackagePath);
 	
 	//Find existing mesh
 	UStaticMesh* Mesh = Cast<UStaticMesh>(Package->FindAssetInPackage());
@@ -50,10 +76,10 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 	if(!IsValid(Mesh))
 	{
 		//No existing mesh was found, try and convert SpeckleMesh
-		Mesh = MeshToNative(Package, SpeckleMesh);
+		Mesh = MeshesToNativeMesh(Package, Parent, SpeckleMeshes, RenderMaterialConverter);
 	}
 	
-	AActor* Actor = CreateEmptyActor(World, FTransform(SpeckleMesh->Transform));
+	AActor* Actor = CreateEmptyActor(World);
 	TInlineComponentArray<UStaticMeshComponent*> Components;
 	Actor->GetComponents<UStaticMeshComponent>(Components);
 	
@@ -66,24 +92,38 @@ AActor* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speckl
 		MeshComponent->SetupAttachment(Actor->GetRootComponent());
 		MeshComponent->RegisterComponent();
 	}
-	
+
 	MeshComponent->SetStaticMesh(Mesh);
-	MeshComponent->SetMaterial(0, MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, true, !FApp::IsGame()));
+	
+	int i = 0;
+	for(const UMesh* DisplayMesh : SpeckleMeshes)
+	{
+		UMaterialInterface* Material = GetMaterial(DisplayMesh->RenderMaterial, World, RenderMaterialConverter);
+		ensure(IsValid(Material));
+		MeshComponent->SetMaterial(i, Material);
+
+		i++;
+	}
 	
 	return Actor;
 }
 
 
-
-UStaticMesh* UStaticMeshConverter::MeshToNative(UObject* Outer,  const UMesh* SpeckleMesh)
+UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter) const
 {
-	TArray<UMesh*> Meshes;
-	Meshes.Add(const_cast<UMesh*>(SpeckleMesh));
-	return MeshesToNative(Outer, SpeckleMesh, Meshes);
+	return Cast<UMaterialInterface>(Execute_ConvertToNative(MaterialConverter.GetObject(), SpeckleMaterial, World, MaterialConverter));
 }
 
 
-UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes)
+UStaticMesh* UStaticMeshConverter::MeshToNativeMesh(UObject* Outer,  const UMesh* SpeckleMesh, TScriptInterface<ISpeckleConverter>& MaterialConverter)
+{
+	TArray<UMesh*> Meshes;
+	Meshes.Add(const_cast<UMesh*>(SpeckleMesh));
+	return MeshesToNativeMesh(Outer, SpeckleMesh, Meshes, MaterialConverter);
+}
+
+
+UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBase* Parent, const TArray<UMesh*>& SpeckleMeshes, TScriptInterface<ISpeckleConverter>& MaterialConverter)
 {
 	if(SpeckleMeshes.Num() == 0) return nullptr;
 	
@@ -136,7 +176,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNative(UObject* Outer, const UBase* P
 		}
 		
 		// Convert Material
-		UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, true, !FApp::IsGame());
+		UMaterialInterface* Material = GetMaterial(SpeckleMesh->RenderMaterial, GetWorld(), MaterialConverter);
 	
 		const FName MaterialSlotName = Mesh->AddMaterial(Material);;
 		BaseMeshDescription.PolygonGroupAttributes().RegisterAttribute<FName>(MeshAttribute::PolygonGroup::ImportedMaterialSlotName, 1, MaterialSlotName,  EMeshAttributeFlags::None);
@@ -266,12 +306,6 @@ void UStaticMeshConverter::GenerateMeshParams(UStaticMesh::FBuildMeshDescription
 }
 
 
-void UStaticMeshConverter::CleanUp_Implementation()
-{
-	MaterialConverter->CleanUp();
-}
-
-
 UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object)
 {
 	const UStaticMeshComponent* M = Cast<UStaticMeshComponent>(Object);
@@ -290,7 +324,13 @@ UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Obje
 }
 
 
-UMesh* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object)
+UBase* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object)
 {
 	return nullptr; //TODO implement ToSpeckle function
+}
+
+
+void UStaticMeshConverter::CleanUp_Implementation()
+{
+
 }

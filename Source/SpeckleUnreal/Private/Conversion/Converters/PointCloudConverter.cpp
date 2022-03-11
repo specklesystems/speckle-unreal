@@ -17,13 +17,13 @@ UPointCloudConverter::UPointCloudConverter()
 }
 
 
-AActor* UPointCloudConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
+UObject* UPointCloudConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>&)
 {
-	const UPointCloud* P = Cast<UPointCloud>(SpeckleBase);
+	const UPointCloud* p = Cast<UPointCloud>(SpeckleBase);
 	
-	if(P == nullptr) return nullptr;
+	if(p == nullptr) return nullptr;
 	
-	return PointCloudToNative(P, World);
+	return PointCloudToNative(p, World);
 }
 
 

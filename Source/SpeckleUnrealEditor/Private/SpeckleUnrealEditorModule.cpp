@@ -6,7 +6,7 @@
 #include "IAssetTools.h"
 
 #include "Conversion/ConverterActions.h"
-#include "Conversion/ConverterFactory.h"
+#include "Conversion/SpeckleConverter.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealEditorModule"
 

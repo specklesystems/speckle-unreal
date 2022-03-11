@@ -3,8 +3,9 @@
 #include "Conversion/Converters/ProceduralMeshConverter.h"
 
 #include "ProceduralMeshComponent.h"
-#include "Conversion/Converters/RenderMaterialConverter.h"
+#include "Conversion/Converters/MaterialConverter.h"
 #include "Objects/Mesh.h"
+#include "Objects/RenderMaterial.h"
 
 UProceduralMeshConverter::UProceduralMeshConverter()
 {
@@ -14,16 +15,16 @@ UProceduralMeshConverter::UProceduralMeshConverter()
     ActorMobility = EComponentMobility::Static;
 }
 
-AActor* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World)
+UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters )
 {
-    const UMesh* P = Cast<UMesh>(SpeckleBase);
+    const UMesh* m = Cast<UMesh>(SpeckleBase);
 	
-    if(P == nullptr) return nullptr;
+    if(m == nullptr) return nullptr;
 	
-    return MeshToNative(P, World);
+    return MeshToNative(m, World, AvailableConverters);
 }
 
-AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld* World)
+AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter)
 {
     AActor* MeshActor = CreateEmptyActor(World, FTransform(SpeckleMesh->Transform));
     UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));
@@ -75,7 +76,9 @@ AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld*
         Tangents,
         true);
 
-    UMaterialInterface* Material = MaterialConverter->GetMaterial(SpeckleMesh->RenderMaterial, true, false);
+    UMaterialInterface* Material = Cast<UMaterialInstance>(Execute_ConvertToNative(MaterialConverter.GetObject(), SpeckleMesh->RenderMaterial, World, MaterialConverter));
+    ensure(Material != nullptr);
+    
     MeshComponent->SetMaterial(0, Material);
     
     return MeshActor;
@@ -89,11 +92,6 @@ AActor* UProceduralMeshConverter::CreateEmptyActor(UWorld* World, const FTransfo
     Scene->RegisterComponent();
     Scene->SetMobility(ActorMobility);
     return Actor;
-}
-
-void UProceduralMeshConverter::CleanUp_Implementation()
-{
-    MaterialConverter->CleanUp();
 }
 
 

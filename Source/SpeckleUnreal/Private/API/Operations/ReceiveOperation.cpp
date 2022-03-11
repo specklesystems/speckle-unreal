@@ -6,7 +6,6 @@
 #include "Transports/Transport.h"
 #include "API/SpeckleSerializer.h"
 #include "Objects/Base.h"
-#include "LogSpeckle.h"
 
 
 UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObject, const FString& ObjectId, TScriptInterface<ITransport> RemoteTransport, TScriptInterface<ITransport> LocalTransport)

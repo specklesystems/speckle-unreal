@@ -4,12 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
-#include "Conversion/Converters/BlockConverter.h"
-#include "Conversion/Converters/DisplayValueConverter.h"
-#include "Conversion/Converters/ProceduralMeshConverter.h"
-#include "Conversion/Converters/StaticMeshConverter.h"
-#include "Conversion/Converters/PointCloudConverter.h"
-#include "Conversion/Converters/RenderMaterialConverter.h"
 
 #include "ConverterFactory.generated.h"
 
