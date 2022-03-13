@@ -26,7 +26,6 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 				}
 			Transform = Transform.GetTransposed();
 			Transform.ScaleTranslation(FVector(ScaleFactor));
-			//Transform.Mirror(EAxis::None, EAxis::Y); //Convert between Speckle's RH  and UE's LH coordinate system
 		}
 	}
 
@@ -42,7 +41,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 			Vertices.Add(Transform.InverseTransformPosition(FVector
 			(
 				ObjectVertices[j].Get()->AsNumber(),
-				ObjectVertices[j + 1].Get()->AsNumber(), //Unreal uses a left-handed coordinate system so we must flip the Y axis
+				ObjectVertices[j + 1].Get()->AsNumber(),
 				ObjectVertices[j + 2].Get()->AsNumber()
 			) * ScaleFactor ));
 		}

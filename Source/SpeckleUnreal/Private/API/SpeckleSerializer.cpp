@@ -28,7 +28,7 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, co
 	
 	if(BaseType == nullptr)
 	{
-		UE_LOG(LogSpeckle, Log, TEXT("Skipping deserialization of %s %s: Unrecognised SpeckleType"), *SpeckleType, *ObjectId );
+		UE_LOG(LogSpeckle, Verbose, TEXT("Skipping deserialization of %s %s: Unrecognised SpeckleType"), *SpeckleType, *ObjectId );
 		BaseType = UBase::StaticClass();
 	}
 	
@@ -36,7 +36,7 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, co
 	if(Base->Parse(Obj, ReadTransport)) return Base;
 
 	//TODO maybe we try the next closest type here, rather than failing after the first try.
-	UE_LOG(LogSpeckle, Log, TEXT("Skipping deserialization of %s %s: Object could not be deserialised to closest type %s"), *SpeckleType, *ObjectId, *BaseType->GetName());
+	UE_LOG(LogSpeckle, Verbose, TEXT("Skipping deserialization of %s %s: Object could not be deserialised to closest type %s"), *SpeckleType, *ObjectId, *BaseType->GetName());
 	return nullptr;
 }
 

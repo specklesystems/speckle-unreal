@@ -36,7 +36,7 @@ UObject* UMaterialConverter::ConvertToNative_Implementation(const UBase* Speckle
 UMaterialInterface* UMaterialConverter::GetMaterial(const URenderMaterial* SpeckleMaterial)
 {
 	if(SpeckleMaterial == nullptr || SpeckleMaterial->Id == "") return DefaultMeshMaterial; //Material is invalid
-
+	
 	// 1. Check Overrides
 	UMaterialInterface* NativeMaterial;
 	if(TryGetOverride(SpeckleMaterial, NativeMaterial))

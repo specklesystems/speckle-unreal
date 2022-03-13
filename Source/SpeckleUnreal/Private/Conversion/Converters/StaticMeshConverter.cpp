@@ -10,6 +10,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Objects/Mesh.h"
 #include "LogSpeckle.h"
+#include "API/SpeckleSerializer.h"
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Objects/DisplayValueElement.h"
 #include "Objects/RenderMaterial.h"
@@ -104,7 +105,22 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 	int i = 0;
 	for(const UMesh* DisplayMesh : SpeckleMeshes)
 	{
-		UMaterialInterface* Material = GetMaterial(DisplayMesh->RenderMaterial, World, RenderMaterialConverter);
+		URenderMaterial* MaterialToConvert = DisplayMesh->RenderMaterial;
+		// if(!MaterialToConvert)
+		// {
+		// 	//Try and grab a material from the parent
+		// 	//TODO figure out how to do this
+		// 	USpeckleSerializer::DeserializeBase(Parent->DynamicProperties["renderMaterial"]);
+		// }
+		
+		if(!MaterialToConvert)
+		{
+		    // Create a fake render material,  (since nullptr doesn't have a type, speckle converters don't know how to convert it)
+			// If the converter wants to handle this specially, The material has an empty Id
+		    MaterialToConvert = NewObject<URenderMaterial>(GetTransientPackage(), "NullSpeckleMaterial");
+		}
+		UMaterialInterface* Material = GetMaterial(MaterialToConvert, World, RenderMaterialConverter);
+		
 		ensure(IsValid(Material));
 		MeshComponent->SetMaterial(i, Material);
 
