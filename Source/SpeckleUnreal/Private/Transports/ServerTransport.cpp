@@ -29,7 +29,10 @@ bool UServerTransport::HasObject(const FString& ObjectId) const
 	return false;
 }
 
-void UServerTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction)
+void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
+											 TScriptInterface<ITransport> TargetTransport,
+											 const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+											 const FTransportErrorDelegate& OnErrorAction)
 {
 	this->OnComplete = OnCompleteAction;
 	this->OnError = OnErrorAction;
@@ -53,6 +56,7 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInt
 		{
 			FString Message = FString::Printf(TEXT("Stream Request failed: %s"), *Response->GetContentAsString());
 			this->OnError.Execute(Message);
+			return;
 		}
 		
 		const int32 ResponseCode = Response->GetResponseCode();
@@ -60,18 +64,14 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInt
 		{
 			FString Message = FString::Printf(TEXT("Can't get object %s/%s: HTTP error %d"), *StreamId, *ObjectId, ResponseCode);
 			this->OnError.Execute(Message);
+			return;
 		}
 
 		FString Content = Response->GetContentAsString();
-	
-		int LineCount = 0;
-		for (const TCHAR* ptr = *Content; *ptr; ptr++)
-			if (*ptr == '\n')
-				LineCount++;
-		TArray<FString> Lines;
-		Lines.Reserve(LineCount);
-		Content.ParseIntoArray(Lines, TEXT("\n"), true);
 
+		TArray<FString> Lines;
+		const int32 LineCount = SplitLines(Content, Lines);
+		
 		UE_LOG(LogSpeckle, Log, TEXT("Parsing %d downloaded objects..."), LineCount)
 	
 		for (const FString& Line : Lines)
@@ -101,4 +101,15 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInt
 		FString Message = FString::Printf(TEXT("Can't get object %s/%s: HTTP request failed to start"), *StreamId, *ObjectId);
 		OnErrorAction.Execute(Message);
 	}
+}
+
+int32 UServerTransport::SplitLines(const FString& Content, TArray<FString>& OutLines)
+{
+	int32 LineCount = 0;
+	for (const TCHAR* ptr = *Content; *ptr; ptr++)
+		if (*ptr == '\n')
+			LineCount++;
+	OutLines.Reserve(LineCount);
+	Content.ParseIntoArray(OutLines, TEXT("\n"), true);
+	return LineCount;
 }

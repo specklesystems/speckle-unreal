@@ -19,9 +19,15 @@ UStaticMeshConverter::UStaticMeshConverter()
 	SpeckleTypes.Add(UMesh::StaticClass());
 	SpeckleTypes.Add(UDisplayValueElement::StaticClass());
 	
-	Transient = false;
+#if WITH_EDITORONLY_DATA
 	UseFullBuild = true;
+#endif
+	Transient = false;
 	BuildSimpleCollision = true;
+	
+	BuildReversedIndexBuffer = true;
+	UseFullPrecisionUVs = false;
+	RemoveDegeneratesOnBuild = false;
 		
 	MeshActorType = AStaticMeshActor::StaticClass();
 	ActorMobility = EComponentMobility::Static;
@@ -142,10 +148,10 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 		FStaticMeshSourceModel& SrcModel = Mesh->AddSourceModel();
 		SrcModel.BuildSettings.bRecomputeNormals = true;
 		SrcModel.BuildSettings.bRecomputeTangents = true;
-		SrcModel.BuildSettings.bRemoveDegenerates = false;
+		SrcModel.BuildSettings.bRemoveDegenerates = RemoveDegeneratesOnBuild;
 		SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
-		SrcModel.BuildSettings.bBuildReversedIndexBuffer = true;
-		SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
+		SrcModel.BuildSettings.bBuildReversedIndexBuffer = BuildReversedIndexBuffer;
+		SrcModel.BuildSettings.bUseFullPrecisionUVs = UseFullPrecisionUVs;
 		SrcModel.BuildSettings.bGenerateLightmapUVs = GenerateLightmapUV;
 		SrcModel.BuildSettings.SrcLightmapIndex = 0;
 		SrcModel.BuildSettings.DstLightmapIndex = 1;

@@ -8,7 +8,8 @@
 #include "AggregateConverter.generated.h"
 
 /**
- * 
+ *  An Aggregate Converter stores multiple ISpeckleConverter instances.
+ *  This allows you to use many converters as one
  */
 UCLASS()
 
@@ -23,13 +24,9 @@ protected:
 
 public:
 	
-	// Array of converters
+	// Array of converters, must be of type ISpeckleConverter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle|Conversion")
 	TArray<UObject*> SpeckleConverters;
-	
-	// Sets default values for this component's properties
-	UAggregateConverter();
-
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual UObject* ConvertToNativeInternal(const UBase* Object, UWorld* World);
@@ -43,14 +40,14 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual TScriptInterface<ISpeckleConverter> GetConverter(const TSubclassOf<UBase> BaseType);
-	
+
+	// Validates a given object is a valid ISpeckleConverter
 	static bool CheckValidConverter(const UObject* Converter, bool LogWarning = true);
 
-	
 	void CleanUpInternal();
 	virtual void CleanUp_Implementation() override;
 
-	// Validates changes to SpeckleConverters, Should be called after modifying SpeckleConverters
+	// Validates changes to SpeckleConverters property, Should be called after modifying SpeckleConverters
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual void OnConvertersChangeHandler();
 	

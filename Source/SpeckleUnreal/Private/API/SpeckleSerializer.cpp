@@ -3,6 +3,7 @@
 #include "Objects/Base.h"
 #include "LogSpeckle.h"
 #include "Conversion/ConversionUtils.h"
+#include "Objects/ObjectModelRegistry.h"
 #include "Transports/Transport.h"
 
 
@@ -23,7 +24,7 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, co
 	FString ObjectId = "";	
 	Obj->TryGetStringField("id", ObjectId);
 		
-	TSubclassOf<UBase> BaseType = UBase::FindClosestType(SpeckleType);
+	TSubclassOf<UBase> BaseType = UObjectModelRegistry::FindClosestType(SpeckleType);
 	
 	if(BaseType == nullptr)
 	{

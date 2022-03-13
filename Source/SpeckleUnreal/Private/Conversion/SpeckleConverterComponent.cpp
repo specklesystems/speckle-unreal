@@ -20,12 +20,12 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 	//static ConstructorHelpers::FObjectFinder<UCameraConverter> CameraConverter(TEXT("CameraConverter'/SpeckleUnreal/Converters/DefaultCameraConverter.DefaultCameraConverter'"));
 	//static ConstructorHelpers::FObjectFinder<ULightConverter> LightConverter(TEXT("LightConverter'/SpeckleUnreal/Converters/DefaultLightConverter.DefaultLightConverter'"));
 
-	SpeckleConverters = CreateDefaultSubobject<UAggregateConverter>(TEXT("Objects Converter"));
+	SpeckleConverter = CreateDefaultSubobject<UAggregateConverter>(TEXT("Objects Converter"));
 	
-	SpeckleConverters->SpeckleConverters.Add(MeshConverter.Object);
-	SpeckleConverters->SpeckleConverters.Add(PointCloudConverter.Object);
-	SpeckleConverters->SpeckleConverters.Add(BlockConverter.Object);
-	SpeckleConverters->SpeckleConverters.Add(MaterialConverter.Object);
+	SpeckleConverter->SpeckleConverters.Add(MeshConverter.Object);
+	SpeckleConverter->SpeckleConverters.Add(PointCloudConverter.Object);
+	SpeckleConverter->SpeckleConverters.Add(BlockConverter.Object);
+	SpeckleConverter->SpeckleConverters.Add(MaterialConverter.Object);
 	//SpeckleConverter->SpeckleConverters.Add(CameraConverter.Object);
 	//SpeckleConverter->SpeckleConverters.Add(LightConverter.Object);
 	
@@ -73,7 +73,7 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 	if(!IsValid(Base)) return nullptr;
 	
 	// Convert Base
-	UObject* Converted = SpeckleConverters->ConvertToNativeInternal(Base, AOwner->GetWorld());
+	UObject* Converted = SpeckleConverter->ConvertToNativeInternal(Base, AOwner->GetWorld());
 	AActor* Owner = AOwner;
 	
 	if(IsValid(Converted))
@@ -126,5 +126,5 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 
 void USpeckleConverterComponent::CleanUp()
 {
-	SpeckleConverters->CleanUpInternal();
+	SpeckleConverter->CleanUpInternal();
 }

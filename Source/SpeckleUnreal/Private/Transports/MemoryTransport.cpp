@@ -8,11 +8,6 @@ bool UMemoryTransport::HasObject(const FString& ObjectId) const
 	return SpeckleObjects.Contains(ObjectId);
 }
 
-void UMemoryTransport::CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction)
-{
-	unimplemented();
-	return;
-}
 
 TSharedPtr<FJsonObject> UMemoryTransport::GetSpeckleObject(const FString& ObjectId) const
 {

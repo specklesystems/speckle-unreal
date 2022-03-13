@@ -12,6 +12,15 @@ class UProceduralMeshComponent;
 class UMesh;
 class URenderMaterial;
 
+
+/**
+ * Converts Speckle Mesh objects into native actors with a procedural mesh component.
+ * 
+ * Compared with the StaticMeshConverter, this converter has some serious limitations
+ * - Cannot convert displayValues,
+ * - N-gon faces will be ignored,
+ * - Meshes are transient, and won't persist on level reload
+ */
 UCLASS()
 class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpeckleConverter
 {

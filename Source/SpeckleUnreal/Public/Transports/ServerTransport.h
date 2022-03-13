@@ -9,10 +9,11 @@
 
 
 class FHttpModule;
+
 /**
- * 
+ *  Transport for receiving objects from a Speckle Server
  */
-UCLASS( BlueprintType)
+UCLASS(BlueprintType)
 class SPECKLEUNREAL_API UServerTransport : public UObject, public ITransport
 {
  GENERATED_BODY()
@@ -33,14 +34,6 @@ protected:
 public:
 
 
-	
-	virtual TSharedPtr<FJsonObject> GetSpeckleObject(const FString& ObjectId) const override;
-	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) override;
-	
-	virtual bool HasObject(const FString& ObjectId) const override;
-	
-    virtual void CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction) override;
-
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
 	static UServerTransport* CreateServerTransport(UPARAM(ref) FString& _ServerUrl, UPARAM(ref)  FString& _StreamId, UPARAM(ref) FString& _AuthToken)
 	{
@@ -50,4 +43,18 @@ public:
 		Transport->AuthToken = _AuthToken;
 		return Transport;
 	}
+	
+	virtual TSharedPtr<FJsonObject> GetSpeckleObject(const FString& ObjectId) const override;
+	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) override;
+	
+	virtual bool HasObject(const FString& ObjectId) const override;
+	
+ 	virtual void CopyObjectAndChildren(const FString& ObjectId,
+ 		TScriptInterface<ITransport> TargetTransport,
+ 		const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+ 		const FTransportErrorDelegate& OnErrorAction) override;
+
+protected:
+	static int32 SplitLines(const FString& Content, TArray<FString>& OutLines);
+	
 };

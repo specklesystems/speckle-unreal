@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/RegisteringBase.h"
 #include "Dom/JsonObject.h"
 
 #include "Base.generated.h"
@@ -12,12 +11,10 @@ class ITransport;
 class ASpeckleUnrealManager;
 
 /**
- * 
+ * Base type that all Object Models inherit from
  */
-
-
 UCLASS(BlueprintType)
-class SPECKLEUNREAL_API UBase : public URegisteringBase
+class SPECKLEUNREAL_API UBase : public UObject
 {
 public:
 

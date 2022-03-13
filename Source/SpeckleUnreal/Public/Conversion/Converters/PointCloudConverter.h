@@ -12,6 +12,9 @@ class ALidarPointCloudActor;
 class ULidarPointCloud;
 class UPointCloud;
 
+/**
+ * Converts Speckle Point Cloud objects into LidarPointClouds
+ */
 UCLASS()
 class SPECKLEUNREAL_API UPointCloudConverter :  public UObject, public ISpeckleConverter
 {

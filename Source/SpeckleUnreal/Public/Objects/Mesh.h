@@ -8,7 +8,7 @@
 #include "Mesh.generated.h"
 
 class URenderMaterial;
-class ASpeckleUnrealManager;
+
 /**
  * 
  */

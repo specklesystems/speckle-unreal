@@ -8,7 +8,7 @@
 class ITransport;
 
 /**
- *  Several conversion helper functions
+ *  Several helper functions useful for handling Speckle Objects
  */
 UCLASS()
 class SPECKLEUNREAL_API UConversionUtils : public UBlueprintFunctionLibrary

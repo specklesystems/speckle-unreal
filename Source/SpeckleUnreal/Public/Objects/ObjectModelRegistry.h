@@ -4,17 +4,20 @@
 
 #include "CoreMinimal.h"
 
-#include "RegisteringBase.generated.h"
+#include "ObjectModelRegistry.generated.h"
 
 class UBase;
 
-UCLASS(Abstract)
-class SPECKLEUNREAL_API URegisteringBase : public UObject
+/**
+ * Handles the mapping of Speckle type to Object Model 
+ */
+UCLASS()
+class SPECKLEUNREAL_API UObjectModelRegistry : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
-protected:
-	//static TOptional<TMap<FString, TSubclassOf<UBase>>> TypeRegistry;
+private:
+
 	static TMap<FString, TSubclassOf<UBase>> TypeRegistry;
 
 	static void GenerateTypeRegistry();
@@ -38,6 +41,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
 	static TSubclassOf<UBase> GetRegisteredType(const FString& SpeckleType);
 
+	/// Attempts to find a TSubclassOf<UBase> with a UBase::SpeckleType matching the given SpeckleType param
 	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
 	static bool TryGetRegisteredType(const FString& SpeckleType, TSubclassOf<UBase>& OutType);
 };

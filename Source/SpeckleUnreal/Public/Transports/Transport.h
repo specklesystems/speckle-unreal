@@ -11,6 +11,8 @@ class ITransport;
 
 DECLARE_DELEGATE_OneParam(FTransportCopyObjectCompleteDelegate, TSharedPtr<FJsonObject>);
 DECLARE_DELEGATE_OneParam(FTransportErrorDelegate, FString&);
+//DECLARE_DELEGATE_OneParam(FTransportTotalChildrenCountKnownDelegate, int32);
+//DECLARE_DELEGATE_OneParam(FTransportProgressDelegate, int32);
 
 // This class does not need to be modified.
 UINTERFACE(Blueprintable)
@@ -35,6 +37,9 @@ public:
 	
  	virtual bool HasObject(const FString& ObjectId) const = 0;
 	
- 	virtual void CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction) = 0;
+ 	virtual void CopyObjectAndChildren(const FString& ObjectId,
+ 		TScriptInterface<ITransport> TargetTransport,
+ 		const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+ 		const FTransportErrorDelegate& OnErrorAction) = 0;
 
 };

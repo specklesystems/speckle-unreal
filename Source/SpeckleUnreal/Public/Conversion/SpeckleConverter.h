@@ -20,6 +20,8 @@ class SPECKLEUNREAL_API USpeckleConverter : public UInterface
 
 /**
  *  Interface for conversion functions (ToSpeckle and ToNative) of a specific speckle type(s).
+ *
+ *  Implementors of this interface provide conversion functions of specific types : Base
  */
 class SPECKLEUNREAL_API ISpeckleConverter
 {

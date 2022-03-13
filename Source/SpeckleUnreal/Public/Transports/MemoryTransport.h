@@ -8,7 +8,7 @@
 #include "MemoryTransport.generated.h"
 
 /**
- * 
+ * An in memory storage of speckle objects.
  */
 UCLASS(Transient, BlueprintType)
 class SPECKLEUNREAL_API UMemoryTransport : public UObject, public ITransport
@@ -23,8 +23,7 @@ public:
 	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) override;
 	
 	virtual bool HasObject(const FString& ObjectId) const override;
-	virtual void CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction) override;
-
+	virtual void CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction) override { unimplemented(); }
 
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
 	static UMemoryTransport* CreateEmptyMemoryTransport()

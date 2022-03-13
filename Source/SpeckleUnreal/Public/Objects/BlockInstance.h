@@ -7,7 +7,6 @@
 
 #include "BlockInstance.generated.h"
 
-class UBase;
 /**
  * 
  */

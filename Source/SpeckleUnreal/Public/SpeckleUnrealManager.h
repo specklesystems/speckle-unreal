@@ -33,6 +33,10 @@ public:
 	// When true, will call `Receive` on BeginPlay
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", AdvancedDisplay)
 	bool ImportAtRuntime;
+
+	// When true, will maintain an in-memory (transient) cache of received speckle objects
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", AdvancedDisplay)
+	bool IsKeepCacheEnabled;
 	
 	// The Conversion component to convert received speckle objects into native Actors
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -68,5 +72,5 @@ protected:
 	// Callback when error
 	virtual void HandleError(FString& Message);
 	
-	virtual void PrintMessage(FString& Message, bool IsError);
+	virtual void PrintMessage(FString& Message, bool IsError = false) const;
 };

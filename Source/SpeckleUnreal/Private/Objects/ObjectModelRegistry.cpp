@@ -1,11 +1,10 @@
-﻿#include "Objects/RegisteringBase.h"
+﻿#include "Objects/ObjectModelRegistry.h"
 
 #include "Objects/Base.h"
 
-//TOptional<TMap<FString, TSubclassOf<UBase>>> URegisteringBase::TypeRegistry;
-TMap<FString, TSubclassOf<UBase>> URegisteringBase::TypeRegistry;
+TMap<FString, TSubclassOf<UBase>> UObjectModelRegistry::TypeRegistry;
 
-void URegisteringBase::GenerateTypeRegistry()
+void UObjectModelRegistry::GenerateTypeRegistry()
 {
 	//TypeRegistry.Reset();
 	TypeRegistry.Empty();
@@ -34,7 +33,7 @@ void URegisteringBase::GenerateTypeRegistry()
 
 
 
-TSubclassOf<UBase> URegisteringBase::FindClosestType(const FString& SpeckleType)
+TSubclassOf<UBase> UObjectModelRegistry::FindClosestType(const FString& SpeckleType)
 {
 	FString TypeString(SpeckleType);
 	TSubclassOf<UBase> Type = nullptr;
@@ -57,14 +56,14 @@ TSubclassOf<UBase> URegisteringBase::FindClosestType(const FString& SpeckleType)
 	
 }
 
-TSubclassOf<UBase> URegisteringBase::GetRegisteredType(const FString& SpeckleType)
+TSubclassOf<UBase> UObjectModelRegistry::GetRegisteredType(const FString& SpeckleType)
 {
 	TSubclassOf<UBase> Type = nullptr;
 	TryGetRegisteredType(SpeckleType, Type);
 	return Type;
 }
 
-bool URegisteringBase::TryGetRegisteredType(const FString& SpeckleType, TSubclassOf<UBase>& OutType)
+bool UObjectModelRegistry::TryGetRegisteredType(const FString& SpeckleType, TSubclassOf<UBase>& OutType)
 {
 	if(TypeRegistry.Num() == 0) GenerateTypeRegistry();
 

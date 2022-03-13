@@ -9,8 +9,10 @@
 #include "BlockConverter.generated.h"
 
 class UBlockInstance;
+
 /**
- * 
+ *  Converts Speckle Block Instance objects empty native actors with transform.
+ *  The Block Definition can then be converted by other converters
  */
 UCLASS()
 class SPECKLEUNREAL_API UBlockConverter : public UObject, public ISpeckleConverter

@@ -28,7 +28,7 @@ UObject* UMaterialConverter::ConvertToNative_Implementation(const UBase* Speckle
 {
 	const URenderMaterial* m = Cast<URenderMaterial>(SpeckleBase);
 	
-	if(m == nullptr) return nullptr;
+	if(m == nullptr) return DefaultMeshMaterial;
 	
 	return GetMaterial(m);
 }

@@ -11,6 +11,10 @@ class ITransport;
 class ISpeckleConverter;
 class UBase;
 
+
+/**
+ * An Actor Component for encapsulating recursive conversion of Speckle Objects
+ */
 UCLASS(ClassGroup=(Speckle), meta=(BlueprintSpawnableComponent))
 class SPECKLEUNREAL_API USpeckleConverterComponent : public UActorComponent
 {
@@ -20,11 +24,11 @@ public:
 	
 	// Array of converters
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle|Conversion")
-	UAggregateConverter* SpeckleConverters;
+	UAggregateConverter* SpeckleConverter;
 	
 	// Sets default values for this component's properties
 	USpeckleConverterComponent();
-
+	
 	// Converts the given Base and all children into native actors.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, TArray<AActor*>& OutActors);

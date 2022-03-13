@@ -14,6 +14,11 @@ class UMesh;
 class URenderMaterial;
 
 
+/**
+ * Converts Speckle Mesh objects into native Actors with a StaticMesh component
+ *
+ * Can convert multiple Speckle Mesh objects (eg with different materials) in one StaticMesh  
+ */
 UCLASS()
 class SPECKLEUNREAL_API UStaticMeshConverter : public UObject, public ISpeckleConverter
 {
@@ -29,9 +34,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EComponentMobility::Type> ActorMobility;
 
+#if WITH_EDITORONLY_DATA
 	// If true, will use the full Editor Only build process
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseFullBuild;
+#endif
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool GenerateLightmapUV;
@@ -42,6 +49,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool Transient;
 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	bool BuildReversedIndexBuffer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+    bool UseFullPrecisionUVs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	bool RemoveDegeneratesOnBuild;
 	
 public:
 	// Sets default values for this actor's properties

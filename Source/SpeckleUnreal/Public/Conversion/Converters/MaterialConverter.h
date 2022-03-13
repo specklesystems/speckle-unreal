@@ -20,7 +20,7 @@ enum EConstMaterialOptions
 
 
 /**
- *  Encapsulates conversion of URenderMaterial --> UMaterialInterface
+ *  Converts Speckle RenderMaterial objects into native Materials
  */
 UCLASS(BlueprintType, Blueprintable)
 class SPECKLEUNREAL_API UMaterialConverter : public UObject, public ISpeckleConverter

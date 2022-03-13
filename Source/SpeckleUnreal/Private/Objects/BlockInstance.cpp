@@ -15,28 +15,33 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 	const float ScaleFactor = UConversionUtils::ParseScaleFactor(Units);
 
 	//Transform
-	const TArray<TSharedPtr<FJsonValue>>* TransformData;
-	if()
 	{
-	
-	}
-	else if(Obj->TryGetArrayField("transform", TransformData))
-	return false
-	DynamicProperties.Remove("transform");
-	
-	FMatrix TransformMatrix;
-	for(int32 Row = 0; Row < 4; Row++)
-		for(int32 Col = 0; Col < 4; Col++)
-		{
-			TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
-		}
-	TransformMatrix = TransformMatrix.GetTransposed();
-	//TransformMatrix.Mirror(EAxis::None, EAxis::Z); //Convert between Speckle's RH  and UE's LH coordinate system
-	//TransformMatrix.ScaleTranslation(FVector(ScaleFactor, -ScaleFactor, ScaleFactor));
-	
-	TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
+		const TSharedPtr<FJsonObject>* TransformObject;
+		const TArray<TSharedPtr<FJsonValue>>* TransformData;
+		
+		if(Obj->TryGetArrayField("transform", TransformData)) //Handle transform as array
+		{ }
+		else if(Obj->TryGetObjectField("transform", TransformObject)
+			&& (*TransformObject)->TryGetArrayField("value", TransformData)) //Handle transform as object
+		{ }
+		else return false;
+		
+		DynamicProperties.Remove("transform");
+		
+		FMatrix TransformMatrix;
+		for(int32 Row = 0; Row < 4; Row++)
+			for(int32 Col = 0; Col < 4; Col++)
+			{
+				TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
+			}
+		TransformMatrix = TransformMatrix.GetTransposed();
+		//TransformMatrix.Mirror(EAxis::None, EAxis::Z); //Convert between Speckle's RH  and UE's LH coordinate system
+		//TransformMatrix.ScaleTranslation(FVector(ScaleFactor, -ScaleFactor, ScaleFactor));
+		
+		TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
 
-	Transform = TransformMatrix;
+		Transform = TransformMatrix;
+	}
 
 	//Geometries
 	const TSharedPtr<FJsonObject>* BlockDefinitionPtr;

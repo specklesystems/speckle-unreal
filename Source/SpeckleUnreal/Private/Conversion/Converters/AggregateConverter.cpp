@@ -5,11 +5,6 @@
 #include "LogSpeckle.h"
 
 
-// Sets default values for this component's properties
-UAggregateConverter::UAggregateConverter()
-{
-	
-}
 
 void UAggregateConverter::OnConvertersChangeHandler()
 {
@@ -64,7 +59,7 @@ UObject* UAggregateConverter::ConvertToNativeInternal(const UBase* Object, UWorl
 	{
 		if(Type != UBase::StaticClass())
 		{
-			UE_LOG(LogSpeckle, Warning, TEXT("Skipping Object %s: No actor conversion functions exist for %s"), *Object->Id, *Type->GetName());
+			UE_LOG(LogSpeckle, Warning, TEXT("Skipping Object %s: No conversion functions exist for %s"), *Object->Id, *Type->GetName());
 		}
 		return nullptr;
 	}
