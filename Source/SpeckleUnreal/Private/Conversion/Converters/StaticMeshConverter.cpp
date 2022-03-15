@@ -8,12 +8,12 @@
 #include "StaticMeshOperations.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/StaticMeshActor.h"
-#include "Objects/Mesh.h"
+#include "Objects/Geometry/Mesh.h"
 #include "LogSpeckle.h"
 #include "API/SpeckleSerializer.h"
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Objects/DisplayValueElement.h"
-#include "Objects/RenderMaterial.h"
+#include "Objects/Other/RenderMaterial.h"
 
 UStaticMeshConverter::UStaticMeshConverter()
 {
@@ -28,7 +28,7 @@ UStaticMeshConverter::UStaticMeshConverter()
 	
 	BuildReversedIndexBuffer = true;
 	UseFullPrecisionUVs = false;
-	RemoveDegeneratesOnBuild = false;
+	RemoveDegeneratesOnBuild = true;
 		
 	MeshActorType = AStaticMeshActor::StaticClass();
 	ActorMobility = EComponentMobility::Static;
@@ -38,7 +38,7 @@ AActor* UStaticMeshConverter::CreateEmptyActor(UWorld* World, const FTransform& 
 {
 	AActor* Actor = World->SpawnActor<AActor>(MeshActorType, Transform, SpawnParameters);
 	if(Actor->HasValidRootComponent())
-		Actor->GetRootComponent()->SetMobility(ActorMobility);
+		Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable); //Create actor as movable for now, we will change it later to the desired mobility
 	return Actor;
 }
 
@@ -85,8 +85,16 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 		//No existing mesh was found, try and convert SpeckleMesh
 		Mesh = MeshesToNativeMesh(Package, Parent, SpeckleMeshes, RenderMaterialConverter);
 	}
+
+	FMatrix Transform = FMatrix::Identity;
+	// For single mesh, we check for transform
+	//TODO figure out how to handle DisplayValueElement with transform. Maybe we just grab transform from parent unconditionally? How does this affect blocks?
+	if(Parent == SpeckleMeshes[0])
+	{
+		Transform = SpeckleMeshes[0]->Transform;
+	}
 	
-	AActor* Actor = CreateEmptyActor(World);
+	AActor* Actor = CreateEmptyActor(World, FTransform(Transform));
 	TInlineComponentArray<UStaticMeshComponent*> Components;
 	Actor->GetComponents<UStaticMeshComponent>(Components);
 	
@@ -106,18 +114,16 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 	for(const UMesh* DisplayMesh : SpeckleMeshes)
 	{
 		URenderMaterial* MaterialToConvert = DisplayMesh->RenderMaterial;
-		// if(!MaterialToConvert)
-		// {
-		// 	//Try and grab a material from the parent
-		// 	//TODO figure out how to do this
-		// 	USpeckleSerializer::DeserializeBase(Parent->DynamicProperties["renderMaterial"]);
-		// }
-		
 		if(!MaterialToConvert)
 		{
-		    // Create a fake render material,  (since nullptr doesn't have a type, speckle converters don't know how to convert it)
-			// If the converter wants to handle this specially, The material has an empty Id
-		    MaterialToConvert = NewObject<URenderMaterial>(GetTransientPackage(), "NullSpeckleMaterial");
+		    //Try and grab a material from the parent
+		 	const auto* MaterialProperty = Parent->DynamicProperties.Find("renderMaterial");
+			const TSharedPtr<FJsonObject>* MaterialObject;
+		 	if(MaterialProperty && (*MaterialProperty)->TryGetObject(MaterialObject))
+		 	{
+		 		//TODO giving a nullptr transport is pretty unsafe and relies on the deserializer not to have to dereference a detached property.
+		 	    MaterialToConvert = Cast<URenderMaterial>(USpeckleSerializer::DeserializeBase(*MaterialObject, nullptr));
+		    }
 		}
 		UMaterialInterface* Material = GetMaterial(MaterialToConvert, World, RenderMaterialConverter);
 		
@@ -126,6 +132,9 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 
 		i++;
 	}
+
+	if(Actor->HasValidRootComponent())
+		Actor->GetRootComponent()->SetMobility(ActorMobility);
 	
 	return Actor;
 }
@@ -133,6 +142,12 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 
 UMaterialInterface* UStaticMeshConverter::GetMaterial(const URenderMaterial* SpeckleMaterial, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter) const
 {
+	if(!SpeckleMaterial)
+	{
+		// Create a fake render material,  (since nullptr doesn't have a type, speckle converters don't know how to convert it)
+		// If the converter wants to handle this specially, The material has an empty Id
+		SpeckleMaterial = NewObject<URenderMaterial>(GetTransientPackage(), "NullSpeckleMaterial");
+	}
 	return Cast<UMaterialInterface>(Execute_ConvertToNative(MaterialConverter.GetObject(), SpeckleMaterial, World, MaterialConverter));
 }
 

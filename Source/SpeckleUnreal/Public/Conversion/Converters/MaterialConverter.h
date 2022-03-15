@@ -68,6 +68,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual bool TryGetOverride(const URenderMaterial* SpeckleMaterial, UMaterialInterface*& OutMaterial) const;
 
+	
+
 	UFUNCTION(BlueprintCallable)
 	virtual UMaterialInterface* GetMaterial(const URenderMaterial* SpeckleMaterial);
 	
@@ -85,6 +87,9 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	virtual UPackage* GetPackage(const FString& ObjectID) const;
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	virtual FString RemoveInvalidFileChars(const FString& InString) const;
 
 #if WITH_EDITOR
 	UFUNCTION(BlueprintCallable, BlueprintPure)

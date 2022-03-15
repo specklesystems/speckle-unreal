@@ -35,6 +35,9 @@ public:
 	///	Returns nullptr if none found.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
 	static TSubclassOf<UBase> FindClosestType(const FString& SpeckleType);
+	
+	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
+	static bool ParentType(const FString& Type, FString& NextType);
 
 	/// Attempts to find a TSubclassOf<UBase> with a UBase::SpeckleType matching the given SpeckleType param
 	///	Returns nullptr if none found.

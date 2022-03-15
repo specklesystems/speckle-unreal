@@ -40,7 +40,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual void ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, TArray<AActor*>& OutActors);
-
+	
+	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
+	virtual void AttachConvertedToOwner(AActor* AOwner, const UBase* Base, UObject* Converted);
 };
 
 

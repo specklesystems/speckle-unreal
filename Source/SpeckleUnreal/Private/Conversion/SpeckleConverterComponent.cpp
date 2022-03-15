@@ -7,7 +7,7 @@
 #include "Conversion/Converters/BlockConverter.h"
 #include "Conversion/Converters/PointCloudConverter.h"
 #include "Conversion/Converters/StaticMeshConverter.h"
-
+#include "Conversion/Converters/MaterialConverter.h"
 
 // Sets default values for this component's properties
 USpeckleConverterComponent::USpeckleConverterComponent()
@@ -35,6 +35,29 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 
 
 
+AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
+                                                               const TScriptInterface<ITransport>& LocalTransport,
+                                                               TArray<AActor*>& OutActors)
+{
+	check(IsValid(AOwner));
+	if(!IsValid(Base)) return nullptr;
+
+	// Convert Speckle Object
+	UObject* Converted = SpeckleConverter->ConvertToNativeInternal(Base, AOwner->GetWorld());
+	AttachConvertedToOwner(AOwner, Base, Converted);
+
+	// Handle new actors
+	AActor* ConvertedAsActor = Cast<AActor>(Converted);
+	AActor* NextOwner =  IsValid(ConvertedAsActor) ? ConvertedAsActor : AOwner;
+	if(NextOwner != AOwner)
+	{
+		OutActors.Add(NextOwner);
+		OutActors.Append(NextOwner->Children);
+	}
+	
+	ConvertChildren(NextOwner, Base, LocalTransport, OutActors);
+	return AOwner;
+}
 
 void USpeckleConverterComponent::ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, TArray<AActor*>& OutActors)
 {
@@ -66,27 +89,19 @@ void USpeckleConverterComponent::ConvertChildren(AActor* AOwner, const UBase* Ba
 	}
 }
 
-AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
-                                                               const TScriptInterface<ITransport>& LocalTransport,
-                                                               TArray<AActor*>& OutActors)
+void USpeckleConverterComponent::AttachConvertedToOwner(AActor* AOwner, const UBase* Base, UObject* Converted)
 {
-	if(!IsValid(Base)) return nullptr;
 	
-	// Convert Base
-	UObject* Converted = SpeckleConverter->ConvertToNativeInternal(Base, AOwner->GetWorld());
-	AActor* Owner = AOwner;
-	
-	if(IsValid(Converted))
+	// Case Actor
 	{
-		// Handle Converted Object being an Actor
 		AActor* NativeActor = Cast<AActor>(Converted);
 		if(IsValid(NativeActor))
 		{
-#if WITH_EDITOR
+	#if WITH_EDITOR
 			NativeActor->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id));
-#endif
+	#endif
 		
-			// Ensure actor has a valid mobility for it's owner
+			// Ensure actor has a valid mobility for its owner
 			if(NativeActor->HasValidRootComponent())
 			{
 				uint8 CurrentMobility = NativeActor->GetRootComponent()->Mobility;
@@ -100,29 +115,27 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 		
 			NativeActor->AttachToActor(AOwner, FAttachmentTransformRules::KeepRelativeTransform);
 			NativeActor->SetOwner(AOwner);
-
-			OutActors.Add(NativeActor);
-			Owner = NativeActor;
+			return;
 		}
+	}
 
-		// Handle Converted Object being a Component
+	// Case ActorComponent
+	{
 		UActorComponent* NativeComponent = Cast<UActorComponent>(Converted);
 		if(IsValid(NativeComponent))
 		{
-			if(!Owner->HasValidRootComponent()) Owner->SetRootComponent(NewObject<USceneComponent>(Owner));
+			if(!AOwner->HasValidRootComponent()) AOwner->SetRootComponent(NewObject<USceneComponent>(AOwner));
 
 			USceneComponent* SceneComponent = Cast<USceneComponent>(Converted);
-			if(IsValid(SceneComponent)) SceneComponent->SetupAttachment(Owner->GetRootComponent());
+			if(IsValid(SceneComponent)) SceneComponent->SetupAttachment(AOwner->GetRootComponent());
 
 			NativeComponent->RegisterComponent();
+			return;
 		}
-		
 	}
 	
-	ConvertChildren(Owner, Base, LocalTransport, OutActors);
-	
-	return Owner;
 }
+
 
 void USpeckleConverterComponent::CleanUp()
 {

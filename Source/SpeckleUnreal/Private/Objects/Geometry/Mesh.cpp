@@ -1,37 +1,32 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/Mesh.h"
+#include "Objects/Geometry/Mesh.h"
 
-#include "Conversion/ConversionUtils.h"
-#include "Objects/RenderMaterial.h"
+#include "Objects/Other/RenderMaterial.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Transports/Transport.h"
 
 bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 {
 	if(!Super::Parse(Obj, ReadTransport)) return false;
-	const float ScaleFactor = UConversionUtils::ParseScaleFactor(Units);
+	const float ScaleFactor = USpeckleObjectUtils::ParseScaleFactor(Units);
 
 	//Parse optional Transform
+	if(USpeckleObjectUtils::TryParseTransform(Obj, Transform))
+	{
+		Transform.ScaleTranslation(FVector(ScaleFactor));
+		DynamicProperties.Remove("transform");
+	}
+	else
 	{
 		Transform = FMatrix::Identity;
-
-		const TArray<TSharedPtr<FJsonValue>>* TransformData = nullptr;
-		if(Obj->HasField("properties") && Obj->GetObjectField("properties")->TryGetArrayField("transform", TransformData))
-		{
-			for(int32 Row = 0; Row < 4; Row++)
-				for(int32 Col = 0; Col < 4; Col++)
-				{
-					Transform.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
-				}
-			Transform = Transform.GetTransposed();
-			Transform.ScaleTranslation(FVector(ScaleFactor));
-		}
 	}
+	
 
 	//Parse Vertices
 	{
-		TArray<TSharedPtr<FJsonValue>> ObjectVertices = UConversionUtils::CombineChunks(Obj->GetArrayField("vertices"), ReadTransport);
+		TArray<TSharedPtr<FJsonValue>> ObjectVertices = USpeckleObjectUtils::CombineChunks(Obj->GetArrayField("vertices"), ReadTransport);
 		const int32 NumberOfVertices = ObjectVertices.Num() / 3;
 
 		Vertices.Reserve(NumberOfVertices);
@@ -50,7 +45,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 
 	//Parse Faces
 	{
-		const TArray<TSharedPtr<FJsonValue>> FaceVertices = UConversionUtils::CombineChunks(Obj->GetArrayField("faces"), ReadTransport);
+		const TArray<TSharedPtr<FJsonValue>> FaceVertices = USpeckleObjectUtils::CombineChunks(Obj->GetArrayField("faces"), ReadTransport);
 		Faces.Reserve(FaceVertices.Num());
 		for(const auto VertIndex : FaceVertices)
 		{
@@ -64,7 +59,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 		const TArray<TSharedPtr<FJsonValue>>* TextCoordArray;
 		if(Obj->TryGetArrayField("textureCoordinates", TextCoordArray))
 		{
-			TArray<TSharedPtr<FJsonValue>> TexCoords = UConversionUtils::CombineChunks(*TextCoordArray, ReadTransport);
+			TArray<TSharedPtr<FJsonValue>> TexCoords = USpeckleObjectUtils::CombineChunks(*TextCoordArray, ReadTransport);
 	
 			TextureCoordinates.Reserve(TexCoords.Num() / 2);
 	
@@ -85,7 +80,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 		const TArray<TSharedPtr<FJsonValue>>* ColorArray;
 		if(Obj->TryGetArrayField("colors", ColorArray))
 		{
-			TArray<TSharedPtr<FJsonValue>> Colors = UConversionUtils::CombineChunks(*ColorArray, ReadTransport);
+			TArray<TSharedPtr<FJsonValue>> Colors = USpeckleObjectUtils::CombineChunks(*ColorArray, ReadTransport);
 	
 			VertexColors.Reserve(Colors.Num());
 	

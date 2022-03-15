@@ -1,6 +1,6 @@
 ﻿#include "Conversion/Converters/BlockConverter.h"
 
-#include "Objects/BlockInstance.h"
+#include "Objects/Other/BlockInstance.h"
 
 UBlockConverter::UBlockConverter()
 {

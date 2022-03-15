@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Base.h"
+#include "Objects/Base.h"
 
 #include "Mesh.generated.h"
 

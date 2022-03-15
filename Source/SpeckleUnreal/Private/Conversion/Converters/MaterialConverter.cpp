@@ -5,7 +5,7 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstanceConstant.h"
-#include "Objects/RenderMaterial.h"
+#include "Objects/Other/RenderMaterial.h"
 
 
 UMaterialConverter::UMaterialConverter()
@@ -87,7 +87,10 @@ bool UMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMaterial, 
 	return false;
 }
 
-
+FString UMaterialConverter::RemoveInvalidFileChars(const FString& InString) const
+{
+	return FPaths::MakeValidFileName(InString.Replace(TEXT("."), TEXT("_"), ESearchCase::CaseSensitive));
+}
 
 UMaterialInterface* UMaterialConverter::RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, UPackage* Package)
 {
@@ -99,7 +102,7 @@ UMaterialInterface* UMaterialConverter::RenderMaterialToNative(const URenderMate
 #if WITH_EDITOR
 	if (ShouldCreateConstMaterial(UseConstMaterials))
 	{
-		const FName Name = MakeUniqueObjectName(Package, UMaterialInstanceConstant::StaticClass(), *FPaths::MakeValidFileName(SpeckleMaterial->Name));
+		const FName Name = MakeUniqueObjectName(Package, UMaterialInstanceConstant::StaticClass(), *RemoveInvalidFileChars(SpeckleMaterial->Name));
 
 		//TStrongObjectPtr< UMaterialInstanceConstantFactoryNew > MaterialFact( NewObject< UMaterialInstanceConstantFactoryNew >() );
 		//MaterialFact->InitialParent = MaterialBase;

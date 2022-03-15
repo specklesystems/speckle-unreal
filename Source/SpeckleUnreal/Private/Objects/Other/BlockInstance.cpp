@@ -1,47 +1,24 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/BlockInstance.h"
+#include "Objects/Other/BlockInstance.h"
 #include "LogSpeckle.h"
 
 #include "API/SpeckleSerializer.h"
-#include "Conversion/ConversionUtils.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Transports/Transport.h"
 
 bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInterface<ITransport> ReadTransport)
 {
 	if(!Super::Parse(Obj, ReadTransport)) return false;
 	
-	const float ScaleFactor = UConversionUtils::ParseScaleFactor(Units);
+	const float ScaleFactor = USpeckleObjectUtils::ParseScaleFactor(Units);
 
 	//Transform
-	{
-		const TSharedPtr<FJsonObject>* TransformObject;
-		const TArray<TSharedPtr<FJsonValue>>* TransformData;
-		
-		if(Obj->TryGetArrayField("transform", TransformData)) //Handle transform as array
-		{ }
-		else if(Obj->TryGetObjectField("transform", TransformObject)
-			&& (*TransformObject)->TryGetArrayField("value", TransformData)) //Handle transform as object
-		{ }
-		else return false;
-		
-		DynamicProperties.Remove("transform");
-		
-		FMatrix TransformMatrix;
-		for(int32 Row = 0; Row < 4; Row++)
-			for(int32 Col = 0; Col < 4; Col++)
-			{
-				TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
-			}
-		TransformMatrix = TransformMatrix.GetTransposed();
-		//TransformMatrix.Mirror(EAxis::None, EAxis::Z); //Convert between Speckle's RH  and UE's LH coordinate system
-		//TransformMatrix.ScaleTranslation(FVector(ScaleFactor, -ScaleFactor, ScaleFactor));
-		
-		TransformMatrix.ScaleTranslation(FVector(ScaleFactor));
-
-		Transform = TransformMatrix;
-	}
+	if(!USpeckleObjectUtils::TryParseTransform(Obj, Transform)) return false;
+	Transform.ScaleTranslation(FVector(ScaleFactor));
+	DynamicProperties.Remove("Transform");
+	
 
 	//Geometries
 	const TSharedPtr<FJsonObject>* BlockDefinitionPtr;
@@ -50,7 +27,7 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 	const FString RefID = BlockDefinitionPtr->operator->()->GetStringField("referencedId");
 	const TSharedPtr<FJsonObject> BlockDefinition = ReadTransport->GetSpeckleObject(RefID);
 	
-	BlockDefinition->TryGetStringField("name", Name);
+	if(BlockDefinition->TryGetStringField("name", Name)) DynamicProperties.Remove("Name");
 
 	const auto Geometries = BlockDefinition->GetArrayField("geometry");
 
@@ -72,8 +49,8 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 				Geometry.Add(Child);
 		}
 		else UE_LOG(LogSpeckle, Warning, TEXT("Block definition references an unknown object id: %s"), *ChildId)
-		
 	}
+	DynamicProperties.Remove("geometry");
 	
 	// Intentionally don't remove blockDefinition from dynamic properties,
 	// because we want the converter to create the child geometries for us

@@ -2,7 +2,7 @@
 
 #include "Objects/Base.h"
 #include "LogSpeckle.h"
-#include "Conversion/ConversionUtils.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Objects/ObjectModelRegistry.h"
 #include "Transports/Transport.h"
 
@@ -13,7 +13,7 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, co
 
 	{ // Handle Detached Objects
 		TSharedPtr<FJsonObject> DetachedObject;
-		if(UConversionUtils::ResolveReference(Obj, ReadTransport, DetachedObject))
+		if(USpeckleObjectUtils::ResolveReference(Obj, ReadTransport, DetachedObject))
 		{
 			return DeserializeBase(DetachedObject, ReadTransport);
 		}
@@ -24,19 +24,35 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, co
 	FString ObjectId = "";	
 	Obj->TryGetStringField("id", ObjectId);
 		
-	TSubclassOf<UBase> BaseType = UObjectModelRegistry::FindClosestType(SpeckleType);
-	
-	if(BaseType == nullptr)
-	{
-		UE_LOG(LogSpeckle, Verbose, TEXT("Skipping deserialization of %s %s: Unrecognised SpeckleType"), *SpeckleType, *ObjectId );
-		BaseType = UBase::StaticClass();
-	}
-	
-	UBase* Base =  NewObject<UBase>(GetTransientPackage(), BaseType);
-	if(Base->Parse(Obj, ReadTransport)) return Base;
+	TSubclassOf<UBase> BaseType;
 
-	//TODO maybe we try the next closest type here, rather than failing after the first try.
-	UE_LOG(LogSpeckle, Verbose, TEXT("Skipping deserialization of %s %s: Object could not be deserialised to closest type %s"), *SpeckleType, *ObjectId, *BaseType->GetName());
+	FString WorkingType(SpeckleType);
+	
+	int32 Tries = 1000;
+	while(ensure(Tries-- > 0))
+	{
+		//Try and deserialize
+		if(UObjectModelRegistry::TryGetRegisteredType(WorkingType, BaseType))
+		{
+			UBase* Base = NewObject<UBase>(GetTransientPackage(), BaseType);
+			if(Base->Parse(Obj, ReadTransport))
+				return Base; 
+		}
+
+		//If we couldn't even deserialize this to a Base
+		if(WorkingType == "Base" || BaseType == UBase::StaticClass())
+		{
+			UE_LOG(LogSpeckle, Warning, TEXT("Skipping deserilization of %s id: %s - object could not be deserilaized to Base"), *SpeckleType, *ObjectId );
+			return nullptr;
+		}
+
+		//Try the next type
+		if(!UObjectModelRegistry::ParentType(WorkingType, WorkingType))
+		{
+			WorkingType = "Base";
+			UE_LOG(LogSpeckle, Verbose, TEXT("Unrecognised SpeckleType %s - Object id: %s Will be deserialized as Base"), *SpeckleType, *ObjectId );
+		}
+	}
 	return nullptr;
 }
 

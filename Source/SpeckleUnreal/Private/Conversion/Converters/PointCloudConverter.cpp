@@ -5,7 +5,7 @@
 
 #include "LidarPointCloudActor.h"
 #include "LidarPointCloudComponent.h"
-#include "Objects/PointCloud.h"
+#include "Objects/Geometry/PointCloud.h"
 
 
 UPointCloudConverter::UPointCloudConverter()

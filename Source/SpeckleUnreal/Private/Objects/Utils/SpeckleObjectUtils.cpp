@@ -1,11 +1,11 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Conversion/ConversionUtils.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Transports/Transport.h"
 
 
-TArray<TSharedPtr<FJsonValue>> UConversionUtils::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField, const TScriptInterface<ITransport> Transport)
+TArray<TSharedPtr<FJsonValue>> USpeckleObjectUtils::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField, const TScriptInterface<ITransport> Transport)
 {
 	TArray<TSharedPtr<FJsonValue>> ObjectPoints;
 		
@@ -25,7 +25,7 @@ TArray<TSharedPtr<FJsonValue>> UConversionUtils::CombineChunks(const TArray<TSha
 	return ObjectPoints;
 }
 
-bool UConversionUtils::ResolveReference(const TSharedPtr<FJsonObject> Object, const TScriptInterface<ITransport> Transport, TSharedPtr<FJsonObject>& OutObject)
+bool USpeckleObjectUtils::ResolveReference(const TSharedPtr<FJsonObject> Object, const TScriptInterface<ITransport> Transport, TSharedPtr<FJsonObject>& OutObject)
 {
 	FString SpeckleType;	
 	FString ReferenceID;
@@ -40,7 +40,7 @@ bool UConversionUtils::ResolveReference(const TSharedPtr<FJsonObject> Object, co
 	return false;
 }
 
-float UConversionUtils::ParseScaleFactor(const FString& UnitsString)
+float USpeckleObjectUtils::ParseScaleFactor(const FString& UnitsString)
 {
 	static const auto ParseUnits = [](const FString& LUnits) -> float
 	{
@@ -66,4 +66,26 @@ float UConversionUtils::ParseScaleFactor(const FString& UnitsString)
 	};
 
 	return ParseUnits(UnitsString.ToLower()); // * WorldToCentimeters; //TODO take into account world units
+}
+
+bool USpeckleObjectUtils::TryParseTransform(const TSharedPtr<FJsonObject> SpeckleObject, FMatrix& OutMatrix)
+{
+	const TSharedPtr<FJsonObject>* TransformObject;
+	const TArray<TSharedPtr<FJsonValue>>* TransformData;
+		
+	if(SpeckleObject->TryGetArrayField("transform", TransformData)) //Handle transform as array
+	{ }
+	else if(SpeckleObject->TryGetObjectField("transform", TransformObject)
+		&& (*TransformObject)->TryGetArrayField("value", TransformData)) //Handle transform as object
+	{ }
+	else return false;
+		
+	FMatrix TransformMatrix;
+	for(int32 Row = 0; Row < 4; Row++)
+		for(int32 Col = 0; Col < 4; Col++)
+		{
+			TransformMatrix.M[Row][Col] = TransformData->operator[](Row * 4 + Col)->AsNumber();
+		}
+	OutMatrix = TransformMatrix.GetTransposed();
+	return true;
 }

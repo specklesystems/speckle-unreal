@@ -3,29 +3,31 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Base.h"
-#include "PointCloud.generated.h"
+#include "Objects/Base.h"
+
+#include "BlockInstance.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SPECKLEUNREAL_API UPointCloud : public UBase
+class SPECKLEUNREAL_API UBlockInstance : public UBase
 {
 	GENERATED_BODY()
-
+	
 public:
 
-	UPointCloud() : UBase(TEXT("Objects.Geometry.Pointcloud")) {}
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
+	FString Name;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<FVector> Points;
+	TArray<UBase*> Geometry;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<FColor> Colors;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
-	TArray<float> Sizes;
+	FMatrix Transform;
+	
+	UBlockInstance() : UBase(TEXT("Objects.Other.BlockInstance")) {}
 
 	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
+
 };

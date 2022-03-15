@@ -4,7 +4,7 @@
 #include "Objects/DisplayValueElement.h"
 
 #include "API/SpeckleSerializer.h"
-#include "Objects/Mesh.h"
+#include "Objects/Geometry/Mesh.h"
 
 
 TArray<FString> UDisplayValueElement::DisplayValueAliasStrings = {

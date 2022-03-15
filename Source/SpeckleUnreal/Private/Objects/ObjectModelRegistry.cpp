@@ -40,20 +40,25 @@ TSubclassOf<UBase> UObjectModelRegistry::FindClosestType(const FString& SpeckleT
 
 	while(!TryGetRegisteredType(TypeString, Type))
 	{
-		
-		int32 DotSplitIndex;
-		TypeString.FindLastChar('.', DotSplitIndex);
-		int32 ColonSplitIndex;
-		TypeString.FindLastChar(':', ColonSplitIndex);
-		const int32 SplitIndex = FGenericPlatformMath::Max(DotSplitIndex, ColonSplitIndex);
-
-		if(SplitIndex <= 0) return nullptr;
-		
-		TypeString = TypeString.Left(SplitIndex);
+		if(!ParentType(TypeString, TypeString)) return nullptr;
 	}
 		
 	return Type;
 	
+}
+
+bool UObjectModelRegistry::ParentType(const FString& Type, FString& NextType)
+{
+	int32 DotSplitIndex;
+	Type.FindLastChar('.', DotSplitIndex);
+	int32 ColonSplitIndex;
+	Type.FindLastChar(':', ColonSplitIndex);
+	const int32 SplitIndex = FGenericPlatformMath::Max(DotSplitIndex, ColonSplitIndex);
+
+	if(SplitIndex <= 0) return false;
+		
+	NextType = Type.Left(SplitIndex);
+	return true;
 }
 
 TSubclassOf<UBase> UObjectModelRegistry::GetRegisteredType(const FString& SpeckleType)

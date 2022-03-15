@@ -4,12 +4,14 @@
 
 #include "ProceduralMeshComponent.h"
 #include "Conversion/Converters/MaterialConverter.h"
-#include "Objects/Mesh.h"
-#include "Objects/RenderMaterial.h"
+#include "Objects/DisplayValueElement.h"
+#include "Objects/Geometry/Mesh.h"
+#include "Objects/Other/RenderMaterial.h"
 
 UProceduralMeshConverter::UProceduralMeshConverter()
 {
     SpeckleTypes.Add(UMesh::StaticClass());
+    SpeckleTypes.Add(UDisplayValueElement::StaticClass());
     
     MeshActorType = AActor::StaticClass();
     ActorMobility = EComponentMobility::Static;
@@ -18,10 +20,29 @@ UProceduralMeshConverter::UProceduralMeshConverter()
 UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters )
 {
     const UMesh* m = Cast<UMesh>(SpeckleBase);
-	
-    if(m == nullptr) return nullptr;
-	
-    return MeshToNative(m, World, AvailableConverters);
+    if(m != nullptr)	
+        return MeshToNative(m, World, AvailableConverters);
+    
+    const UDisplayValueElement* d = Cast<UDisplayValueElement>(SpeckleBase);
+    if(d)
+    {
+        AActor* Parent = CreateEmptyActor(World, FTransform());
+        for(const UMesh* Child : d->DisplayValue)
+        {
+            AActor* ChildActor = MeshToNative(Child, World, AvailableConverters);
+            if(IsValid(ChildActor))
+            {
+#if WITH_EDITOR
+                ChildActor->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Child->SpeckleType, *Child->Id));
+#endif
+                ChildActor->GetRootComponent()->SetMobility(ActorMobility);
+                ChildActor->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
+                ChildActor->SetOwner(Parent);
+            }
+        }
+        return Parent;
+    }
+    return nullptr;
 }
 
 AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter)

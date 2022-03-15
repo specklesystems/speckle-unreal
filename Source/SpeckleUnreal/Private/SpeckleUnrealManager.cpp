@@ -127,7 +127,7 @@ void ASpeckleUnrealManager::DeleteObjects()
 	
 	for (AActor* a : Actors)
 	{
-		a->Destroy();
+		if(IsValid(a)) a->Destroy();
 	}
 
 	Actors.Empty();

@@ -3,15 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ConversionUtils.generated.h"
+#include "SpeckleObjectUtils.generated.h"
 
 class ITransport;
 
 /**
- *  Several helper functions useful for handling Speckle Objects
+ *  Several helper functions useful for handling JSON Speckle Objects
  */
 UCLASS()
-class SPECKLEUNREAL_API UConversionUtils : public UBlueprintFunctionLibrary
+class SPECKLEUNREAL_API USpeckleObjectUtils : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
@@ -20,7 +20,9 @@ public:
     
     static bool ResolveReference(const TSharedPtr<FJsonObject> Object, const TScriptInterface<ITransport> Transport, TSharedPtr<FJsonObject>& OutObject);
 
-	UFUNCTION()
+	static bool TryParseTransform(const TSharedPtr<FJsonObject> SpeckleObject, FMatrix& OutMatrix);
+	
+	UFUNCTION(BlueprintCallable)
 	static float ParseScaleFactor(const FString& UnitsString);
-
+	
 };
