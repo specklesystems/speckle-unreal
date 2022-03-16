@@ -29,19 +29,19 @@ class SPECKLEUNREAL_API ISpeckleConverter
 
 public:
 	/// Will return true if this converter can convert a given BaseType
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	bool CanConvertToNative(TSubclassOf<UBase> BaseType);
 	
 	/// Tries to convert a given SpeckleBase into a native Actor
-	UFUNCTION(BlueprintNativeEvent)
-	UObject* ConvertToNative(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UObject* ConvertToNative(const UBase* SpeckleBase, UWorld* World, UPARAM(ref) TScriptInterface<ISpeckleConverter>& AvailableConverters);
 
 	/// Tries to convert a given Actor or Component into a Speckle Base
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	UBase* ConvertToSpeckle(const UObject* Object);
 
 	/// Clean up any cached assets that now may be unused
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void CleanUp();
 	
 };
