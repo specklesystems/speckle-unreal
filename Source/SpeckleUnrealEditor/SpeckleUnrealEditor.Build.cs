@@ -1,12 +1,10 @@
 using UnrealBuildTool;
 
-public class SpeckleUnreal : ModuleRules
+public class SpeckleUnrealEditor : ModuleRules
 {
-	public SpeckleUnreal(ReadOnlyTargetRules Target) : base(Target)
+	public SpeckleUnrealEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicDefinitions.Add("SUPPRESS_SPECKLE_ANALYTICS=0");
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -28,11 +26,9 @@ public class SpeckleUnreal : ModuleRules
 				"Core",
 				"Http", 
 				"Json", 
-				"JsonUtilities", 
-				"ProceduralMeshComponent",
-				"MeshDescription",
-				"StaticMeshDescription", 
-				"LidarPointCloudRuntime",
+				"JsonUtilities",
+				"UnrealEd", 
+				"SpeckleUnreal",
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);
@@ -44,7 +40,7 @@ public class SpeckleUnreal : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore", "ICU", "AlembicLib",
+				"SlateCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 		);

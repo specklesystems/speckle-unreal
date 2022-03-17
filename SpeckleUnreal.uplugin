@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.0.1",
+	"VersionName": "2.4.0",
 	"FriendlyName": "SpeckleUnreal",
 	"Description": "Speckle is an open source data platform for Architecture, Engineering, and Construction. It has been open sourced under the MIT license, is customizable, and available in the cloud or via a self-hosted server. It allows users to exchange data between various AEC modelling and content creation platforms.",
 	"Category": "AEC",
@@ -9,7 +9,7 @@
 	"CreatedByURL": "https://speckle.systems/",
 	"DocsURL": "https://github.com/specklesystems/speckle-unreal",
 	"MarketplaceURL": "",
-	"SupportURL": "",
+	"SupportURL": "https://speckle.community/",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
@@ -19,6 +19,11 @@
 			"Name": "SpeckleUnreal",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "SpeckleUnrealEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
 		}
 	],
 	"Plugins": [
