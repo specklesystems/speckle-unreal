@@ -76,7 +76,7 @@ bool UMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMaterial, 
 	const FString Name = SpeckleMaterial->Name;
 	for (const UMaterialInterface* Mat : MaterialOverridesByName)
 	{
-		if(Mat->GetName() == Name)
+		if(ensureAlways(IsValid(Mat)) && Mat->GetName() == Name)
 		{
 			OutMaterial = MaterialOverridesById[MaterialID];
 			return true;
