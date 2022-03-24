@@ -2,6 +2,9 @@
 
 
 #include "Objects/Utils/SpeckleObjectUtils.h"
+
+#include "API/SpeckleSerializer.h"
+#include "Objects/Geometry/Mesh.h"
 #include "Transports/Transport.h"
 
 
@@ -68,6 +71,16 @@ float USpeckleObjectUtils::ParseScaleFactor(const FString& UnitsString)
 	return ParseUnits(UnitsString.ToLower()); // * WorldToCentimeters; //TODO take into account world units
 }
 
+FTransform USpeckleObjectUtils::CreateTransform(UPARAM(ref) const FMatrix& TransformMatrix)
+{
+	FTransform Transform(TransformMatrix);
+	Transform.ScaleTranslation(FVector(1,-1,1));
+	FVector Rot = Transform.GetRotation().Euler();
+	FVector NewRot(-Rot.X, Rot.Y, -Rot.Z);
+	Transform.SetRotation(FQuat::MakeFromEuler(NewRot));
+	return Transform;
+}
+
 bool USpeckleObjectUtils::TryParseTransform(const TSharedPtr<FJsonObject> SpeckleObject, FMatrix& OutMatrix)
 {
 	const TSharedPtr<FJsonObject>* TransformObject;
@@ -88,4 +101,58 @@ bool USpeckleObjectUtils::TryParseTransform(const TSharedPtr<FJsonObject> Speckl
 		}
 	OutMatrix = TransformMatrix.GetTransposed();
 	return true;
+}
+
+bool USpeckleObjectUtils::ParseVectorProperty(const TSharedPtr<FJsonObject> Base, const FString& PropertyName,
+	const TScriptInterface<ITransport> ReadTransport, FVector& OutObject)
+{
+	const TSharedPtr<FJsonObject>* OriginObject;
+	if(Base->TryGetObjectField(PropertyName, OriginObject)
+		&& ParseVector(*OriginObject, ReadTransport, OutObject))
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+bool USpeckleObjectUtils::ParseVector(const TSharedPtr<FJsonObject> Object,
+	const TScriptInterface<ITransport> Transport, FVector& OutObject)
+{
+	if(!ensure(Object != nullptr)) return false;
+	
+	TSharedPtr<FJsonObject> Obj;
+	if(!ResolveReference(Object, Transport, Obj)) Obj = Object;
+	
+	double x,y,z;
+	
+	if(!(Obj->TryGetNumberField("x", x)
+		&& Obj->TryGetNumberField("y", y)
+		&& Obj->TryGetNumberField("z", z))) return false;
+
+	OutObject = FVector(x,y,z);
+	//return true;
+
+	UMesh* mesh;
+	return ParseSpeckleObject<UMesh>(Obj, Transport, mesh);
+}
+
+template <typename TBase>  
+bool USpeckleObjectUtils::ParseSpeckleObject(const TSharedPtr<FJsonObject> Object,
+	const TScriptInterface<ITransport> Transport, TBase*& OutObject)
+{
+	static_assert(TIsDerivedFrom<TBase, UBase>::IsDerived, "Type TBase must inherit UBase");
+
+	TSharedPtr<FJsonObject> Obj;
+	if(!ResolveReference(Object, Transport, Obj)) Obj = Object;
+	
+	UBase* b = USpeckleSerializer::DeserializeBase(Object, Transport);
+	OutObject = Cast<TBase>(b);
+	return OutObject == nullptr;
+}
+
+
+AActor* USpeckleObjectUtils::SpawnActorInWorld(const TSubclassOf<AActor> Class, UWorld* World, const FTransform& Transform)
+{
+	return World->SpawnActor(Class, &Transform, FActorSpawnParameters());
 }

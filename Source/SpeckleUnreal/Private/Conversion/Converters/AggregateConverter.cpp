@@ -55,7 +55,7 @@ UObject* UAggregateConverter::ConvertToNativeInternal(const UBase* Object, UWorl
 	
 	const TSubclassOf<UBase> Type = Object->GetClass();
 	UObject* Converter = GetConverter(Type).GetObject();
-	if(Converter == nullptr)
+	if(!IsValid(Converter))
 	{
 		if(Type != UBase::StaticClass())
 		{
@@ -69,6 +69,8 @@ UObject* UAggregateConverter::ConvertToNativeInternal(const UBase* Object, UWorl
 	FEditorScriptExecutionGuard ScriptGuard;
 	
 	TScriptInterface<ISpeckleConverter> MainConverter = this;
+	
+	check(Converter->IsValidLowLevel());
 	return Execute_ConvertToNative(Converter, Object, World, MainConverter);
 
 }
@@ -118,6 +120,7 @@ void UAggregateConverter::CleanUpInternal()
 		
 		Execute_CleanUp(Converter);
 	}
+	OnConvertersChangeHandler();
 }
 
 bool UAggregateConverter::CheckValidConverter(const UObject* Converter, bool LogWarning)

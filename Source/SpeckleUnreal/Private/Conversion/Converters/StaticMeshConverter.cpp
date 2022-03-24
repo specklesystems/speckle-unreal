@@ -14,6 +14,7 @@
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Objects/DisplayValueElement.h"
 #include "Objects/Other/RenderMaterial.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 
 UStaticMeshConverter::UStaticMeshConverter()
 {
@@ -29,6 +30,7 @@ UStaticMeshConverter::UStaticMeshConverter()
 	BuildReversedIndexBuffer = true;
 	UseFullPrecisionUVs = false;
 	RemoveDegeneratesOnBuild = true;
+	MinLightmapResolution = 64;
 		
 	MeshActorType = AStaticMeshActor::StaticClass();
 	ActorMobility = EComponentMobility::Static;
@@ -94,7 +96,7 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 		Transform = SpeckleMeshes[0]->Transform;
 	}
 	
-	AActor* Actor = CreateEmptyActor(World, FTransform(Transform));
+	AActor* Actor = CreateEmptyActor(World, USpeckleObjectUtils::CreateTransform(Transform));
 	TInlineComponentArray<UStaticMeshComponent*> Components;
 	Actor->GetComponents<UStaticMeshComponent>(Components);
 	
@@ -186,6 +188,7 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 		SrcModel.BuildSettings.bGenerateLightmapUVs = GenerateLightmapUV;
 		SrcModel.BuildSettings.SrcLightmapIndex = 0;
 		SrcModel.BuildSettings.DstLightmapIndex = 1;
+		SrcModel.BuildSettings.MinLightmapResolution = MinLightmapResolution;
 	}
 #endif
 
@@ -238,14 +241,14 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 		{
 			int32 n = SpeckleMesh->Faces[i];
 			if(n < 3) n += 3; // 0 -> 3, 1 -> 4
-		
+			
 			TArray<FVertexInstanceID> VertexInstances;
 			VertexInstances.Reserve(n);
 			TSet<FVertexID> Verts;
 			Verts.Reserve(n);
 			for(int j = 0; j < n; j ++)
 			{
-				int32 VertIndex = SpeckleMesh->Faces[i + n - j];
+				int32 VertIndex = SpeckleMesh->Faces[i + 1 + j];
 				FVertexID Vert = Vertices[VertIndex];
 				bool AlreadyInSet;
 				Verts.Add(Vert, &AlreadyInSet);

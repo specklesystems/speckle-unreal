@@ -36,7 +36,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 			Vertices.Add(Transform.InverseTransformPosition(FVector
 			(
 				ObjectVertices[j].Get()->AsNumber(),
-				ObjectVertices[j + 1].Get()->AsNumber(),
+				-ObjectVertices[j + 1].Get()->AsNumber(),
 				ObjectVertices[j + 2].Get()->AsNumber()
 			) * ScaleFactor ));
 		}

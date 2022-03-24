@@ -3,6 +3,7 @@
 
 #include "Conversion/SpeckleConverterComponent.h"
 
+#include "ActorEditorUtils.h"
 #include "API/SpeckleSerializer.h"
 #include "Conversion/Converters/BlockConverter.h"
 #include "Conversion/Converters/PointCloudConverter.h"
@@ -17,7 +18,7 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 	static ConstructorHelpers::FObjectFinder<UPointCloudConverter> PointCloudConverter(TEXT("PointCloudConverter'/SpeckleUnreal/Converters/DefaultPointCloudConverter.DefaultPointCloudConverter'"));
 	static ConstructorHelpers::FObjectFinder<UBlockConverter> BlockConverter(TEXT("BlockConverter'/SpeckleUnreal/Converters/DefaultBlockConverter.DefaultBlockConverter'"));
 	static ConstructorHelpers::FObjectFinder<UMaterialConverter> MaterialConverter(TEXT("MaterialConverter'/SpeckleUnreal/Converters/DefaultMaterialConverter.DefaultMaterialConverter'"));
-	//static ConstructorHelpers::FObjectFinder<UCameraConverter> CameraConverter(TEXT("CameraConverter'/SpeckleUnreal/Converters/DefaultCameraConverter.DefaultCameraConverter'"));
+	static ConstructorHelpers::FObjectFinder<UObject> CameraConverter(TEXT("CameraConverter'/SpeckleUnreal/Converters/DefaultCameraConverter.DefaultCameraConverter'"));
 	//static ConstructorHelpers::FObjectFinder<ULightConverter> LightConverter(TEXT("LightConverter'/SpeckleUnreal/Converters/DefaultLightConverter.DefaultLightConverter'"));
 
 	SpeckleConverter = CreateDefaultSubobject<UAggregateConverter>(TEXT("Objects Converter"));
@@ -26,7 +27,7 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 	SpeckleConverter->SpeckleConverters.Add(PointCloudConverter.Object);
 	SpeckleConverter->SpeckleConverters.Add(BlockConverter.Object);
 	SpeckleConverter->SpeckleConverters.Add(MaterialConverter.Object);
-	//SpeckleConverter->SpeckleConverters.Add(CameraConverter.Object);
+	SpeckleConverter->SpeckleConverters.Add(CameraConverter.Object);
 	//SpeckleConverter->SpeckleConverters.Add(LightConverter.Object);
 	
 	PrimaryComponentTick.bCanEverTick = false;
@@ -98,7 +99,15 @@ void USpeckleConverterComponent::AttachConvertedToOwner(AActor* AOwner, const UB
 		if(IsValid(NativeActor))
 		{
 	#if WITH_EDITOR
-			NativeActor->SetActorLabel(FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id));
+			{
+				FString Name;
+				FText _Discard;
+				if( !(Base->TryGetDynamicString("name", Name) && FActorEditorUtils::ValidateActorName(FText::FromString(Name), _Discard)) )
+				{
+					Name = FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id);
+				}
+				NativeActor->SetActorLabel(Name);
+			}
 	#endif
 		
 			// Ensure actor has a valid mobility for its owner

@@ -40,8 +40,6 @@ public:
 	bool UseFullBuild;
 #endif
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool GenerateLightmapUV;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool BuildSimpleCollision;
@@ -49,6 +47,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool Transient;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	bool GenerateLightmapUV;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	int32 MinLightmapResolution;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	bool BuildReversedIndexBuffer;
