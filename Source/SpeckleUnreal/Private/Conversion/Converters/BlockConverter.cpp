@@ -1,6 +1,7 @@
 ﻿#include "Conversion/Converters/BlockConverter.h"
 
 #include "Objects/Other/BlockInstance.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 
 UBlockConverter::UBlockConverter()
 {
@@ -20,7 +21,7 @@ UObject* UBlockConverter::ConvertToNative_Implementation(const UBase* SpeckleBas
 
 AActor* UBlockConverter::BlockToNative(const UBlockInstance* Block, UWorld* World)
 {
-	AActor* BlockActor = CreateEmptyActor(World, FTransform(Block->Transform));
+	AActor* BlockActor = CreateEmptyActor(World, USpeckleObjectUtils::CreateTransform(Block->Transform));
 	//Return the block actor as is,
 	//Other converter logic will convert child geometries because UBlockInstance intentionally left them as dynamic properties
 	return BlockActor;

@@ -7,6 +7,7 @@
 #include "Objects/DisplayValueElement.h"
 #include "Objects/Geometry/Mesh.h"
 #include "Objects/Other/RenderMaterial.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 
 UProceduralMeshConverter::UProceduralMeshConverter()
 {
@@ -47,7 +48,7 @@ UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* S
 
 AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter)
 {
-    AActor* MeshActor = CreateEmptyActor(World, FTransform(SpeckleMesh->Transform));
+    AActor* MeshActor = CreateEmptyActor(World, USpeckleObjectUtils::CreateTransform(SpeckleMesh->Transform));
     UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));
     MeshComponent->SetupAttachment(MeshActor->GetRootComponent());
     MeshComponent->RegisterComponent();

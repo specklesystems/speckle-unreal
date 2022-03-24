@@ -16,8 +16,8 @@
 // Sets default values
 ASpeckleUnrealManager::ASpeckleUnrealManager()
 {
-	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
-	RootComponent->SetRelativeScale3D(FVector(1,-1,1)); // Flip the Y because Speckle uses right handed coordinates, unreal uses left handed
+	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("Root")));
+	RootComponent->SetRelativeScale3D(FVector(1,1,1));
     RootComponent->SetMobility(EComponentMobility::Static);
 
 	Converter = CreateDefaultSubobject<USpeckleConverterComponent>(FName("Converter"));

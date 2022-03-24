@@ -55,7 +55,7 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 		if(!bWasSuccessful)
 		{
 			FString Message = FString::Printf(TEXT("Stream Request failed: %s"), *Response->GetContentAsString());
-			this->OnError.Execute(Message);
+			ensureAlwaysMsgf(this->OnError.ExecuteIfBound(Message), TEXT("Unhandled error - %s"), *Message);
 			return;
 		}
 		
@@ -63,7 +63,7 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 		if (ResponseCode != 200)
 		{
 			FString Message = FString::Printf(TEXT("Can't get object %s/%s: HTTP error %d"), *StreamId, *ObjectId, ResponseCode);
-			this->OnError.Execute(Message);
+			ensureAlwaysMsgf(this->OnError.ExecuteIfBound(Message), TEXT("Unhandled error - %s"), *Message);
 			return;
 		}
 
@@ -86,8 +86,7 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 
 			TargetTransport->SaveObject(Id, JsonObject);
 		}
-
-		this->OnComplete.Execute(TargetTransport->GetSpeckleObject(ObjectId));
+		ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(ObjectId)), TEXT("Complete handler was not bound properly"));
 
 	};
 	
