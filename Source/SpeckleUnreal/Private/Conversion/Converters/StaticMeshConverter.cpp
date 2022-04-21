@@ -352,6 +352,10 @@ void UStaticMeshConverter::GenerateMeshParams(UStaticMesh::FBuildMeshDescription
 	MeshParams.bCommitMeshDescription = true;
 	MeshParams.bMarkPackageDirty = true;
 	MeshParams.bUseHashAsGuid = false;
+
+#if !WITH_EDITOR && ENGINE_MAJOR_VERSION >= 5
+	MeshParams.bFastBuild = true;
+#endif
 }
 
 
