@@ -44,8 +44,8 @@ public:
 	// Validates a given object is a valid ISpeckleConverter
 	static bool CheckValidConverter(const UObject* Converter, bool LogWarning = true);
 
-	void CleanUpInternal();
-	virtual void CleanUp_Implementation() override;
+	void FinishConversion_Internal();
+	virtual void FinishConversion_Implementation() override;
 
 	// Validates changes to SpeckleConverters property, Should be called after modifying SpeckleConverters
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")

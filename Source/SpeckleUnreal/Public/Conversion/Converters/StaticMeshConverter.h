@@ -38,6 +38,14 @@ public:
 	// If true, will use the full Editor Only build process
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseFullBuild;
+
+	// When true, will display FSlowTask progress of editor only build process
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	bool DisplayBuildProgressBar;
+
+	// When true, will allow cancellation of FSlowTask progress of editor only build process
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	bool AllowCancelBuild;
 #endif
 	
 
@@ -61,14 +69,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	bool RemoveDegeneratesOnBuild;
-	
 public:
 	// Sets default values for this actor's properties
 	UStaticMeshConverter();
 	
 	virtual UObject* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters) override;
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
-	virtual void CleanUp_Implementation() override;
+	virtual void FinishConversion_Implementation() override;
 	
 	// Converts a multiple Speckle Meshes to a native actor of type MeshActorType
 	UFUNCTION(BlueprintCallable)
@@ -86,6 +93,10 @@ public:
 
 	
 protected:
+
+	FCriticalSection Lock_StaticMeshesToBuild;
+	TArray<UStaticMesh*> StaticMeshesToBuild;
+	
 	virtual void GenerateMeshParams(UStaticMesh::FBuildMeshDescriptionsParams& MeshParams) const;
 	
 	UFUNCTION(BlueprintCallable)

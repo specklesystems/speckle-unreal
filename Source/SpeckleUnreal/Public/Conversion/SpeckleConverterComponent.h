@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Converters/AggregateConverter.h"
+#include "Misc/SlowTask.h"
 #include "SpeckleConverterComponent.generated.h"
+
 
 class ITransport;
 class ISpeckleConverter;
 class UBase;
-
+class UAggregateConverter;
 
 /**
  * An Actor Component for encapsulating recursive conversion of Speckle Objects
@@ -31,15 +32,17 @@ public:
 	
 	// Converts the given Base and all children into native actors.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	virtual UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, TArray<AActor*>& OutActors);
+	UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, bool DisplayProgressBar, TArray<AActor*>& OutActors);
+
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	virtual void CleanUp();
+	virtual void FinishConversion();
 
 protected:
 
-	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	virtual void ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, TArray<AActor*>& OutActors);
+	virtual AActor* RecursivelyConvertToNative_Internal(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors);
+	
+	virtual void ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors);
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual void AttachConvertedToOwner(AActor* AOwner, const UBase* Base, UObject* Converted);

@@ -77,7 +77,7 @@ public:
 	virtual UMaterialInterface* RenderMaterialToNative(const URenderMaterial* SpeckleMaterial, UPackage* Package);
 
 	UFUNCTION(BlueprintCallable)
-	virtual void CleanUp_Implementation() override;
+	virtual void FinishConversion_Implementation() override;
 	
 protected:
 	

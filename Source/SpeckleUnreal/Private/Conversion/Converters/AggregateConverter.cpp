@@ -107,18 +107,18 @@ TScriptInterface<ISpeckleConverter> UAggregateConverter::GetConverter(const TSub
 	return nullptr;
 }
 
-void UAggregateConverter::CleanUp_Implementation()
+void UAggregateConverter::FinishConversion_Implementation()
 {
-	CleanUpInternal();
+	FinishConversion_Internal();
 }
 
-void UAggregateConverter::CleanUpInternal()
+void UAggregateConverter::FinishConversion_Internal()
 {
 	for (UObject* Converter : SpeckleConverters)
 	{
 		if(!CheckValidConverter(Converter)) continue;
 		
-		Execute_CleanUp(Converter);
+		Execute_FinishConversion(Converter);
 	}
 	OnConvertersChangeHandler();
 }
