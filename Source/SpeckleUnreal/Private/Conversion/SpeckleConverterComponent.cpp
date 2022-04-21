@@ -5,10 +5,14 @@
 
 #include "ActorEditorUtils.h"
 #include "API/SpeckleSerializer.h"
+#include "Conversion/Converters/AggregateConverter.h"
 #include "Conversion/Converters/BlockConverter.h"
 #include "Conversion/Converters/PointCloudConverter.h"
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Conversion/Converters/MaterialConverter.h"
+#include "Misc/ScopedSlowTask.h"
+
+#define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
 // Sets default values for this component's properties
 USpeckleConverterComponent::USpeckleConverterComponent()
@@ -33,16 +37,30 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-
-
-
 AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
-                                                               const TScriptInterface<ITransport>& LocalTransport,
-                                                               TArray<AActor*>& OutActors)
+	const TScriptInterface<ITransport>& LocalTransport, bool DisplayProgressBar, TArray<AActor*>& OutActors)
+{
+	float ObjectsToConvert{};
+	Base->TryGetDynamicNumber("totalChildrenCount", ObjectsToConvert);
+	FScopedSlowTask Progress(ObjectsToConvert + 2, LOCTEXT("SpeckleConvertoNative","Converting Speckle Objects to Native"), DisplayProgressBar);
+#if WITH_EDITOR
+	Progress.MakeDialog(true, false);
+#endif
+	
+	AActor* RootActor = RecursivelyConvertToNative_Internal(AOwner, Base, LocalTransport, &Progress, OutActors);
+	
+	FinishConversion();
+	return RootActor;
+}
+
+AActor* USpeckleConverterComponent::RecursivelyConvertToNative_Internal(AActor* AOwner, const UBase* Base,
+                                                                        const TScriptInterface<ITransport>& LocalTransport,
+                                                                        FSlowTask* Task,
+                                                                        TArray<AActor*>& OutActors)
 {
 	check(IsValid(AOwner));
 	if(!IsValid(Base)) return nullptr;
-
+	
 	// Convert Speckle Object
 	UObject* Converted = SpeckleConverter->ConvertToNativeInternal(Base, AOwner->GetWorld());
 	AttachConvertedToOwner(AOwner, Base, Converted);
@@ -55,23 +73,28 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 		OutActors.Add(NextOwner);
 		OutActors.Append(NextOwner->Children);
 	}
+
+	Task->EnterProgressFrame(1);
+	if(Task->ShouldCancel()) return AOwner;
 	
-	ConvertChildren(NextOwner, Base, LocalTransport, OutActors);
+	ConvertChildren(NextOwner, Base, LocalTransport, Task, OutActors);
 	return AOwner;
 }
 
-void USpeckleConverterComponent::ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, TArray<AActor*>& OutActors)
+void USpeckleConverterComponent::ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors)
 {
 	//Convert Children
 	TMap<FString, TSharedPtr<FJsonValue>> PotentialChildren = Base->DynamicProperties;
 	
 	for (const auto& Kv : PotentialChildren)
 	{
+		if(Task->ShouldCancel()) return;
+		
 		const TSharedPtr<FJsonObject>* SubObjectPtr;
 		if (Kv.Value->TryGetObject(SubObjectPtr))
 		{
 			const UBase* Child = USpeckleSerializer::DeserializeBase(*SubObjectPtr, LocalTransport);
-			RecursivelyConvertToNative(AOwner, Child, LocalTransport,OutActors);
+			RecursivelyConvertToNative_Internal(AOwner, Child, LocalTransport, Task, OutActors);
 			continue;
 		}
 
@@ -84,7 +107,7 @@ void USpeckleConverterComponent::ConvertChildren(AActor* AOwner, const UBase* Ba
 				if (!ArrayElement->TryGetObject(ArraySubObjPtr)) continue;
 				
 				const UBase* Child = USpeckleSerializer::DeserializeBase(*ArraySubObjPtr, LocalTransport);
-				RecursivelyConvertToNative(AOwner, Child, LocalTransport,OutActors);
+				RecursivelyConvertToNative_Internal(AOwner, Child, LocalTransport, Task, OutActors);
 			}
 		}
 	}
@@ -146,7 +169,9 @@ void USpeckleConverterComponent::AttachConvertedToOwner(AActor* AOwner, const UB
 }
 
 
-void USpeckleConverterComponent::CleanUp()
+void USpeckleConverterComponent::FinishConversion()
 {
-	SpeckleConverter->CleanUpInternal();
+	SpeckleConverter->FinishConversion_Internal();
 }
+
+#undef LOCTEXT_NAMESPACE

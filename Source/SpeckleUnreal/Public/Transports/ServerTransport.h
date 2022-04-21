@@ -10,6 +10,16 @@
 
 class FHttpModule;
 
+// Data for graphQL request for object ids.
+USTRUCT()
+struct FObjectIdRequest
+{
+	GENERATED_BODY()
+		
+	UPROPERTY()
+	TArray<FString> Ids;
+};
+
 /**
  *  Transport for receiving objects from a Speckle Server
  */
@@ -26,6 +36,9 @@ protected:
 	FString StreamId;
 	UPROPERTY(meta=(PasswordField))
 	FString AuthToken;
+
+	UPROPERTY()
+	int32 MaxNumberOfObjectsPerRequest = 20000;
 
 	
 	FTransportCopyObjectCompleteDelegate OnComplete;
@@ -54,7 +67,27 @@ public:
  		const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  		const FTransportErrorDelegate& OnErrorAction) override;
 
+
 protected:
-	static int32 SplitLines(const FString& Content, TArray<FString>& OutLines);
+	virtual void HandleRootObjectResponse(const FString& RootObjSerialized, TScriptInterface<ITransport> TargetTransport, const FString& ObjectId) const;
+
+    /**
+	 * Iteratively fetches chunks of children
+	 * @param TargetTransport the transport to store the fetched objects
+	 * @param RootObjectId the id of the root object
+	 * @param ChildrenIds array of all children to be fetched
+	 * @param CStart the index in ChildrenIds of the start point of the current chunk
+	 */
+    virtual void FetchChildren(TScriptInterface<ITransport> TargetTransport,
+	                            const FString& RootObjectId,
+	                            const TArray<FString>& ChildrenIds,
+	                            int32 CStart = 0) const;
 	
+	virtual void InvokeOnError(FString& Message) const;
+
+	static bool LoadJson(const FString& ObjectJson, TSharedPtr<FJsonObject>& OutJsonObject);
+	static int32 SplitLines(const FString& Content, TArray<FString>& OutLines);
+
 };
+
+

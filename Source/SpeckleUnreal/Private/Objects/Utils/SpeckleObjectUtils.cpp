@@ -17,6 +17,9 @@ TArray<TSharedPtr<FJsonValue>> USpeckleObjectUtils::CombineChunks(const TArray<T
 		FString Index;
 		if(ArrayField[i]->AsObject()->TryGetStringField("referencedId", Index))
 		{
+			if(!ensureAlwaysMsgf(Transport->HasObject(Index), TEXT("Failed to Dechunk array, Could not find chunk %s in transport"), *Index))
+				continue;
+			
 			const auto Chunk = Transport->GetSpeckleObject(Index)->GetArrayField("data");;
 			ObjectPoints.Append(Chunk);
 		}
@@ -37,7 +40,9 @@ bool USpeckleObjectUtils::ResolveReference(const TSharedPtr<FJsonObject> Object,
 		&& SpeckleType == "reference"
 		&& Object->TryGetStringField("referencedId",ReferenceID))
 	{
-		OutObject = Transport->GetSpeckleObject(ReferenceID); //TODO Consider handle cases where transport doesn't have the object
+		check(Transport != nullptr && Transport.GetObject() != nullptr)
+		
+		OutObject = Transport->GetSpeckleObject(ReferenceID);
 		return OutObject != nullptr;
 	}
 	return false;

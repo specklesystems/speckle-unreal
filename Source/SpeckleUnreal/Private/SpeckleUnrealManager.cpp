@@ -9,6 +9,7 @@
 #include "Conversion/SpeckleConverterComponent.h"
 #include "Misc/ScopedSlowTask.h"
 #include "Objects/Base.h"
+#include "Mixpanel.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
@@ -22,7 +23,8 @@ ASpeckleUnrealManager::ASpeckleUnrealManager()
 
 	Converter = CreateDefaultSubobject<USpeckleConverterComponent>(FName("Converter"));
 	
-	IsKeepCacheEnabled = true;
+	KeepCache = true;
+	DisplayProgressBar = true;
 	ServerUrl = "https://speckle.xyz";
 }
 
@@ -44,49 +46,43 @@ void ASpeckleUnrealManager::Receive()
 	ObjectID.TrimEndInline();
 	AuthToken.TrimEndInline();
 
-	
-	
-	// Try and get object from local cache
-	if(IsKeepCacheEnabled && LocalObjectCache.GetInterface() != nullptr)
+	FAnalytics::TrackEvent("unknown", "unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }, {"worldType", FString::FromInt(GetWorld()->WorldType)}});
+
+	if(!KeepCache && LocalObjectCache.GetObjectRef() != nullptr)
 	{
-		auto Obj = LocalObjectCache->GetSpeckleObject(ObjectID);
-		if (Obj != nullptr )
-		{
-			HandleReceive(Obj);
-			return;
-		}
+		LocalObjectCache.GetObjectRef()->ConditionalBeginDestroy();
+		LocalObjectCache = UMemoryTransport::CreateEmptyMemoryTransport();
 	}
-	else
+	if(LocalObjectCache.GetObjectRef() == nullptr)
 	{
 		LocalObjectCache = UMemoryTransport::CreateEmptyMemoryTransport();
 	}
 	
-	
-	// Try and get object from server
-	TScriptInterface<ITransport> LocalTransport = IsKeepCacheEnabled? LocalObjectCache : UMemoryTransport::CreateEmptyMemoryTransport();
-	TScriptInterface<ITransport> ServerTransport = UServerTransport::CreateServerTransport(ServerUrl,StreamID,AuthToken);
-
-	
-	FTransportCopyObjectCompleteDelegate CompleteDelegate;
-	CompleteDelegate.BindUObject(this, &ASpeckleUnrealManager::HandleReceive);
-	FTransportErrorDelegate ErrorDelegate;
-	ErrorDelegate.BindUObject(this, &ASpeckleUnrealManager::HandleError);
+	UServerTransport* ServerTransport = UServerTransport::CreateServerTransport(ServerUrl,StreamID,AuthToken);
 
 	FString Message = FString::Printf(TEXT("Fetching Objects from Speckle Server: %s"), *ServerUrl);
 	PrintMessage(Message);
+
+	FTransportErrorDelegate ErrorDelegate;
+	ErrorDelegate.BindUObject(this, &ASpeckleUnrealManager::HandleError);
+	FTransportCopyObjectCompleteDelegate CompleteDelegate;
+	CompleteDelegate.BindUObject(this, &ASpeckleUnrealManager::HandleReceive, DisplayProgressBar);
 	
-	ServerTransport->CopyObjectAndChildren(ObjectID, LocalTransport, CompleteDelegate, ErrorDelegate);
+	
+	//Receive 
+	ServerTransport->CopyObjectAndChildren(ObjectID, LocalObjectCache, CompleteDelegate, ErrorDelegate);
 }
 
 
-void ASpeckleUnrealManager::HandleReceive(TSharedPtr<FJsonObject> RootObject)
+
+void ASpeckleUnrealManager::HandleReceive(TSharedPtr<FJsonObject> RootObject, bool DisplayProgress)
 {
 	if(RootObject == nullptr) return;
 	
 	const UBase* Res = USpeckleSerializer::DeserializeBase(RootObject, LocalObjectCache);
 	if(IsValid(Res))
 	{
-		Converter->RecursivelyConvertToNative(this, Res, LocalObjectCache, Actors);
+		Converter->RecursivelyConvertToNative(this, Res, LocalObjectCache, DisplayProgress, Actors);
 		
 		FString Message = FString::Printf(TEXT("Converted %d Actors"), Actors.Num());
 		PrintMessage(Message);
@@ -123,7 +119,7 @@ void ASpeckleUnrealManager::PrintMessage(FString& Message, bool IsError) const
 
 void ASpeckleUnrealManager::DeleteObjects()
 {
-	Converter->CleanUp();
+	Converter->FinishConversion();
 	
 	for (AActor* a : Actors)
 	{

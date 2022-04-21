@@ -42,7 +42,7 @@ public:
 
 	/// Clean up any cached assets that now may be unused
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void CleanUp();
+	void FinishConversion();
 	
 };
 

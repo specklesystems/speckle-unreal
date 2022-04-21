@@ -6,6 +6,7 @@
 #include "Transports/Transport.h"
 #include "API/SpeckleSerializer.h"
 #include "Objects/Base.h"
+#include "Mixpanel.h"
 
 
 UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObject, const FString& ObjectId, TScriptInterface<ITransport> RemoteTransport, TScriptInterface<ITransport> LocalTransport)
@@ -22,8 +23,9 @@ UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObje
 
 void UReceiveOperation::Activate()
 {
+	FAnalytics::TrackEvent("unknown", "unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+
 	//Async(EAsyncExecution::Thread, [this]{Receive();});
-	
 	Receive();
 }
 

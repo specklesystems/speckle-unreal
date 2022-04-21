@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "SpeckleUnrealManager.generated.h"
 
+class UServerTransport;
 class ITransport;
 class USpeckleConverterComponent;
 
@@ -36,22 +37,26 @@ public:
 
 	// When true, will maintain an in-memory (transient) cache of received speckle objects
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", AdvancedDisplay)
-	bool IsKeepCacheEnabled;
+	bool KeepCache;
 	
 	// The Conversion component to convert received speckle objects into native Actors
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	USpeckleConverterComponent* Converter;
+	
+	// Used to stagger transport requests, useful when making requests for a large number of child objects
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", AdvancedDisplay)
+	bool DisplayProgressBar;
 	
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
 
 	// Receives specified object from specified Speckle server
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Speckle")
-	void Receive();
+	virtual void Receive();
 
 	// Deletes the Actors created by the previous receive operation
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Speckle")
-	void DeleteObjects();
+	virtual void DeleteObjects();
 	
 	virtual void BeginPlay() override;
 
@@ -67,8 +72,8 @@ protected:
 	TArray<AActor*> Actors;
 
 	// Callback when JSON has been received
-	virtual void HandleReceive(TSharedPtr<FJsonObject> RootObject);
-
+	virtual void HandleReceive(TSharedPtr<FJsonObject> RootObject, bool DisplayProgress = false);
+	
 	// Callback when error
 	virtual void HandleError(FString& Message);
 	

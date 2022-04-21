@@ -144,7 +144,7 @@ UMaterialInterface* UMaterialConverter::RenderMaterialToNative(const URenderMate
 	
 }
 
-void UMaterialConverter::CleanUp_Implementation()
+void UMaterialConverter::FinishConversion_Implementation()
 {
 	ConvertedMaterials.Empty();
 }

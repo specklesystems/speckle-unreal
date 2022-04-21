@@ -12,9 +12,12 @@
 #include "LogSpeckle.h"
 #include "API/SpeckleSerializer.h"
 #include "Conversion/Converters/MaterialConverter.h"
+#include "Misc/ScopedSlowTask.h"
 #include "Objects/DisplayValueElement.h"
 #include "Objects/Other/RenderMaterial.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
+
+#define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
 UStaticMeshConverter::UStaticMeshConverter()
 {
@@ -23,6 +26,8 @@ UStaticMeshConverter::UStaticMeshConverter()
 	
 #if WITH_EDITORONLY_DATA
 	UseFullBuild = true;
+	DisplayBuildProgressBar = true;
+	AllowCancelBuild = false;
 #endif
 	Transient = false;
 	BuildSimpleCollision = true;
@@ -324,7 +329,11 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 	Mesh->BuildFromMeshDescriptions(TArray<const FMeshDescription*>{&BaseMeshDescription}, MeshParams);
 
 #if WITH_EDITOR
-	if(UseFullBuild) Mesh->Build(true); //This makes conversion time much slower, but is needed for generating lightmap UVs
+	if(UseFullBuild)
+	{
+		FScopeLock Lock(&Lock_StaticMeshesToBuild);
+		StaticMeshesToBuild.Add(Mesh);
+	}
 
 	if (!FApp::IsGame())
 	{
@@ -370,7 +379,29 @@ UBase* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object)
 }
 
 
-void UStaticMeshConverter::CleanUp_Implementation()
+void UStaticMeshConverter::FinishConversion_Implementation()
 {
 
+	FScopeLock Lock(&Lock_StaticMeshesToBuild);
+
+#if WITH_EDITOR
+	
+	FFormatNamedArguments Args;
+	Args.Add( TEXT("Path"), FText::FromString( GetPathName() ) );
+	const FText StatusUpdate = FText::Format( LOCTEXT("BeginStaticMeshBuildingTask", "({Path}) Building"), Args );
+	FScopedSlowTask Progress(StaticMeshesToBuild.Num(), StatusUpdate, DisplayBuildProgressBar);
+
+	Progress.MakeDialog(AllowCancelBuild);
+	auto ProgressAction = [&Progress](UStaticMesh*) -> bool
+	{
+		Progress.EnterProgressFrame(1);
+		return !Progress.ShouldCancel();
+	};
+	
+	UStaticMesh::BatchBuild(StaticMeshesToBuild, !DisplayBuildProgressBar,  ProgressAction);
+#endif
+
+	StaticMeshesToBuild.Empty();
 }
+
+#undef LOCTEXT_NAMESPACE
