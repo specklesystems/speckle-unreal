@@ -16,19 +16,19 @@ class SPECKLEUNREAL_API UView3D : public UBase
 
 public:
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|Objects")
 	FString Name;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|Objects")
 	FVector Origin;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|Objects")
 	FVector UpDirection;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|Objects")
 	FVector ForwardDirection;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|Objects")
 	bool IsOrthogonal;
 
 	UView3D() : UBase(TEXT("Objects.BuiltElements.View")) {}

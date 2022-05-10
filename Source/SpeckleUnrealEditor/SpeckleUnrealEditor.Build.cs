@@ -24,7 +24,7 @@ public class SpeckleUnrealEditor : ModuleRules
 			new string[]
 			{
 				"Core",
-				"Http", 
+				"HTTP", 
 				"Json", 
 				"JsonUtilities",
 				"UnrealEd", 

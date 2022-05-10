@@ -18,44 +18,44 @@ class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 	
 public:
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle")
 	FString ServerUrl;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle")
 	FString StreamID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle")
 	FString ObjectID;
 
 	// A Personal Access Token can be created from your Speckle Profile page (Treat tokens like passwords, do not share publicly) - Required for receiving private streams
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", meta=(PasswordField = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", meta=(PasswordField = true))
 	FString AuthToken;
 
 	// When true, will call `Receive` on BeginPlay
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", AdvancedDisplay)
 	bool ImportAtRuntime;
 
 	// When true, will maintain an in-memory (transient) cache of received speckle objects
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", AdvancedDisplay)
 	bool KeepCache;
 	
 	// The Conversion component to convert received speckle objects into native Actors
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, Category="Speckle", BlueprintReadWrite)
 	USpeckleConverterComponent* Converter;
 	
 	// Used to stagger transport requests, useful when making requests for a large number of child objects
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Speckle", AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", AdvancedDisplay)
 	bool DisplayProgressBar;
 	
 	// Sets default values for this actor's properties
 	ASpeckleUnrealManager();
 
 	// Receives specified object from specified Speckle server
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Speckle")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category="Speckle", meta=(DisplayPriority=0))
 	virtual void Receive();
 
 	// Deletes the Actors created by the previous receive operation
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Speckle")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category="Speckle" , meta=(DisplayAfter="Receive"))
 	virtual void DeleteObjects();
 	
 	virtual void BeginPlay() override;
@@ -64,11 +64,11 @@ public:
 protected:
 
 	// Cache received Speckle objects
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle")
 	TScriptInterface<ITransport> LocalObjectCache;
 
 	// Array of Actors created by the previous receive operation
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, Category="Speckle")
 	TArray<AActor*> Actors;
 
 	// Callback when JSON has been received
