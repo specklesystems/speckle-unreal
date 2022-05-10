@@ -24,10 +24,10 @@ class SPECKLEUNREAL_API UPointCloudConverter :  public UObject, public ISpeckleC
 	
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
 	TSubclassOf<ALidarPointCloudActor> PointCloudActorType;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
 	TEnumAsByte<EComponentMobility::Type> ActorMobility;
 	
 	UPointCloudConverter();
@@ -35,13 +35,13 @@ public:
 	virtual UObject* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>&) override;
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="ToNative")
 	virtual ALidarPointCloudActor* PointCloudToNative(const UPointCloud* SpecklePointCloud, UWorld* World);
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="ToSpeckle")
 	virtual UPointCloud* PointCloudToSpeckle(const ULidarPointCloudComponent* Object);
 
 protected:
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="ToNative")
 	virtual ALidarPointCloudActor* CreateActor(UWorld* World, ULidarPointCloud* PointCloudData);
 };

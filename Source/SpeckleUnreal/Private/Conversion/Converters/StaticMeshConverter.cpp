@@ -171,7 +171,12 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 {
 	if(SpeckleMeshes.Num() == 0) return nullptr;
 	
-	const EObjectFlags ObjectFags = Transient? RF_Transient | RF_Public : RF_Public;
+	EObjectFlags ObjectFags = Transient? RF_Transient | RF_Public : RF_Public;
+
+#if ENGINE_MAJOR_VERSION >= 5
+	ObjectFags |= RF_Standalone; //TODO maybe all versions should have RF_Standalone?
+#endif
+	
 	UStaticMesh* Mesh = NewObject<UStaticMesh>(Outer, FName(Parent->Id), ObjectFags);
 
 	Mesh->InitResources();
@@ -230,9 +235,12 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 		const FPolygonGroupID PolygonGroupID = StaticMeshDescription->CreatePolygonGroup();
 
 		StaticMeshDescription->SetPolygonGroupMaterialSlotName(PolygonGroupID, MaterialSlotName);
-	
-		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::None);
 
+#if ENGINE_MAJOR_VERSION >= 5
+		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2f>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2f::ZeroVector, EMeshAttributeFlags::None);
+#else
+		StaticMeshDescription->VertexInstanceAttributes().RegisterAttribute<FVector2D>(MeshAttribute::VertexInstance::TextureCoordinate, 2, FVector2D::ZeroVector, EMeshAttributeFlags::None);
+#endif
 		{
 			// Reserve space assuming faces will all be triangles //TODO (maybe it's better to assume something higher?)
 			const int32 EstimatedNumberOfFaces = SpeckleMesh->Faces.Num() / 4 * 3;
@@ -305,14 +313,14 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 	}
 			
 	
-#if ENGINE_MAJOR_VERSION <= 4
+#if ENGINE_MAJOR_VERSION >= 5
+	FStaticMeshOperations::ComputeTriangleTangentsAndNormals(BaseMeshDescription);
+#else
 	BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Normal, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
 	BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Tangent, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
 	BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Binormal, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
 	BaseMeshDescription.PolygonAttributes().RegisterAttribute<FVector>(MeshAttribute::Polygon::Center, 1, FVector::ZeroVector, EMeshAttributeFlags::Transient);
 	FStaticMeshOperations::ComputePolygonTangentsAndNormals(BaseMeshDescription);
-#else
-	FStaticMeshOperations::ComputeTriangleTangentsAndNormals(BaseMeshDescription);
 #endif
 	
 	FStaticMeshOperations::ComputeTangentsAndNormals(BaseMeshDescription, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
@@ -320,10 +328,10 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 	
 	//Mesh->PreEditChange(nullptr);
 	
-#if ENGINE_MAJOR_VERSION <= 4
-	Mesh->LightMapCoordinateIndex = 1;
-#else
+#if ENGINE_MAJOR_VERSION >= 5 || ( ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 27 )
 	Mesh->SetLightMapCoordinateIndex(1);
+#else
+	Mesh->LightMapCoordinateIndex = 1;
 #endif
 	
 	Mesh->BuildFromMeshDescriptions(TArray<const FMeshDescription*>{&BaseMeshDescription}, MeshParams);

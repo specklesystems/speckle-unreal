@@ -23,10 +23,10 @@ class SPECKLEUNREAL_API UBlockConverter : public UObject, public ISpeckleConvert
 public:
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
 	TSubclassOf<AActor> BlockInstanceActorType;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
 	TEnumAsByte<EComponentMobility::Type> ActorMobility;
 	
 	UBlockConverter();
@@ -34,7 +34,7 @@ public:
 	virtual UObject* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters) override;
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="ToNative")
 	virtual AActor* BlockToNative(const UBlockInstance* Block, UWorld* World);
 	
 protected:

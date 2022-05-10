@@ -107,7 +107,7 @@ UMaterialInterface* UMaterialConverter::RenderMaterialToNative(const URenderMate
 		//TStrongObjectPtr< UMaterialInstanceConstantFactoryNew > MaterialFact( NewObject< UMaterialInstanceConstantFactoryNew >() );
 		//MaterialFact->InitialParent = MaterialBase;
 		//UMaterialInstanceConstant* ConstMaterial = Cast< UMaterialInstanceConstant >( MaterialFact->FactoryCreateNew( UMaterialInstanceConstant::StaticClass(), Package, Name, RF_Public, nullptr, GWarn ) );
-		UMaterialInstanceConstant* ConstMaterial = NewObject<UMaterialInstanceConstant>(Package, Name, RF_Public);
+		UMaterialInstanceConstant* ConstMaterial = NewObject<UMaterialInstanceConstant>(Package, Name, RF_Public | RF_Standalone);
 		
 		MaterialInstance = ConstMaterial;
 		ConstMaterial->SetParentEditorOnly(MaterialBase);

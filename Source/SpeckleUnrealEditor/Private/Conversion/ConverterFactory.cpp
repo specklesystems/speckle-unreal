@@ -46,7 +46,11 @@ bool UConverterFactory::ConfigureProperties()
 	Options.Mode = EClassViewerMode::ClassPicker;
 
 	TSharedPtr<FInterfaceClassFilter> Filter = MakeShareable(new FInterfaceClassFilter);
+#if ENGINE_MAJOR_VERSION >= 5
+	Options.ClassFilters.Emplace(Filter.ToSharedRef());
+#else
 	Options.ClassFilter = Filter;
+#endif
 
 	Filter->InterfaceThatMustBeImplemented = USpeckleConverter::StaticClass();
 	Filter->bAllowAbstract = false;

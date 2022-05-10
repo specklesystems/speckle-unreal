@@ -30,13 +30,13 @@ public:
 	static bool ParseSpeckleObject(const TSharedPtr<FJsonObject> Object, const TScriptInterface<ITransport> Transport, T*& OutObject);
 
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Speckle/ObjectUtils")
 	static float ParseScaleFactor(const FString& UnitsString);
 
 	// Given a Right Handed Z-up transformation matrix (Speckle's system), will create an equivalent Left Handed Z-up FTransform (UE's system)
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category="Speckle/ObjectUtils")
 	static FTransform CreateTransform(UPARAM(ref) const FMatrix& TransformMatrix);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Speckle/ObjectUtils")
 	static AActor* SpawnActorInWorld(const TSubclassOf<AActor> Class, UWorld* World, UPARAM(ref) const FTransform& Transform);
 };
