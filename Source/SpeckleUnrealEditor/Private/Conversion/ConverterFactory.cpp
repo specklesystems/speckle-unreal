@@ -55,7 +55,7 @@ bool UConverterFactory::ConfigureProperties()
 	Filter->InterfaceThatMustBeImplemented = USpeckleConverter::StaticClass();
 	Filter->bAllowAbstract = false;
 	Filter->ClassPropertyMetaClass = UObject::StaticClass();
-	Filter->AllowedClassFilters = TArray<const UClass*> {UObject::StaticClass()};
+	Filter->AllowedClassFilters = {UObject::StaticClass()};
 	const FText TitleText = LOCTEXT("CreateConverterOptions", "Pick Converter Class");
 	UClass* ChosenClass = nullptr;
 	const bool bPressedOk = SClassPickerDialog::PickClass(TitleText, Options, ChosenClass, UObject::StaticClass());

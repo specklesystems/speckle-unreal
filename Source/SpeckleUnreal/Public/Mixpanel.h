@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "CoreMinimal.h"
+
 ///  Anonymous telemetry to help us understand how to make a better Speckle.
 ///  This really helps us to deliver a better open source project and product!
 class FAnalytics

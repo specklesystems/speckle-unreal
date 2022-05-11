@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Conversion/SpeckleConverter.h"
 #include "Engine/EngineTypes.h"
+#include "Engine/World.h"
+#include "Engine/StaticMesh.h"
 
 #include "StaticMeshConverter.generated.h"
 
@@ -95,6 +97,8 @@ public:
 protected:
 
 	FCriticalSection Lock_StaticMeshesToBuild;
+	
+	UPROPERTY(BlueprintReadWrite, Transient, Category="ToNative")
 	TArray<UStaticMesh*> StaticMeshesToBuild;
 	
 	virtual void GenerateMeshParams(UStaticMesh::FBuildMeshDescriptionsParams& MeshParams) const;

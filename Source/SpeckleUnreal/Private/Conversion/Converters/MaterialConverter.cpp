@@ -5,7 +5,9 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Objects/Other/RenderMaterial.h"
+#include "UObject/ConstructorHelpers.h"
 
 
 UMaterialConverter::UMaterialConverter()

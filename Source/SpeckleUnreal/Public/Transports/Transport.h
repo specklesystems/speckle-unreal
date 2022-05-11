@@ -5,9 +5,8 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "Dom/JsonObject.h"
-#include "Transport.generated.h"
 
-class ITransport;
+#include "Transport.generated.h"
 
 DECLARE_DELEGATE_OneParam(FTransportCopyObjectCompleteDelegate, TSharedPtr<FJsonObject>);
 DECLARE_DELEGATE_OneParam(FTransportErrorDelegate, FString&);

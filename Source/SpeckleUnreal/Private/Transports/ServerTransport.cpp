@@ -9,6 +9,7 @@
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Mixpanel.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
 
 
 TSharedPtr<FJsonObject> UServerTransport::GetSpeckleObject(const FString& ObjectId) const

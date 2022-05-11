@@ -3,8 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Conversion/SpeckleConverter.h"
 #include "UObject/Object.h"
+#include "Conversion/SpeckleConverter.h"
+
 #include "AggregateConverter.generated.h"
 
 /**

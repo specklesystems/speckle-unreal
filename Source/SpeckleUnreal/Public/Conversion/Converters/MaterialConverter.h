@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Conversion/SpeckleConverter.h"
 #include "UObject/Object.h"
+
 #include "MaterialConverter.generated.h"
 
 class URenderMaterial;
-class ASpeckleUnrealManager;
+class UMaterialInterface;
 
 UENUM()
 enum EConstMaterialOptions

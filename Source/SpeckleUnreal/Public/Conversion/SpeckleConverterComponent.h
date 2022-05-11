@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Misc/SlowTask.h"
+
 #include "SpeckleConverterComponent.generated.h"
 
 
@@ -12,6 +12,7 @@ class ITransport;
 class ISpeckleConverter;
 class UBase;
 class UAggregateConverter;
+struct FSlowTask;
 
 /**
  * An Actor Component for encapsulating recursive conversion of Speckle Objects

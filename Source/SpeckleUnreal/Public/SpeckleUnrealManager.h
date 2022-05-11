@@ -6,7 +6,7 @@
 class UServerTransport;
 class ITransport;
 class USpeckleConverterComponent;
-
+class FJsonObject;
 
 /**
  * An Actor to handle the receiving of Speckle objects into a level

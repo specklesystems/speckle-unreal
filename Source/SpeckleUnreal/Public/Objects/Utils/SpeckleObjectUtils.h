@@ -3,10 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "Templates/SubclassOf.h"
 #include "SpeckleObjectUtils.generated.h"
 
 class ITransport;
 class UBase;
+class FJsonValue;
+class FJsonObject;
+class UWorld;
+class AActor;
+
 /**
  *  Several helper functions useful for handling JSON Speckle Objects
  */

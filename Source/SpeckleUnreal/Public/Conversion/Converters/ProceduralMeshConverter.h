@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Conversion/SpeckleConverter.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/World.h"
 
 #include "ProceduralMeshConverter.generated.h"
 

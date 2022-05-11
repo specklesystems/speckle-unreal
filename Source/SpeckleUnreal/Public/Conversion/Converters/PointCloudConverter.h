@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Conversion/SpeckleConverter.h"
+#include "Engine/EngineTypes.h"
 
 #include "PointCloudConverter.generated.h"
 

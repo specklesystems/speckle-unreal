@@ -4,6 +4,7 @@
 
 #include "ProceduralMeshComponent.h"
 #include "Conversion/Converters/MaterialConverter.h"
+#include "Materials/MaterialInstance.h"
 #include "Objects/DisplayValueElement.h"
 #include "Objects/Geometry/Mesh.h"
 #include "Objects/Other/RenderMaterial.h"

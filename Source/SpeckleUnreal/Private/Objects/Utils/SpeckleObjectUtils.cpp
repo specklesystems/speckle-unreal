@@ -4,6 +4,7 @@
 #include "Objects/Utils/SpeckleObjectUtils.h"
 
 #include "API/SpeckleSerializer.h"
+#include "Engine/World.h"
 #include "Objects/Geometry/Mesh.h"
 #include "Transports/Transport.h"
 
@@ -129,7 +130,7 @@ bool USpeckleObjectUtils::ParseVector(const TSharedPtr<FJsonObject> Object,
 	TSharedPtr<FJsonObject> Obj;
 	if(!ResolveReference(Object, Transport, Obj)) Obj = Object;
 	
-	double x,y,z;
+	double x = 0, y = 0, z = 0;
 	
 	if(!(Obj->TryGetNumberField("x", x)
 		&& Obj->TryGetNumberField("y", y)
@@ -138,8 +139,8 @@ bool USpeckleObjectUtils::ParseVector(const TSharedPtr<FJsonObject> Object,
 	OutObject = FVector(x,y,z);
 	//return true;
 
-	UMesh* mesh;
-	return ParseSpeckleObject<UMesh>(Obj, Transport, mesh);
+	UMesh* Mesh;
+	return ParseSpeckleObject<UMesh>(Obj, Transport, Mesh);
 }
 
 template <typename TBase>  

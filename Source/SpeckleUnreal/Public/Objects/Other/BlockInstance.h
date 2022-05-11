@@ -30,4 +30,4 @@ public:
 
 	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
 
-};
+};	

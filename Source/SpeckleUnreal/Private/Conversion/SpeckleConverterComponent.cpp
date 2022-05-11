@@ -11,6 +11,7 @@
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Misc/ScopedSlowTask.h"
+#include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 

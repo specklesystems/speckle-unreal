@@ -1,9 +1,13 @@
 ﻿#pragma once
 
+#include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+
 #include "SpeckleSerializer.generated.h"
 
 class UBase;
 class ITransport;
+class FJsonObject;
 
 UCLASS()
 class USpeckleSerializer : public UBlueprintFunctionLibrary

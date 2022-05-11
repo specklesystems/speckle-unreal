@@ -6,12 +6,10 @@
 #include "CoreMinimal.h"
 #include "Objects/Base.h"
 #include "UObject/Interface.h"
+#include "Templates/SubclassOf.h"
 
 #include "SpeckleConverter.generated.h"
 
-class UBase;
-class ASpeckleUnrealManager;
-class ISpeckleConverter;
 
 UINTERFACE()
 class SPECKLEUNREAL_API USpeckleConverter : public UInterface

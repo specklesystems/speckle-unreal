@@ -44,7 +44,7 @@ public class SpeckleUnreal : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore", "ICU", "AlembicLib",
+				"SlateCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 		);

@@ -7,9 +7,9 @@
 
 #include "ReceiveOperation.generated.h"
 
-
 class ITransport;
 class UBase;
+class FJsonObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FRecieveOperationHandler, UBase*, RootBase, FString, ErrorMessage);
 

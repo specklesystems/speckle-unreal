@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Conversion/SpeckleConverter.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/World.h"
 
 #include "BlockConverter.generated.h"
 
