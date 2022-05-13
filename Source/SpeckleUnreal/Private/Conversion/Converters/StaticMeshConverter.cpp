@@ -299,8 +299,6 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 			{
 				StaticMeshDescription->GetEdgeHardnesses()[EdgeID] = true;
 			}
-			
-			StaticMeshDescription->ComputePolygonTriangulation(PolygonID);
 		}
 	}
 
@@ -312,7 +310,8 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 		return nullptr;
 	}
 			
-	
+	BaseMeshDescription.TriangulateMesh();
+
 #if ENGINE_MAJOR_VERSION >= 5
 	FStaticMeshOperations::ComputeTriangleTangentsAndNormals(BaseMeshDescription);
 #else
