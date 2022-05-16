@@ -9,7 +9,9 @@
 #include "UObject/Package.h"
 
 
-UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
+// Create the Deserialization Base
+UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj,
+										   const TScriptInterface<ITransport> ReadTransport)
 {
 	if(Obj == nullptr) return nullptr;
 
@@ -59,7 +61,7 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, co
 }
 
 UBase* USpeckleSerializer::DeserializeBaseById(const FString& ObjectId,
-	const TScriptInterface<ITransport> ReadTransport)
+                                               const TScriptInterface<ITransport> ReadTransport)
 {
 	auto Obj = ReadTransport->GetSpeckleObject(ObjectId);
 	return DeserializeBase(Obj, ReadTransport);
