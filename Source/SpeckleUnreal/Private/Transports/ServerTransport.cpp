@@ -254,3 +254,86 @@ void UServerTransport::InvokeOnError(FString& Message) const
 	ensureAlwaysMsgf(this->OnError.ExecuteIfBound(Message), TEXT("ServerTransport: Unhandled error - %s"), *Message);
 }
 
+
+// Create HTTP Request for Commit Root objects (only ids of children)
+FString UServerTransport::FetchListOfStreams(	
+ 											 TScriptInterface<ITransport> TargetTransport
+ 											 
+											 )
+{
+	//this->OnComplete = OnCompleteAction;
+	//this->OnError = OnErrorAction;
+	
+	// Create Request for Root Object
+	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+
+	// Using this we can get the object.
+	//const FString Endpoint = FString::Printf(TEXT("%s/objects/%s/%s/single"), *ServerUrl, *StreamId, *ObjectId);
+
+	// GraphQL: Here we have POST PAYLOAD but not endpoint
+	const FString PostPayload =
+		"{\"query\": \"query{user {streams(limit:50) {totalCount items {id name description updatedAt createdAt isPublic role}}}}\"}";
+	
+	// Request->SetVerb("GET");
+	// Request->SetURL(Endpoint);
+	// Request->SetHeader("Accept", TEXT("text/plain"));
+	// Request->SetHeader("Authorization", "Bearer " + AuthToken);
+
+	// FHttpRequestRef Request = FHttpModule::  Http->CreateRequest();
+	Request->SetURL(ServerUrl + "/graphql");
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip")); 
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetContentAsString(PostPayload);
+	
+	// Response Callback
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+	{
+		if(!bWasSuccessful)
+		{
+			FString Message = FString::Printf(TEXT("Request for root object at %s was unsuccessful: %s"),
+													*Response->GetURL(), *Response->GetContentAsString());
+			InvokeOnError(Message);
+			return;
+		}
+		
+		const int32 ResponseCode = Response->GetResponseCode();
+		if (ResponseCode != 200)
+		{
+			
+		
+
+			FString Message = FString::Printf(TEXT("Request for root object at %s failed with HTTP response %d"),
+													*Response->GetURL(), ResponseCode);
+			InvokeOnError(Message);
+			return;
+		}
+
+
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON: %s"), *Response->GetContentAsString());
+		
+		// ToDo: Handler here !!! 
+		// HandleRootObjectResponse(Response->GetContentAsString(), TargetTransport, ObjectId);
+	};
+	
+	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
+	
+	// Send request
+	const bool RequestSent = Request->ProcessRequest();
+
+	if(!RequestSent)
+	{
+		FString Message = FString::Printf(
+			TEXT("Request for root object at %s failed: \nHTTP request failed to start"),
+					*PostPayload);
+		
+		InvokeOnError(Message);
+		return Message;
+	}
+	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *PostPayload );
+	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+
+	return "bb";
+}
+

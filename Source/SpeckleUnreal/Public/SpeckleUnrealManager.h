@@ -57,6 +57,7 @@ public:
 	// Deletes the Actors created by the previous receive operation
 	UFUNCTION(BlueprintCallable, CallInEditor, Category="Speckle" , meta=(DisplayAfter="Receive"))
 	virtual void DeleteObjects();
+
 	
 	virtual void BeginPlay() override;
 

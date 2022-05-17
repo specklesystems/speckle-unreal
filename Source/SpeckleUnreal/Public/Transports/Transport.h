@@ -41,4 +41,10 @@ public:
  									   const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  									   const FTransportErrorDelegate& OnErrorAction) = 0;
 
+	
+	virtual FString FetchListOfStreams(
+										TScriptInterface<ITransport> TargetTransport
+										
+										) = 0;
+
 };

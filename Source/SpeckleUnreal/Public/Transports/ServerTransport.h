@@ -68,7 +68,13 @@ public:
  										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  										const FTransportErrorDelegate& OnErrorAction) override;
 
-
+	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
+	virtual FString FetchListOfStreams(
+									   TScriptInterface<ITransport> TargetTransport
+									   
+									   ) override;
+	
+	
 protected:
 	virtual void HandleRootObjectResponse(const FString& RootObjSerialized, TScriptInterface<ITransport> TargetTransport,
 																			const FString& ObjectId) const;

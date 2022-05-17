@@ -10,6 +10,7 @@
 #include "Objects/Base.h"
 #include "Mixpanel.h"
 #include "Engine/Engine.h"
+#include "Interfaces/IHttpRequest.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
@@ -163,5 +164,8 @@ void ASpeckleUnrealManager::DeleteObjects()
 
 	Actors.Empty();
 }
+
+
+
 
 #undef LOCTEXT_NAMESPACE

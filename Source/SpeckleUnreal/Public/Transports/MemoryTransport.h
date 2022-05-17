@@ -23,8 +23,18 @@ public:
 	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) override;
 	
 	virtual bool HasObject(const FString& ObjectId) const override;
-	virtual void CopyObjectAndChildren(const FString& ObjectId, TScriptInterface<ITransport> TargetTransport, const FTransportCopyObjectCompleteDelegate& OnCompleteAction, const FTransportErrorDelegate& OnErrorAction) override { unimplemented(); }
+	virtual void CopyObjectAndChildren(const FString& ObjectId,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) override { unimplemented(); }
 
+
+	virtual FString FetchListOfStreams(
+									  TScriptInterface<ITransport> TargetTransport
+									  
+									  ) override { return "unimplemented"; };
+
+	
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
 	static UMemoryTransport* CreateEmptyMemoryTransport()
 	{
