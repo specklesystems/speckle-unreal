@@ -10,7 +10,10 @@
 #include "Mixpanel.h"
 
 
-UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObject, const FString& ObjectId, TScriptInterface<ITransport> RemoteTransport, TScriptInterface<ITransport> LocalTransport)
+UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObject,
+													   const FString& ObjectId,
+							                           TScriptInterface<ITransport> RemoteTransport,
+							                           TScriptInterface<ITransport> LocalTransport)
 {
     UReceiveOperation* Node = NewObject<UReceiveOperation>();
     Node->ObjectId = ObjectId;
@@ -24,7 +27,8 @@ UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObje
 
 void UReceiveOperation::Activate()
 {
-	FAnalytics::TrackEvent("unknown", "unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+	FAnalytics::TrackEvent("unknown",
+		"unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
 
 	//Async(EAsyncExecution::Thread, [this]{Receive();});
 	Receive();
@@ -46,13 +50,16 @@ void UReceiveOperation::Receive()
 	// 2. Try and get object from remote transport
 	if(RemoteTransport == nullptr)
 	{
-		FString ErrorMessage = TEXT("Could not find specified object using the local transport, and you didn't provide a fallback remote from which to pull it.");
+		FString ErrorMessage = TEXT(
+			"Could not find specified object using the local transport, and you didn't provide a fallback remote from which to pull it.");
+
 		HandleError(ErrorMessage);
 		return;
 	}
 
 	FTransportCopyObjectCompleteDelegate CompleteDelegate;
 	CompleteDelegate.BindUObject(this, &UReceiveOperation::HandleReceive);
+
 	FTransportErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindUObject(this, &UReceiveOperation::HandleError);
 	

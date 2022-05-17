@@ -10,6 +10,7 @@
 #include "Objects/Other/RenderMaterial.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 
+// Setup some basics
 UProceduralMeshConverter::UProceduralMeshConverter()
 {
     SpeckleTypes.Add(UMesh::StaticClass());
@@ -19,7 +20,9 @@ UProceduralMeshConverter::UProceduralMeshConverter()
     ActorMobility = EComponentMobility::Static;
 }
 
-UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters )
+// Blueprint for converting data to 3D model 
+UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World,
+                                                            TScriptInterface<ISpeckleConverter>& AvailableConverters )
 {
     const UMesh* m = Cast<UMesh>(SpeckleBase);
     if(m != nullptr)	
@@ -47,7 +50,9 @@ UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* S
     return nullptr;
 }
 
-AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter)
+AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh,
+                                               UWorld* World,
+                                               TScriptInterface<ISpeckleConverter>& MaterialConverter)
 {
     AActor* MeshActor = CreateEmptyActor(World, USpeckleObjectUtils::CreateTransform(SpeckleMesh->Transform));
     UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));

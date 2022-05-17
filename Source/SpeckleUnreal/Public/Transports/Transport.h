@@ -37,8 +37,8 @@ public:
  	virtual bool HasObject(const FString& ObjectId) const = 0;
 	
  	virtual void CopyObjectAndChildren(const FString& ObjectId,
- 		TScriptInterface<ITransport> TargetTransport,
- 		const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
- 		const FTransportErrorDelegate& OnErrorAction) = 0;
+ 									   TScriptInterface<ITransport> TargetTransport,
+ 									   const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+ 									   const FTransportErrorDelegate& OnErrorAction) = 0;
 
 };
