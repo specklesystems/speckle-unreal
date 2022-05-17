@@ -43,7 +43,7 @@ protected:
 
 	virtual AActor* RecursivelyConvertToNative_Internal(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors);
 	
-	virtual void ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors);
+	virtual void ConvertChild(const TSharedPtr<FJsonValue> Object, AActor* AOwner, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors);
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual void AttachConvertedToOwner(AActor* AOwner, const UBase* Base, UObject* Converted);
