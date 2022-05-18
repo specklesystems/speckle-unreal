@@ -68,7 +68,7 @@ void UReceiveStreamsOperation::ReceiveStreams()
 	// ---- HERE ----
 	// CompleteDelegate is the HandleStreamsReceive
 
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
+	//UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
 	
 	RemoteTransport->CopyListOfStreams(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
 }
@@ -77,7 +77,7 @@ void UReceiveStreamsOperation::HandleStreamsReceive(TSharedPtr<FJsonObject> Obje
 {
 	check(IsInGameThread())
 
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 2"));
+	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON HHHHHHHHHHHHAAAAAAAAAAAAAANDLE"));
 	
 	FEditorScriptExecutionGuard ScriptGuard;
 	if(Object == nullptr)
@@ -91,8 +91,6 @@ void UReceiveStreamsOperation::HandleStreamsReceive(TSharedPtr<FJsonObject> Obje
 		TArray<FSpeckleStream> FullListOfStreams = USpeckleSerializer::DeserializeListOfStreams(Object, LocalTransport);
 		if(FullListOfStreams.Num()>0)
 		{
-			// ToDo : Fill the list of streams
-			
 			OnReceiveStreamsSuccessfully.Broadcast(FullListOfStreams, "");
 		}else
 		{
@@ -107,6 +105,9 @@ void UReceiveStreamsOperation::HandleStreamsReceive(TSharedPtr<FJsonObject> Obje
 
 void UReceiveStreamsOperation::HandleStreamsError(FString& Message)
 {
+
+	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON EEEEEEEERRRRRRRRRRRRRRRRRRROR"));
+	
 	FEditorScriptExecutionGuard ScriptGuard;
 	TArray<FSpeckleStream> EmptyListOfStreams;
 	OnError.Broadcast(EmptyListOfStreams, Message);

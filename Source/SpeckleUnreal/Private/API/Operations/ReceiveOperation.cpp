@@ -95,4 +95,3 @@ void UReceiveOperation::HandleError(FString& Message)
 	OnError.Broadcast(nullptr, Message);
 	SetReadyToDestroy();
 }
-

@@ -21,6 +21,7 @@ public:
 
 	static UBase* DeserializeBase(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
 
+	// Ververidis: Check with *
 	static TArray<FSpeckleStream> DeserializeListOfStreams(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
 
 
