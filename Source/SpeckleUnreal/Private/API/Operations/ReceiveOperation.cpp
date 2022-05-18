@@ -10,6 +10,7 @@
 #include "Mixpanel.h"
 
 
+// ReceiveOperation
 UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObject,
 													   const FString& ObjectId,
 							                           TScriptInterface<ITransport> RemoteTransport,
@@ -24,7 +25,7 @@ UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObje
     return Node;
 }
 
-
+// Activate
 void UReceiveOperation::Activate()
 {
 	FAnalytics::TrackEvent("unknown",
@@ -79,7 +80,7 @@ void UReceiveOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 	{
 		UBase* Res = USpeckleSerializer::DeserializeBase(Object, LocalTransport);
 		if(IsValid(Res))
-			OnReceiveSuccessfully.Broadcast(Res, "");
+			OnReceiveOldSuccessfully.Broadcast(Res, "");
 		else
 			OnError.Broadcast(nullptr, FString::Printf(TEXT("Root Speckle Object %s failed to deserialize"), *ObjectId));
 	}

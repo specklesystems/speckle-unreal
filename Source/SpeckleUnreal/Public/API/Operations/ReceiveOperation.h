@@ -24,7 +24,7 @@ class SPECKLEUNREAL_API UReceiveOperation : public UBlueprintAsyncActionBase
 public:
 	
     UPROPERTY(BlueprintAssignable)
-    FRecieveOperationHandler OnReceiveSuccessfully;
+    FRecieveOperationHandler OnReceiveOldSuccessfully;
 
 	/// Called when the total number of children is known
     //UPROPERTY(BlueprintAssignable)

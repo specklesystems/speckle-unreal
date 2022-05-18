@@ -243,9 +243,9 @@ int32 UServerTransport::SplitLines(const FString& Content, TArray<FString>& OutL
 	return LineCount;
 }
 
-bool UServerTransport::LoadJson(const FString& ObjectJson, TSharedPtr<FJsonObject>& OutJsonObject)
+bool UServerTransport::LoadJson(const FString& StringJson, TSharedPtr<FJsonObject>& OutJsonObject)
 {
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ObjectJson);
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(StringJson);
 	return FJsonSerializer::Deserialize(Reader, OutJsonObject);
 }
 
@@ -255,34 +255,25 @@ void UServerTransport::InvokeOnError(FString& Message) const
 }
 
 
-// Create HTTP Request for Commit Root objects (only ids of children)
-FString UServerTransport::FetchListOfStreams(	
- 											 TScriptInterface<ITransport> TargetTransport
- 											 
-											 )
+// STREAMS LIST
+void UServerTransport::CopyListOfStreams(const FString& ObjectId,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction)
 {
-	//this->OnComplete = OnCompleteAction;
-	//this->OnError = OnErrorAction;
+	this->OnComplete = OnCompleteAction;
+	this->OnError = OnErrorAction;
 	
 	// Create Request for Root Object
 	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
-
-	// Using this we can get the object.
-	//const FString Endpoint = FString::Printf(TEXT("%s/objects/%s/%s/single"), *ServerUrl, *StreamId, *ObjectId);
 
 	// GraphQL: Here we have POST PAYLOAD but not endpoint
 	const FString PostPayload =
 		"{\"query\": \"query{user {streams(limit:50) {totalCount items {id name description updatedAt createdAt isPublic role}}}}\"}";
 	
-	// Request->SetVerb("GET");
-	// Request->SetURL(Endpoint);
-	// Request->SetHeader("Accept", TEXT("text/plain"));
-	// Request->SetHeader("Authorization", "Bearer " + AuthToken);
-
-	// FHttpRequestRef Request = FHttpModule::  Http->CreateRequest();
 	Request->SetURL(ServerUrl + "/graphql");
 	Request->SetVerb(TEXT("POST"));
-	Request->SetHeader("Accept-Encoding", TEXT("gzip")); 
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
 	Request->SetHeader("Content-Type", TEXT("application/json"));
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
 	Request->SetContentAsString(PostPayload);
@@ -295,28 +286,39 @@ FString UServerTransport::FetchListOfStreams(
 			FString Message = FString::Printf(TEXT("Request for root object at %s was unsuccessful: %s"),
 													*Response->GetURL(), *Response->GetContentAsString());
 			InvokeOnError(Message);
-			return;
+			
 		}
 		
 		const int32 ResponseCode = Response->GetResponseCode();
 		if (ResponseCode != 200)
 		{
-			
-		
-
 			FString Message = FString::Printf(TEXT("Request for root object at %s failed with HTTP response %d"),
 													*Response->GetURL(), ResponseCode);
 			InvokeOnError(Message);
-			return;
 		}
-
 
 		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON: %s"), *Response->GetContentAsString());
 		
-		// ToDo: Handler here !!! 
-		// HandleRootObjectResponse(Response->GetContentAsString(), TargetTransport, ObjectId);
+		ResponseListOfStreamsSerialized = Response->GetContentAsString();
+		
+		TSharedPtr<FJsonObject> StreamsObj;
+		if(!LoadJson(ResponseListOfStreamsSerialized, StreamsObj))
+		{
+			FString Message = FString::Printf(
+				TEXT("A Speckle List of Streams Object %s was recieved but was invalid and could not be deserialied"),
+											*ResponseListOfStreamsSerialized);
+			InvokeOnError(Message);
+			
+		} else
+		{
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save A"));
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save content: %s"), *Response->GetContentAsString());
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save ObjectId: %s"), *ObjectId);
+			TargetTransport->SaveObject(ObjectId, StreamsObj);
+		}
 	};
-	
+
+	// Handle the response
 	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
 	
 	// Send request
@@ -329,11 +331,8 @@ FString UServerTransport::FetchListOfStreams(
 					*PostPayload);
 		
 		InvokeOnError(Message);
-		return Message;
+		return;
 	}
 	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *PostPayload );
 	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
-
-	return "bb";
 }
-

@@ -11,7 +11,9 @@
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Transports/Transport.h"
 #include "UObject/ConstructorHelpers.h"
+#include "LogSpeckle.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
@@ -43,7 +45,11 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 {
 	float ObjectsToConvert{};
 	Base->TryGetDynamicNumber("totalChildrenCount", ObjectsToConvert);
-	FScopedSlowTask Progress(ObjectsToConvert + 2, LOCTEXT("SpeckleConvertoNative","Converting Speckle Objects to Native"), DisplayProgressBar);
+
+	// Progress bar
+	FScopedSlowTask Progress(ObjectsToConvert + 2,
+		LOCTEXT("SpeckleConvertoNative","Converting Speckle Objects to Native"), DisplayProgressBar);
+
 #if WITH_EDITOR
 	Progress.MakeDialog(true, false);
 #endif
@@ -53,6 +59,21 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 	FinishConversion();
 	return RootActor;
 }
+
+// We should convert JSON to Speckle Object Streams
+TArray<FSpeckleStream> USpeckleConverterComponent::ConvertStreamsToNative(AActor* AOwner, const UBase* Base,
+	const TScriptInterface<ITransport>& LocalTransport, bool DisplayProgressBar, TArray<AActor*>& OutActors)
+{
+
+	return ArrayOfStreams;
+}
+
+
+
+
+
+
+
 
 AActor* USpeckleConverterComponent::RecursivelyConvertToNative_Internal(AActor* AOwner, const UBase* Base,
                                                                         const TScriptInterface<ITransport>& LocalTransport,

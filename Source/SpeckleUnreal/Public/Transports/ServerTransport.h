@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Transport.h"
+#include "Objects/HighLevel/FSpeckleStream.h"
 
 #include "ServerTransport.generated.h"
 
@@ -27,6 +28,10 @@ UCLASS(BlueprintType)
 class SPECKLEUNREAL_API UServerTransport : public UObject, public ITransport
 {
  GENERATED_BODY()
+
+
+	
+
 	
 protected:
 	
@@ -40,11 +45,18 @@ protected:
 	UPROPERTY()
 	int32 MaxNumberOfObjectsPerRequest = 20000;
 
+	UPROPERTY()
+	FString ResponseListOfStreamsSerialized = "";
+	
+	UPROPERTY()
+	TArray<FSpeckleStream> ArrayOfStreams;
 	
 	FTransportCopyObjectCompleteDelegate OnComplete;
 	FTransportErrorDelegate OnError;
+	FStreamsRequestProcessedDelegate OnStreamsProcessed;
 	
 public:
+
 
 
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
@@ -68,16 +80,22 @@ public:
  										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  										const FTransportErrorDelegate& OnErrorAction) override;
 
-	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
-	virtual FString FetchListOfStreams(
-									   TScriptInterface<ITransport> TargetTransport
-									   
-									   ) override;
 	
+	virtual void CopyListOfStreams(const FString& ObjectId,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) override;
+	
+
 	
 protected:
-	virtual void HandleRootObjectResponse(const FString& RootObjSerialized, TScriptInterface<ITransport> TargetTransport,
-																			const FString& ObjectId) const;
+	virtual void HandleRootObjectResponse(const FString& RootObjSerialized,
+										  TScriptInterface<ITransport> TargetTransport,
+										  const FString& ObjectId) const;
+	//
+	// virtual void HandleListOfStreamsResponse(const FString& RootObjSerialized,
+	// 										 TScriptInterface<ITransport> TargetTransport
+	// 										);
 
     /**
 	 * Iteratively fetches chunks of children

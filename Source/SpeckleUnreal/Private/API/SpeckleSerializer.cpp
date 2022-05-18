@@ -10,6 +10,77 @@
 
 
 // Create the Deserialization Base
+TArray<FSpeckleStream> USpeckleSerializer::DeserializeListOfStreams(const TSharedPtr<FJsonObject> Obj,
+										            const TScriptInterface<ITransport> ReadTransport)
+{
+
+//	TSharedPtr<FJsonObject> a = ReadTransport->GetSpeckleObject(Obj);
+
+	//---------------------------------
+	
+	//Create a reader pointer to read the json data
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ReadTransport->ResponseListOfStreamsSerialized);
+
+
+	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON 2: %s"), *ReadTransport->ResponseListOfStreamsSerialized);
+
+	
+	TArray<FSpeckleStream> ArrayOfStreams;
+
+	TSharedPtr<FJsonObject> JsonObject;
+	
+	ArrayOfStreams.Empty();
+	
+	// //Deserialize the json data given Reader and the actual object to deserialize
+	if (FJsonSerializer::Deserialize(Reader, JsonObject))
+	{
+		for(const auto& pair:JsonObject->Values)
+		{
+			// nested objects
+			auto StreamsArr = JsonObject->GetObjectField(TEXT("data"))
+																	->GetObjectField(TEXT("user"))
+																	   ->GetObjectField(TEXT("streams"))
+																			->GetArrayField(TEXT("items"));
+
+			// FString OutputString;
+			// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+			// FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+			
+			for (auto s : StreamsArr)
+			{
+				auto ID = s->AsObject()->GetStringField("id");
+
+					
+					
+				auto Name = s->AsObject()->GetStringField("name");
+
+				UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON 111: %s"), *Name);
+					
+				auto Description = s->AsObject()->GetStringField("description");
+				auto UpdatedAt = s->AsObject()->GetStringField("updatedAt");
+				auto CreatedAt = s->AsObject()->GetStringField("createdAt");
+				auto RoleUser = s->AsObject()->GetStringField("role");
+				auto IsPublic = s->AsObject()->GetBoolField("isPublic");
+
+				//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::White, RoleUser);
+				auto Stream = FSpeckleStream(ID, Name, Description, IsPublic, RoleUser, CreatedAt, UpdatedAt);
+				
+				ArrayOfStreams.Add(Stream);
+			}
+		}
+	}
+
+
+	return ArrayOfStreams;
+	//-----------------------------------------
+
+
+
+	
+}
+
+
+// Create the Deserialization Base
 UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj,
 										   const TScriptInterface<ITransport> ReadTransport)
 {

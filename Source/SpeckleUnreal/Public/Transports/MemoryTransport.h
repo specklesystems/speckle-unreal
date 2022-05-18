@@ -29,10 +29,10 @@ public:
 										const FTransportErrorDelegate& OnErrorAction) override { unimplemented(); }
 
 
-	virtual FString FetchListOfStreams(
-									  TScriptInterface<ITransport> TargetTransport
-									  
-									  ) override { return "unimplemented"; };
+	virtual void CopyListOfStreams(const FString& ObjectId,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) override { return; };
 
 	
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")

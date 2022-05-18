@@ -5,11 +5,14 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "Dom/JsonObject.h"
+#include "Objects/HighLevel/FSpeckleStream.h"
 
 #include "Transport.generated.h"
 
 DECLARE_DELEGATE_OneParam(FTransportCopyObjectCompleteDelegate, TSharedPtr<FJsonObject>);
 DECLARE_DELEGATE_OneParam(FTransportErrorDelegate, FString&);
+DECLARE_DELEGATE_OneParam(FStreamsRequestProcessedDelegate, const TArray<FSpeckleStream>&);
+
 //DECLARE_DELEGATE_OneParam(FTransportTotalChildrenCountKnownDelegate, int32);
 //DECLARE_DELEGATE_OneParam(FTransportProgressDelegate, int32);
 
@@ -28,6 +31,10 @@ class SPECKLEUNREAL_API ITransport
 	GENERATED_BODY()
 
 public:
+
+	
+	FString ResponseListOfStreamsSerialized = "";
+	
  	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) = 0;
 
  	//virtual void SaveObjectFromTransport(FString& ObjectID, TScriptInterface<ITransport> SourceTransport) = 0;
@@ -42,9 +49,9 @@ public:
  									   const FTransportErrorDelegate& OnErrorAction) = 0;
 
 	
-	virtual FString FetchListOfStreams(
-										TScriptInterface<ITransport> TargetTransport
-										
-										) = 0;
+	virtual void CopyListOfStreams(const FString& ObjectId,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) = 0;
 
 };

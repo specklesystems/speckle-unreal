@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Objects/HighLevel/FSpeckleStream.h"
 
 #include "SpeckleSerializer.generated.h"
 
@@ -19,6 +20,8 @@ public:
 	static UBase* DeserializeBaseById(const FString& ObjectId, const TScriptInterface<ITransport> ReadTransport);
 
 	static UBase* DeserializeBase(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
+
+	static TArray<FSpeckleStream> DeserializeListOfStreams(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
 
 
 };
