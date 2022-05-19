@@ -66,34 +66,36 @@ void UReceiveStreamsOperation::Receive()
 	ErrorDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleError);
 	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
 	
-	//RemoteTransport->CopyListOfStreams(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
+	RemoteTransport->CopyListOfStreams(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
 	//RemoteTransport->CopyObjectAndChildren(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
 
-	RemoteTransport->CopyObjectAndChildrenFake(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
+	//RemoteTransport->CopyObjectAndChildrenFake(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
 }
 
 void UReceiveStreamsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 {
 	check(IsInGameThread())
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON HHHHHHHHHHHHAAAAAAAAAAAAAANDLE"));
-	
+		
 	FEditorScriptExecutionGuard ScriptGuard;
 	if(Object == nullptr)
 	{
 		TArray<FSpeckleStream> EmptyListOfStreams;
-		OnError.Broadcast(EmptyListOfStreams, FString::Printf(TEXT("Failed to get object %s from transport"), *ObjectId));
+		OnError.Broadcast(EmptyListOfStreams, FString::Printf(TEXT("Failed to get Stream object %s from transport"), *ObjectId));
 	}
 	else
 	{
 		// --- Here Deserialize the list of Streams ----
+		// It is not Deserializing the Streams well
 		TArray<FSpeckleStream> FullListOfStreams = USpeckleSerializer::DeserializeListOfStreams(Object, LocalTransport);
+
+		
 		if(FullListOfStreams.Num()>0)
 		{
 			OnReceiveSuccessfully.Broadcast(FullListOfStreams, "");
 		}else
 		{
 			TArray<FSpeckleStream> EmptyListOfStreams;
-			OnError.Broadcast(EmptyListOfStreams, FString::Printf(TEXT("Root Speckle Object %s failed to deserialize"), *ObjectId));
+			OnError.Broadcast(EmptyListOfStreams, FString::Printf(TEXT("Root Speckle Stream Object %s failed to deserialize"), *ObjectId));
 		}
 	}
 		
@@ -103,9 +105,6 @@ void UReceiveStreamsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 
 void UReceiveStreamsOperation::HandleError(FString& Message)
 {
-
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON EEEEEEEERRRRRRRRRRRRRRRRRRROR"));
-	
 	FEditorScriptExecutionGuard ScriptGuard;
 	TArray<FSpeckleStream> EmptyListOfStreams;
 	OnError.Broadcast(EmptyListOfStreams, Message);

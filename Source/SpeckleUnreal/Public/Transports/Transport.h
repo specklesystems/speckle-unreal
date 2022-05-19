@@ -48,12 +48,6 @@ public:
  									   const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  									   const FTransportErrorDelegate& OnErrorAction) = 0;
 
-	virtual void CopyObjectAndChildrenFake(const FString& ObjectId,
-										TScriptInterface<ITransport> TargetTransport,
-										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-										const FTransportErrorDelegate& OnErrorAction) = 0;
-
-	
 	virtual void CopyListOfStreams(const FString& ObjectId,
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,

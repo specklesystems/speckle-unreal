@@ -29,12 +29,6 @@ public:
 										const FTransportErrorDelegate& OnErrorAction) override { unimplemented(); }
 
 
-	virtual void CopyObjectAndChildrenFake(const FString& ObjectId,
-										TScriptInterface<ITransport> TargetTransport,
-										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-										const FTransportErrorDelegate& OnErrorAction) override { unimplemented(); }
-	
-
 	virtual void CopyListOfStreams(const FString& ObjectId,
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,

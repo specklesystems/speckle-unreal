@@ -29,60 +29,37 @@ bool UServerTransport::HasObject(const FString& ObjectId) const
 	return false;
 }
 
-// Create HTTP Request for Commit Root objects (only ids of children)
-void UServerTransport::CopyObjectAndChildrenFake(const FString& ObjectId,
-											 TScriptInterface<ITransport> TargetTransport,
-											 const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-											 const FTransportErrorDelegate& OnErrorAction)
+// Parse Root JSON
+void UServerTransport::HandleRootObjectResponse(const FString& RootObjSerialized,
+												TScriptInterface<ITransport> TargetTransport,
+												const FString& ObjectId) const
 {
-	this->OnComplete = OnCompleteAction;
-	this->OnError = OnErrorAction;
-	
-	// Create Request for Root Object
-	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
-	const FString Endpoint = FString::Printf(TEXT("%s/objects/%s/%s/single"), *ServerUrl, *StreamId, *ObjectId);
-	Request->SetVerb("GET");
-	Request->SetURL(Endpoint);
-	Request->SetHeader("Accept", TEXT("text/plain"));
-	Request->SetHeader("Authorization", "Bearer " + AuthToken);
-		
-	// Response Callback
-	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+	TSharedPtr<FJsonObject> RootObj;
+	if(!LoadJson(RootObjSerialized, RootObj))
 	{
-		if(!bWasSuccessful)
-		{
-			FString Message = FString::Printf(TEXT("Request for root object at %s was unsuccessful: %s"), *Response->GetURL(), *Response->GetContentAsString());
-			InvokeOnError(Message);
-			return;
-		}
-		
-		const int32 ResponseCode = Response->GetResponseCode();
-		if (ResponseCode != 200)
-		{
-			FString Message = FString::Printf(TEXT("Request for root object at %s failed with HTTP response %d"), *Response->GetURL(), ResponseCode);
-			InvokeOnError(Message);
-			return;
-		}
-
-		//UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON REACH"));
-		HandleRootObjectResponse(Response->GetContentAsString(), TargetTransport, ObjectId);
-	};
-	
-	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
-	
-	// Send request
-	const bool RequestSent = Request->ProcessRequest();
-
-	if(!RequestSent)
-	{
-		FString Message = FString::Printf(TEXT("Request for root object at %s failed: \nHTTP request failed to start"), *Endpoint);
+		FString Message = FString::Printf( TEXT("A Root Object %s was recieved but was invalid and could not be deserialied"), *ObjectId);
 		InvokeOnError(Message);
 		return;
 	}
-	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *Endpoint );
-	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
-}
+	
+	TargetTransport->SaveObject(ObjectId, RootObj);	
+	
+	// Find children are not already in the target transport
+	const auto Closures = RootObj->GetObjectField("__closure")->Values;
+	
+	TArray<FString> ChildrenIds; 
+	Closures.GetKeys(ChildrenIds);
+	TArray<FString> NewChildrenIds;
+	for(const FString& Id : ChildrenIds)
+	{
+		if(TargetTransport->HasObject(Id)) continue;
+		
+		NewChildrenIds.Add(Id);
+	}
 
+	
+	FetchChildren(TargetTransport, ObjectId, NewChildrenIds);	
+}
 
 
 // Create HTTP Request for Commit Root objects (only ids of children)
@@ -138,8 +115,6 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
 }
 
-
-
 // Fetch Children JSON and parse it
 void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTransport, const FString& ObjectId,
 																const TArray<FString>& ChildrenIds, int32 CStart) const
@@ -147,6 +122,7 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 	// Check if all children have been fetched
 	if(ChildrenIds.Num() <= CStart)
 	{
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON < CSTART <-----------"));
 		ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(ObjectId)),
 		                                                               TEXT("Complete handler was not bound properly"));
 		return;
@@ -253,39 +229,9 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 		InvokeOnError(Message);
 		return;
 	}
+
 	
 	UE_LOG(LogSpeckle, Verbose, TEXT("Requesting %d child objects"), CEnd - CStart);
-}
-
-// Parse Root JSON
-void UServerTransport::HandleRootObjectResponse(const FString& RootObjSerialized,
-												TScriptInterface<ITransport> TargetTransport,
-												const FString& ObjectId) const
-{
-	TSharedPtr<FJsonObject> RootObj;
-	if(!LoadJson(RootObjSerialized, RootObj))
-	{
-		FString Message = FString::Printf( TEXT("A Root Object %s was recieved but was invalid and could not be deserialied"), *ObjectId);
-		InvokeOnError(Message);
-		return;
-	}
-	
-	TargetTransport->SaveObject(ObjectId, RootObj);	
-	
-	// Find children are not already in the target transport
-	const auto Closures = RootObj->GetObjectField("__closure")->Values;
-	
-	TArray<FString> ChildrenIds; 
-	Closures.GetKeys(ChildrenIds);
-	TArray<FString> NewChildrenIds;
-	for(const FString& Id : ChildrenIds)
-	{
-		if(TargetTransport->HasObject(Id)) continue;
-		
-		NewChildrenIds.Add(Id);
-	}
-	
-	FetchChildren(TargetTransport, ObjectId, NewChildrenIds);	
 }
 
 // STREAMS LIST
@@ -348,10 +294,9 @@ void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 			// UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save ObjectId: %s"), *ObjectId);
 			TargetTransport->SaveObject(ObjectId, StreamsObj);
 
-			UE_LOG(LogSpeckle, Log, TEXT("-----------> FINISHED <--------------"));
+			ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(ObjectId)),
+																	   TEXT("Complete handler was not bound properly"));
 		}
-
-		UE_LOG(LogSpeckle, Log, TEXT("-----------> FINISHED 2 <--------------"));
 	};
 
 	// Handle the response

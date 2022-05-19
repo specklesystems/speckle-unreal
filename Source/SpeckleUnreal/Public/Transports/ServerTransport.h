@@ -75,18 +75,11 @@ public:
  										TScriptInterface<ITransport> TargetTransport,
  										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  										const FTransportErrorDelegate& OnErrorAction) override;
-
-	virtual void CopyObjectAndChildrenFake(const FString& ObjectId,
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) override;
 	
 	virtual void CopyListOfStreams(const FString& ObjectId,
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) override;
-	
-
 	
 protected:
 	virtual void HandleRootObjectResponse(const FString& RootObjSerialized,
