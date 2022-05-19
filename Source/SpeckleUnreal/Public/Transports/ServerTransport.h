@@ -28,10 +28,6 @@ UCLASS(BlueprintType)
 class SPECKLEUNREAL_API UServerTransport : public UObject, public ITransport
 {
  GENERATED_BODY()
-
-
-	
-
 	
 protected:
 	
@@ -53,7 +49,7 @@ protected:
 	
 	FTransportCopyObjectCompleteDelegate OnComplete;
 	FTransportErrorDelegate OnError;
-	FStreamsRequestProcessedDelegate OnStreamsProcessed;
+	
 	
 public:
 
@@ -80,6 +76,10 @@ public:
  										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  										const FTransportErrorDelegate& OnErrorAction) override;
 
+	virtual void CopyObjectAndChildrenFake(const FString& ObjectId,
+									TScriptInterface<ITransport> TargetTransport,
+									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+									const FTransportErrorDelegate& OnErrorAction) override;
 	
 	virtual void CopyListOfStreams(const FString& ObjectId,
 										TScriptInterface<ITransport> TargetTransport,

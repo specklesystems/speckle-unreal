@@ -33,10 +33,10 @@ void UReceiveStreamsOperation::Activate()
 		"unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
 
 	//Async(EAsyncExecution::Thread, [this]{Receive();});
-	ReceiveStreams();
+	Receive();
 }
 
-void UReceiveStreamsOperation::ReceiveStreams()
+void UReceiveStreamsOperation::Receive()
 {
 	check(LocalTransport != nullptr);
 	
@@ -45,7 +45,7 @@ void UReceiveStreamsOperation::ReceiveStreams()
 
 	if (Obj != nullptr )
 	{
-		HandleStreamsReceive(Obj);
+		HandleReceive(Obj);
 		return;
 	}
 
@@ -55,28 +55,26 @@ void UReceiveStreamsOperation::ReceiveStreams()
 		FString ErrorMessage = TEXT(
 			"Could not find specified object using the local transport, and you didn't provide a fallback remote from which to pull it.");
 
-		HandleStreamsError(ErrorMessage);
+		HandleError(ErrorMessage);
 		return;
 	}
 
 	FTransportCopyObjectCompleteDelegate CompleteDelegate;
-	CompleteDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleStreamsReceive);
+	CompleteDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleReceive);
 
 	FTransportErrorDelegate ErrorDelegate;
-	ErrorDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleStreamsError);
-
-	// ---- HERE ----
-	// CompleteDelegate is the HandleStreamsReceive
-
-	//UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
+	ErrorDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleError);
+	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
 	
-	RemoteTransport->CopyListOfStreams(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
+	//RemoteTransport->CopyListOfStreams(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
+	//RemoteTransport->CopyObjectAndChildren(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
+
+	RemoteTransport->CopyObjectAndChildrenFake(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveStreamsOperation::HandleStreamsReceive(TSharedPtr<FJsonObject> Object)
+void UReceiveStreamsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 {
 	check(IsInGameThread())
-
 	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON HHHHHHHHHHHHAAAAAAAAAAAAAANDLE"));
 	
 	FEditorScriptExecutionGuard ScriptGuard;
@@ -91,7 +89,7 @@ void UReceiveStreamsOperation::HandleStreamsReceive(TSharedPtr<FJsonObject> Obje
 		TArray<FSpeckleStream> FullListOfStreams = USpeckleSerializer::DeserializeListOfStreams(Object, LocalTransport);
 		if(FullListOfStreams.Num()>0)
 		{
-			OnReceiveStreamsSuccessfully.Broadcast(FullListOfStreams, "");
+			OnReceiveSuccessfully.Broadcast(FullListOfStreams, "");
 		}else
 		{
 			TArray<FSpeckleStream> EmptyListOfStreams;
@@ -103,7 +101,7 @@ void UReceiveStreamsOperation::HandleStreamsReceive(TSharedPtr<FJsonObject> Obje
 	SetReadyToDestroy();
 }
 
-void UReceiveStreamsOperation::HandleStreamsError(FString& Message)
+void UReceiveStreamsOperation::HandleError(FString& Message)
 {
 
 	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON EEEEEEEERRRRRRRRRRRRRRRRRRROR"));

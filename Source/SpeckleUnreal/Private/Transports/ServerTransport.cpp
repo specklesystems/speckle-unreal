@@ -30,6 +30,62 @@ bool UServerTransport::HasObject(const FString& ObjectId) const
 }
 
 // Create HTTP Request for Commit Root objects (only ids of children)
+void UServerTransport::CopyObjectAndChildrenFake(const FString& ObjectId,
+											 TScriptInterface<ITransport> TargetTransport,
+											 const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+											 const FTransportErrorDelegate& OnErrorAction)
+{
+	this->OnComplete = OnCompleteAction;
+	this->OnError = OnErrorAction;
+	
+	// Create Request for Root Object
+	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+	const FString Endpoint = FString::Printf(TEXT("%s/objects/%s/%s/single"), *ServerUrl, *StreamId, *ObjectId);
+	Request->SetVerb("GET");
+	Request->SetURL(Endpoint);
+	Request->SetHeader("Accept", TEXT("text/plain"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+		
+	// Response Callback
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+	{
+		if(!bWasSuccessful)
+		{
+			FString Message = FString::Printf(TEXT("Request for root object at %s was unsuccessful: %s"), *Response->GetURL(), *Response->GetContentAsString());
+			InvokeOnError(Message);
+			return;
+		}
+		
+		const int32 ResponseCode = Response->GetResponseCode();
+		if (ResponseCode != 200)
+		{
+			FString Message = FString::Printf(TEXT("Request for root object at %s failed with HTTP response %d"), *Response->GetURL(), ResponseCode);
+			InvokeOnError(Message);
+			return;
+		}
+
+		//UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON REACH"));
+		HandleRootObjectResponse(Response->GetContentAsString(), TargetTransport, ObjectId);
+	};
+	
+	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
+	
+	// Send request
+	const bool RequestSent = Request->ProcessRequest();
+
+	if(!RequestSent)
+	{
+		FString Message = FString::Printf(TEXT("Request for root object at %s failed: \nHTTP request failed to start"), *Endpoint);
+		InvokeOnError(Message);
+		return;
+	}
+	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *Endpoint );
+	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+}
+
+
+
+// Create HTTP Request for Commit Root objects (only ids of children)
 void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 											 TScriptInterface<ITransport> TargetTransport,
 											 const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
@@ -232,29 +288,6 @@ void UServerTransport::HandleRootObjectResponse(const FString& RootObjSerialized
 	FetchChildren(TargetTransport, ObjectId, NewChildrenIds);	
 }
 
-int32 UServerTransport::SplitLines(const FString& Content, TArray<FString>& OutLines)
-{
-	int32 LineCount = 0;
-	for (const TCHAR* ptr = *Content; *ptr; ptr++)
-		if (*ptr == '\n')
-			LineCount++;
-	OutLines.Reserve(LineCount);
-	Content.ParseIntoArray(OutLines, TEXT("\n"), true);
-	return LineCount;
-}
-
-bool UServerTransport::LoadJson(const FString& StringJson, TSharedPtr<FJsonObject>& OutJsonObject)
-{
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(StringJson);
-	return FJsonSerializer::Deserialize(Reader, OutJsonObject);
-}
-
-void UServerTransport::InvokeOnError(FString& Message) const
-{
-	ensureAlwaysMsgf(this->OnError.ExecuteIfBound(Message), TEXT("ServerTransport: Unhandled error - %s"), *Message);
-}
-
-
 // STREAMS LIST
 void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 										TScriptInterface<ITransport> TargetTransport,
@@ -286,7 +319,6 @@ void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 			FString Message = FString::Printf(TEXT("Request for root object at %s was unsuccessful: %s"),
 													*Response->GetURL(), *Response->GetContentAsString());
 			InvokeOnError(Message);
-			
 		}
 		
 		const int32 ResponseCode = Response->GetResponseCode();
@@ -315,8 +347,11 @@ void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 			// UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save content: %s"), *Response->GetContentAsString());
 			// UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save ObjectId: %s"), *ObjectId);
 			TargetTransport->SaveObject(ObjectId, StreamsObj);
-			
+
+			UE_LOG(LogSpeckle, Log, TEXT("-----------> FINISHED <--------------"));
 		}
+
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> FINISHED 2 <--------------"));
 	};
 
 	// Handle the response
@@ -336,4 +371,32 @@ void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 	}
 	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *PostPayload );
 	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+
+	UE_LOG(LogSpeckle, Log, TEXT("-----------> NOT FINISHED <--------------"));
+	
+}
+
+
+// Utilities
+
+int32 UServerTransport::SplitLines(const FString& Content, TArray<FString>& OutLines)
+{
+	int32 LineCount = 0;
+	for (const TCHAR* ptr = *Content; *ptr; ptr++)
+		if (*ptr == '\n')
+			LineCount++;
+	OutLines.Reserve(LineCount);
+	Content.ParseIntoArray(OutLines, TEXT("\n"), true);
+	return LineCount;
+}
+
+bool UServerTransport::LoadJson(const FString& StringJson, TSharedPtr<FJsonObject>& OutJsonObject)
+{
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(StringJson);
+	return FJsonSerializer::Deserialize(Reader, OutJsonObject);
+}
+
+void UServerTransport::InvokeOnError(FString& Message) const
+{
+	ensureAlwaysMsgf(this->OnError.ExecuteIfBound(Message), TEXT("ServerTransport: Unhandled error - %s"), *Message);
 }

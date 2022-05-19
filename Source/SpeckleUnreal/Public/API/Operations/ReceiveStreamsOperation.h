@@ -12,15 +12,12 @@ class ITransport;
 class UBase;
 class FJsonObject;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveStreamsOperationHandler, const TArray<FSpeckleStream>&, Streams, FString, ErrorMessage);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveStreamsOperationHandler, const TArray<FSpeckleStream>&, Streams, FString, ErrorMessage);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveStreamsOperationHandler, UBase*, RootBase, FString, ErrorMessage);
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStreamsRequestProcessedDyn, const TArray<FSpeckleStream>&, StreamsList);
-
-
 /**
- * 
+ *	
  */
 UCLASS()
 class SPECKLEUNREAL_API UReceiveStreamsOperation : public UBlueprintAsyncActionBase
@@ -30,7 +27,7 @@ class SPECKLEUNREAL_API UReceiveStreamsOperation : public UBlueprintAsyncActionB
 public:
 	
     UPROPERTY(BlueprintAssignable)
-    FReceiveStreamsOperationHandler OnReceiveStreamsSuccessfully;
+    FReceiveStreamsOperationHandler OnReceiveSuccessfully;
 
 	UPROPERTY(BlueprintAssignable)
     FReceiveStreamsOperationHandler OnError;
@@ -43,13 +40,13 @@ public:
 	virtual void Activate() override;
 	
 protected:
-	void ReceiveStreams();
+	void Receive();
 	
 	FString ObjectId;
 	TScriptInterface<ITransport> RemoteTransport;
 	TScriptInterface<ITransport> LocalTransport;
 
-	void HandleStreamsReceive(TSharedPtr<FJsonObject> Object);
+	void HandleReceive(TSharedPtr<FJsonObject> Object);
 	
-	void HandleStreamsError(FString& Message);
+	void HandleError(FString& Message);
 };

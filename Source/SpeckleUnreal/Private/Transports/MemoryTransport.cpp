@@ -2,6 +2,7 @@
 
 
 #include "Transports/MemoryTransport.h"
+#include "LogSpeckle.h"
 
 bool UMemoryTransport::HasObject(const FString& ObjectId) const
 {
@@ -17,4 +18,5 @@ TSharedPtr<FJsonObject> UMemoryTransport::GetSpeckleObject(const FString& Object
 void UMemoryTransport::SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject)
 {
 	SpeckleObjects.Add(ObjectId, SerializedObject);
+	UE_LOG(LogSpeckle, Log, TEXT("-----------> ADDED <-------------- %d"), SpeckleObjects.Num());
 }
