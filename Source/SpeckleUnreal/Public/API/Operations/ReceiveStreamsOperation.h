@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-#include "Objects/HighLevel/FSpeckleStream.h"
+#include "Objects/HighLevel/SpeckleStream.h"
 
 #include "ReceiveStreamsOperation.generated.h"
 
@@ -14,10 +14,9 @@ class FJsonObject;
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveStreamsOperationHandler, const TArray<FSpeckleStream>&, Streams, FString, ErrorMessage);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveStreamsOperationHandler, UBase*, RootBase, FString, ErrorMessage);
 
 /**
- *	
+ *   Receive All streams	
  */
 UCLASS()
 class SPECKLEUNREAL_API UReceiveStreamsOperation : public UBlueprintAsyncActionBase
@@ -34,7 +33,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations", meta = (WorldContext = "WorldContextObject"))
 	static UReceiveStreamsOperation* ReceiveStreamsOperation(UObject* WorldContextObject,
-															 const FString& ObjectId,
+															
 															TScriptInterface<ITransport> RemoteTransport,
 															TScriptInterface<ITransport> LocalTransport);
 	virtual void Activate() override;

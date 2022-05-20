@@ -13,10 +13,13 @@
 
 // ReceiveOperation
 UReceiveStreamsOperation* UReceiveStreamsOperation::ReceiveStreamsOperation(UObject* WorldContextObject,
-													   const FString& ObjectId,
+													 
 							                           TScriptInterface<ITransport> RemoteTransport,
 							                           TScriptInterface<ITransport> LocalTransport)
 {
+
+	FString ObjectId = "Streams";
+	
     UReceiveStreamsOperation* Node = NewObject<UReceiveStreamsOperation>();
     Node->ObjectId = ObjectId;
     Node->RemoteTransport = RemoteTransport;
@@ -95,7 +98,8 @@ void UReceiveStreamsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 		}else
 		{
 			TArray<FSpeckleStream> EmptyListOfStreams;
-			OnError.Broadcast(EmptyListOfStreams, FString::Printf(TEXT("Root Speckle Stream Object %s failed to deserialize"), *ObjectId));
+			OnError.Broadcast(EmptyListOfStreams,
+				FString::Printf(TEXT("Root Speckle Stream Object %s failed to deserialize"), *ObjectId));
 		}
 	}
 		

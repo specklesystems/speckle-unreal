@@ -4,6 +4,7 @@
 #include "LogSpeckle.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Objects/ObjectModelRegistry.h"
+#include "Objects/HighLevel/SpeckleStream.h"
 #include "Templates/SubclassOf.h"
 #include "Transports/Transport.h"
 #include "UObject/Package.h"
@@ -14,69 +15,28 @@ TArray<FSpeckleStream> USpeckleSerializer::DeserializeListOfStreams(const TShare
 										            const TScriptInterface<ITransport> ReadTransport)
 {
 
-//	TSharedPtr<FJsonObject> a = ReadTransport->GetSpeckleObject(Obj);
-
-	//---------------------------------
-	
-	//Create a reader pointer to read the json data
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ReadTransport->ResponseListOfStreamsSerialized);
-
-
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON 2: %s"), *ReadTransport->ResponseListOfStreamsSerialized);
-
-	
 	TArray<FSpeckleStream> ArrayOfStreams;
 
-	TSharedPtr<FJsonObject> JsonObject;
+	if(Obj == nullptr)
+	{
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON OBJ is null"));
+		return ArrayOfStreams;
+	};
 	
 	ArrayOfStreams.Empty();
-	
-	// //Deserialize the json data given Reader and the actual object to deserialize
-	if (FJsonSerializer::Deserialize(Reader, JsonObject))
-	{
-		for(const auto& pair:JsonObject->Values)
-		{
-			// nested objects
-			auto StreamsArr = JsonObject->GetObjectField(TEXT("data"))
-																	->GetObjectField(TEXT("user"))
-																	   ->GetObjectField(TEXT("streams"))
-																			->GetArrayField(TEXT("items"));
-
-			// FString OutputString;
-			// TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
-			// FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
 			
-			for (auto s : StreamsArr)
-			{
-				auto ID = s->AsObject()->GetStringField("id");
-
-					
-					
-				auto Name = s->AsObject()->GetStringField("name");
-
-				UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON 111: %s"), *Name);
-					
-				auto Description = s->AsObject()->GetStringField("description");
-				auto UpdatedAt = s->AsObject()->GetStringField("updatedAt");
-				auto CreatedAt = s->AsObject()->GetStringField("createdAt");
-				auto RoleUser = s->AsObject()->GetStringField("role");
-				auto IsPublic = s->AsObject()->GetBoolField("isPublic");
-
-				//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::White, RoleUser);
-				auto Stream = FSpeckleStream(ID, Name, Description, IsPublic, RoleUser, CreatedAt, UpdatedAt);
-				
-				ArrayOfStreams.Add(Stream);
-			}
-		}
+	// {"data":{"user":{"streams":{"totalCount":23,"items":[{"id":"2171b53ac6","name":"Test Push","description":"Mindesk code","updatedAt":"2022-05-17T09:10:40.841Z","createdAt":"2022-05-17T07:18:29.541Z","isPublic":false,"role":"stream:owner"},{"id":"a18f8c8569","name":"ZH Villa ","description"  ...}]
+	TArray<TSharedPtr<FJsonValue>> StreamsArrJSON = Obj->GetObjectField(TEXT("data"))
+															   ->GetObjectField(TEXT("user"))
+																  ->GetObjectField(TEXT("streams"))
+																	   ->GetArrayField(TEXT("items"));
+	for (TSharedPtr<FJsonValue> streamAsJSONValue : StreamsArrJSON)
+	{
+		FSpeckleStream Stream = FSpeckleStream(streamAsJSONValue);
+		ArrayOfStreams.Add(Stream);
 	}
 
-
 	return ArrayOfStreams;
-	//-----------------------------------------
-
-
-
-	
 }
 
 
@@ -86,14 +46,13 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj,
 {
 	if(Obj == nullptr) return nullptr;
 
-	{ // Handle Detached Objects
-		TSharedPtr<FJsonObject> DetachedObject;
-		if(USpeckleObjectUtils::ResolveReference(Obj, ReadTransport, DetachedObject))
-		{
+	// Handle Detached Objects
+	TSharedPtr<FJsonObject> DetachedObject;
+	if(USpeckleObjectUtils::ResolveReference(Obj, ReadTransport, DetachedObject))
+	{
 			return DeserializeBase(DetachedObject, ReadTransport);
-		}
 	}
-	
+		
 	FString SpeckleType;	
 	if (!Obj->TryGetStringField("speckle_type", SpeckleType)) return nullptr;
 	FString ObjectId = "";	

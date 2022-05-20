@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Objects/HighLevel/FSpeckleStream.h"
+#include "Objects/HighLevel/SpeckleStream.h"
 
 #include "SpeckleConverterComponent.generated.h"
 
@@ -48,9 +48,6 @@ public:
 						bool DisplayProgressBar,
 						TArray<AActor*>& OutActors
 						);
-
-
-	
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual void FinishConversion();

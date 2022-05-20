@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Transport.h"
-#include "Objects/HighLevel/FSpeckleStream.h"
+#include "Objects/HighLevel/SpeckleStream.h"
 
 #include "ServerTransport.generated.h"
 

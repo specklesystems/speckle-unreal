@@ -289,13 +289,11 @@ void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 			
 		} else
 		{
-			// UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save A"));
-			// UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save content: %s"), *Response->GetContentAsString());
-			// UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Save ObjectId: %s"), *ObjectId);
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON: Save To %s"), *ObjectId);
 			TargetTransport->SaveObject(ObjectId, StreamsObj);
 
 			ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(ObjectId)),
-																	   TEXT("Complete handler was not bound properly"));
+															   TEXT("Complete handler was not bound properly"));
 		}
 	};
 

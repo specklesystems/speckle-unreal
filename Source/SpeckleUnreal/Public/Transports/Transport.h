@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "Dom/JsonObject.h"
-#include "Objects/HighLevel/FSpeckleStream.h"
+#include "Objects/HighLevel/SpeckleStream.h"
 
 #include "Transport.generated.h"
 

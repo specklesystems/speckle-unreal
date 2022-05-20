@@ -1,17 +1,26 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "FSpeckleStream.generated.h"
+#include "LogSpeckle.h"
+
+#include "SpeckleStream.generated.h"
+
+
+
 
 /*
-* Struct that holds all the properties required
+* Class that holds all the properties required
 * from a speckle Branch
 * received from GraphQL.
 */
 USTRUCT(BlueprintType)
-struct FSpeckleStream
+struct FSpeckleStream 
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
+	
+public:
+
+	
 	
 	UPROPERTY(BlueprintReadWrite)
 	FString ID;
@@ -33,9 +42,22 @@ struct FSpeckleStream
 
 	UPROPERTY(BlueprintReadWrite)
 	FString UpdatedAt;
-	
-	FSpeckleStream(){};
 
+	FSpeckleStream(const TSharedPtr<FJsonValue> StreamAsJSONValue)
+	{
+		ID = StreamAsJSONValue->AsObject()->GetStringField("id");
+		Name = StreamAsJSONValue->AsObject()->GetStringField("name");
+		Description = StreamAsJSONValue->AsObject()->GetStringField("description");
+		UpdatedAt = StreamAsJSONValue->AsObject()->GetStringField("updatedAt");
+		CreatedAt = StreamAsJSONValue->AsObject()->GetStringField("createdAt");
+		Role = StreamAsJSONValue->AsObject()->GetStringField("role");
+		IsPublic = StreamAsJSONValue->AsObject()->GetBoolField("isPublic");
+	
+		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::White, RoleUser);
+	}
+
+	FSpeckleStream(){};
+	
 	FSpeckleStream(const FString& ID, const FString& Name, const FString& Description):
 			ID(ID), Name(Name), Description(Description){};
 	
