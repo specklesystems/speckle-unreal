@@ -99,41 +99,42 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative_Internal(AActor* 
 	Task->EnterProgressFrame(1);
 	if(Task->ShouldCancel()) return AOwner;
 	
-	ConvertChildren(NextOwner, Base, LocalTransport, Task, OutActors);
-	return AOwner;
-}
-
-void USpeckleConverterComponent::ConvertChildren(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors)
-{
 	//Convert Children
 	TMap<FString, TSharedPtr<FJsonValue>> PotentialChildren = Base->DynamicProperties;
 	
-	for (const auto& Kv : PotentialChildren)
+	for (const auto& Kvp : PotentialChildren)
 	{
-		if(Task->ShouldCancel()) return;
+		if(Task->ShouldCancel()) break;
 		
-		const TSharedPtr<FJsonObject>* SubObjectPtr;
-		if (Kv.Value->TryGetObject(SubObjectPtr))
-		{
-			const UBase* Child = USpeckleSerializer::DeserializeBase(*SubObjectPtr, LocalTransport);
-			RecursivelyConvertToNative_Internal(AOwner, Child, LocalTransport, Task, OutActors);
-			continue;
-		}
+		ConvertChild(Kvp.Value, AOwner, LocalTransport, Task, OutActors);
+	}
+	return AOwner;
+}
 
-		const TArray<TSharedPtr<FJsonValue>>* SubArrayPtr;
-		if (Kv.Value->TryGetArray(SubArrayPtr))
+void USpeckleConverterComponent::ConvertChild(const TSharedPtr<FJsonValue> Object, AActor* AOwner,
+                                              const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task,
+                                              TArray<AActor*>& OutActors)
+{
+	//Handle child object
+	const TSharedPtr<FJsonObject>* ChildObj;
+	if (Object->TryGetObject(ChildObj))
+	{
+		const UBase* Child = USpeckleSerializer::DeserializeBase(*ChildObj, LocalTransport);
+		RecursivelyConvertToNative_Internal(AOwner, Child, LocalTransport, Task, OutActors);
+		return;
+	}
+
+	//Handle child array object
+	const TArray<TSharedPtr<FJsonValue>>* ChildArr;
+	if (Object->TryGetArray(ChildArr))
+	{
+		for (const auto v : *ChildArr)
 		{
-			for (const auto ArrayElement : *SubArrayPtr)
-			{
-				const TSharedPtr<FJsonObject>* ArraySubObjPtr;
-				if (!ArrayElement->TryGetObject(ArraySubObjPtr)) continue;
-				
-				const UBase* Child = USpeckleSerializer::DeserializeBase(*ArraySubObjPtr, LocalTransport);
-				RecursivelyConvertToNative_Internal(AOwner, Child, LocalTransport, Task, OutActors);
-			}
+			ConvertChild(v, AOwner, LocalTransport, Task, OutActors);
 		}
 	}
-}
+};
+	
 
 void USpeckleConverterComponent::AttachConvertedToOwner(AActor* AOwner, const UBase* Base, UObject* Converted)
 {
