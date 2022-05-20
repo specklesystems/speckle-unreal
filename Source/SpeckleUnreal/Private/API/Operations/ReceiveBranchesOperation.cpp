@@ -1,36 +1,33 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "API/Operations/ReceiveStreamsOperation.h"
+#include "API/Operations/ReceiveBranchesOperation.h"
 
 #include "Dom/JsonObject.h"
 #include "Transports/Transport.h"
 #include "API/SpeckleSerializer.h"
-#include "Objects/Base.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
 
 
 // ReceiveOperation
-UReceiveStreamsOperation* UReceiveStreamsOperation::ReceiveStreamsOperation(UObject* WorldContextObject,
-													 
+UReceiveBranchesOperation* UReceiveBranchesOperation::ReceiveBranchesOperation(UObject* WorldContextObject,
+														const FString& StreamId,
 							                           TScriptInterface<ITransport> RemoteTransport,
 							                           TScriptInterface<ITransport> LocalTransport)
 {
-
 	FString ObjectId = "Streams";
 	
-    UReceiveStreamsOperation* Node = NewObject<UReceiveStreamsOperation>();
-    Node->ObjectId = ObjectId;
+    UReceiveBranchesOperation* Node = NewObject<UReceiveBranchesOperation>();
+    Node->StreamId = StreamId;
     Node->RemoteTransport = RemoteTransport;
     Node->LocalTransport = LocalTransport;
-
 	Node->RegisterWithGameInstance(WorldContextObject);
     return Node;
 }
 
 // Activate
-void UReceiveStreamsOperation::Activate()
+void UReceiveBranchesOperation::Activate()
 {
 	FAnalytics::TrackEvent("unknown",
 		"unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
@@ -39,12 +36,12 @@ void UReceiveStreamsOperation::Activate()
 	Receive();
 }
 
-void UReceiveStreamsOperation::Receive()
+void UReceiveBranchesOperation::Receive()
 {
 	check(LocalTransport != nullptr);
 	
 	// 1. Try and get object from local transport
-	auto Obj = LocalTransport->GetSpeckleObject(ObjectId);
+	auto Obj = LocalTransport->GetSpeckleObject(StreamId);
 
 	if (Obj != nullptr )
 	{
@@ -63,40 +60,40 @@ void UReceiveStreamsOperation::Receive()
 	}
 
 	FTransportCopyObjectCompleteDelegate CompleteDelegate;
-	CompleteDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleReceive);
+	CompleteDelegate.BindUObject(this, &UReceiveBranchesOperation::HandleReceive);
 
 	FTransportErrorDelegate ErrorDelegate;
-	ErrorDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleError);
+	ErrorDelegate.BindUObject(this, &UReceiveBranchesOperation::HandleError);
 	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
 	
-	RemoteTransport->CopyListOfStreams(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
+	RemoteTransport->CopyListOfBranches(LocalTransport, CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveStreamsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
+void UReceiveBranchesOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 {
 	check(IsInGameThread())
 		
 	FEditorScriptExecutionGuard ScriptGuard;
 	if(Object == nullptr)
 	{
-		TArray<FSpeckleStream> EmptyListOfStreams;
-		OnError.Broadcast(EmptyListOfStreams, FString::Printf(TEXT("Failed to get Stream object %s from transport"), *ObjectId));
+		TArray<FSpeckleBranch> EmptyListOfBranches;
+		OnError.Broadcast(EmptyListOfBranches, FString::Printf(TEXT("Failed to get Branches from Stream: %s"), *StreamId));
 	}
 	else
 	{
 		// --- Here Deserialize the list of Streams ----
 		// It is not Deserializing the Streams well
-		TArray<FSpeckleStream> FullListOfStreams = USpeckleSerializer::DeserializeListOfStreams(Object, LocalTransport);
+		TArray<FSpeckleBranch> FullListOfBranches = USpeckleSerializer::DeserializeListOfBranches(Object, LocalTransport);
 
 		
-		if(FullListOfStreams.Num()>0)
+		if(FullListOfBranches.Num()>0)
 		{
-			OnReceiveSuccessfully.Broadcast(FullListOfStreams, "");
+			OnReceiveSuccessfully.Broadcast(FullListOfBranches, "");
 		}else
 		{
-			TArray<FSpeckleStream> EmptyListOfStreams;
-			OnError.Broadcast(EmptyListOfStreams,
-				FString::Printf(TEXT("Root Speckle Stream Object %s failed to deserialize"), *ObjectId));
+			TArray<FSpeckleBranch> EmptyListOfBranches;
+			OnError.Broadcast(EmptyListOfBranches,
+				FString::Printf(TEXT("Root Speckle Stream Object %s failed to deserialize"), *StreamId));
 		}
 	}
 		
@@ -104,11 +101,11 @@ void UReceiveStreamsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 	SetReadyToDestroy();
 }
 
-void UReceiveStreamsOperation::HandleError(FString& Message)
+void UReceiveBranchesOperation::HandleError(FString& Message)
 {
 	FEditorScriptExecutionGuard ScriptGuard;
-	TArray<FSpeckleStream> EmptyListOfStreams;
-	OnError.Broadcast(EmptyListOfStreams, Message);
+	TArray<FSpeckleBranch> EmptyListOfBranches;
+	OnError.Broadcast(EmptyListOfBranches, Message);
 	SetReadyToDestroy();
 }
 

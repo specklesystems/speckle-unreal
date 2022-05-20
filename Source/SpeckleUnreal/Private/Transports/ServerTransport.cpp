@@ -234,6 +234,99 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 	UE_LOG(LogSpeckle, Verbose, TEXT("Requesting %d child objects"), CEnd - CStart);
 }
 
+
+
+
+
+// Branches LIST
+void UServerTransport::CopyListOfBranches(
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction)
+{
+	this->OnComplete = OnCompleteAction;
+	this->OnError = OnErrorAction;
+	
+	// Create Request for Root Object
+	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+
+
+	FString PostPayload = "{\"query\": \"query{\\n stream (id: \\\"" +
+			StreamId + "\\\"){\\n id\\n name\\n branches {\\n totalCount\\n cursor\\n items{\\n id\\n name\\n description\\n}\\n }\\n }\\n}\"}";
+
+	// The above can be extended with author information 
+	//query{stream(id:"a18f8c8569"){id name branches{totalCount items{id name description author{id, name, email, commits{cursor}}}}}}
+	
+	Request->SetURL(ServerUrl + "/graphql");
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetContentAsString(PostPayload);
+	
+	// Response Callback
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+	{
+		if(!bWasSuccessful)
+		{
+			FString Message = FString::Printf(TEXT("Branches: Request for root object at %s was unsuccessful: %s"),
+													*Response->GetURL(), *Response->GetContentAsString());
+			InvokeOnError(Message);
+		}
+		
+		const int32 ResponseCode = Response->GetResponseCode();
+		if (ResponseCode != 200)
+		{
+			FString Message = FString::Printf(TEXT("Branches: Request for root object at %s failed with HTTP response %d"),
+													*Response->GetURL(), ResponseCode);
+			InvokeOnError(Message);
+		}
+
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON Branches: %s"), *Response->GetContentAsString());
+		
+		ResponseListOfBranchesSerialized = Response->GetContentAsString();
+		
+		TSharedPtr<FJsonObject> BranchesObj;
+		if(!LoadJson(ResponseListOfBranchesSerialized, BranchesObj))
+		{
+			FString Message = FString::Printf(
+				TEXT("A Speckle List of Branches Object %s was recieved but was invalid and could not be deserialied"),
+											*ResponseListOfBranchesSerialized);
+			InvokeOnError(Message);
+			
+		} else
+		{
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON: Save To %s"), *StreamId);
+			TargetTransport->SaveObject(StreamId, BranchesObj);
+
+			ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(StreamId)),
+															   TEXT("Complete handler was not bound properly"));
+		}
+	};
+
+	// Handle the response
+	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
+	
+	// Send request
+	const bool RequestSent = Request->ProcessRequest();
+
+	if(!RequestSent)
+	{
+		FString Message = FString::Printf(
+			TEXT("Request for Branches object at %s failed: \nHTTP request failed to start"),
+					*PostPayload);
+		
+		InvokeOnError(Message);
+		return;
+	}
+	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for Branches object at %s, awaiting response"), *PostPayload );
+	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+}
+
+
+
+
+
 // STREAMS LIST
 void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 										TScriptInterface<ITransport> TargetTransport,
@@ -306,17 +399,14 @@ void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 	if(!RequestSent)
 	{
 		FString Message = FString::Printf(
-			TEXT("Request for root object at %s failed: \nHTTP request failed to start"),
+			TEXT("Request for Streams object at %s failed: \nHTTP request failed to start"),
 					*PostPayload);
 		
 		InvokeOnError(Message);
 		return;
 	}
-	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *PostPayload );
+	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for Streams object at %s, awaiting response"), *PostPayload );
 	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
-
-	UE_LOG(LogSpeckle, Log, TEXT("-----------> NOT FINISHED <--------------"));
-	
 }
 
 

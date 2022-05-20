@@ -5,9 +5,40 @@
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Objects/ObjectModelRegistry.h"
 #include "Objects/HighLevel/SpeckleStream.h"
+#include "Objects/HighLevel/SpeckleBranch.h"
 #include "Templates/SubclassOf.h"
 #include "Transports/Transport.h"
 #include "UObject/Package.h"
+
+
+// Create the Deserialization Base
+TArray<FSpeckleBranch> USpeckleSerializer::DeserializeListOfBranches(const TSharedPtr<FJsonObject> Obj,
+													const TScriptInterface<ITransport> ReadTransport)
+{
+
+	TArray<FSpeckleBranch> ArrayOfBranches;
+
+	if(Obj == nullptr)
+	{
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON OBJ 156 is null"));
+		return ArrayOfBranches;
+	};
+	
+	ArrayOfBranches.Empty();
+			
+	// {"data":{"user":{"streams":{"totalCount":23,"items":[{"id":"2171b53ac6","name":"Test Push","description":"Mindesk code","updatedAt":"2022-05-17T09:10:40.841Z","createdAt":"2022-05-17T07:18:29.541Z","isPublic":false,"role":"stream:owner"},{"id":"a18f8c8569","name":"ZH Villa ","description"  ...}]
+	TArray<TSharedPtr<FJsonValue>> BranchesArrJSON = Obj->GetObjectField(TEXT("data"))
+																->GetObjectField(TEXT("stream"))
+																	->GetObjectField(TEXT("branches"))
+																			->GetArrayField(TEXT("items"));
+	for (TSharedPtr<FJsonValue> branchAsJSONValue : BranchesArrJSON)
+	{
+		FSpeckleBranch Branch = FSpeckleBranch(branchAsJSONValue);
+		ArrayOfBranches.Add(Branch);
+	}
+
+	return ArrayOfBranches;
+}
 
 
 // Create the Deserialization Base

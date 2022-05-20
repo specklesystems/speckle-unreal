@@ -53,4 +53,9 @@ public:
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) = 0;
 
+	virtual void CopyListOfBranches(
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) = 0;
+
 };

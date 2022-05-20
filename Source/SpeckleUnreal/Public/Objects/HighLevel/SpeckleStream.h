@@ -5,9 +5,6 @@
 
 #include "SpeckleStream.generated.h"
 
-
-
-
 /*
 * Class that holds all the properties required
 * from a speckle Branch
@@ -19,8 +16,6 @@ struct FSpeckleStream
 	GENERATED_BODY()
 	
 public:
-
-	
 	
 	UPROPERTY(BlueprintReadWrite)
 	FString ID;

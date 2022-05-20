@@ -80,7 +80,7 @@ void UReceiveOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
 	{
 		UBase* Res = USpeckleSerializer::DeserializeBase(Object, LocalTransport);
 		if(IsValid(Res))
-			OnReceiveOldSuccessfully.Broadcast(Res, "");
+			OnReceiveSuccessfully.Broadcast(Res, "");
 		else
 			OnError.Broadcast(nullptr, FString::Printf(TEXT("Root Speckle Object %s failed to deserialize"), *ObjectId));
 	}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FSpeckleBranch.generated.h"
+#include "SpeckleBranch.generated.h"
 
 
 /*
@@ -29,6 +29,16 @@ struct FSpeckleBranch
 	UPROPERTY(BlueprintReadWrite)
 	FString Commits;
 
+
+	FSpeckleBranch(const TSharedPtr<FJsonValue> StreamAsJSONValue)
+	{
+		ID = StreamAsJSONValue->AsObject()->GetStringField("id");
+		Name = StreamAsJSONValue->AsObject()->GetStringField("name");
+		Description = StreamAsJSONValue->AsObject()->GetStringField("description");
+		//Author = StreamAsJSONValue->AsObject()->GetStringField("author");
+		//Commits = StreamAsJSONValue->AsObject()->GetStringField("commits");
+	}
+	
 	FSpeckleBranch(){};
 	
 	FSpeckleBranch(const FString& ID, const FString& Name, const FString& Description):

@@ -43,9 +43,15 @@ protected:
 
 	UPROPERTY()
 	FString ResponseListOfStreamsSerialized = "";
+
+	UPROPERTY()
+	FString ResponseListOfBranchesSerialized = "";
 	
 	UPROPERTY()
 	TArray<FSpeckleStream> ArrayOfStreams;
+
+	UPROPERTY()
+	TArray<FSpeckleStream> ArrayOfBranches;
 	
 	FTransportCopyObjectCompleteDelegate OnComplete;
 	FTransportErrorDelegate OnError;
@@ -77,6 +83,11 @@ public:
  										const FTransportErrorDelegate& OnErrorAction) override;
 	
 	virtual void CopyListOfStreams(const FString& ObjectId,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) override;
+
+	virtual void CopyListOfBranches(
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) override;
