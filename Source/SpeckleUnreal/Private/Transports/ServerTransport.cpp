@@ -239,6 +239,106 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 
 
 // Branches LIST
+void UServerTransport::CopyListOfCommits(
+										const FString& BranchName,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction)
+{
+	this->OnComplete = OnCompleteAction;
+	this->OnError = OnErrorAction;
+
+	
+	// Create Request for Root Object
+	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+
+	// FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamId +
+	// 	"\\\"){ commits{items {id referencedObject sourceApplication totalChildrenCount branchName parents authorName authorId message createdAt commentCount}}}}\"}";
+	
+	FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamId +
+		"\\\"){id name createdAt updatedAt branch(name: \\\"" + BranchName + "\\\" ){id name description author{name id email} " +
+					"commits{totalCount items {id referencedObject sourceApplication totalChildrenCount " +
+					"branchName parents authorName authorId authorAvatar message createdAt commentCount}}}}}\"}"; 
+
+	UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON Commits Payload: %s"), *PostPayload);
+	
+	Request->SetURL(ServerUrl + "/graphql");
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetContentAsString(PostPayload);
+	
+	// Response Callback
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+	{
+		if(!bWasSuccessful)
+		{
+			FString Message = FString::Printf(TEXT("Commits: Request for Branch %s returned %s. It was unsuccessful"),
+													*Response->GetURL(), *Response->GetContentAsString());
+			InvokeOnError(Message);
+		}
+		
+		const int32 ResponseCode = Response->GetResponseCode();
+		if (ResponseCode != 200)
+		{
+			FString Message = FString::Printf(TEXT("Branches: Request for Branch object with %s failed with HTTP response %d"),
+													*Response->GetURL(), ResponseCode);
+			InvokeOnError(Message);
+		}
+
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON Commits: %s"), *Response->GetContentAsString());
+		
+		ResponseListOfCommitsSerialized = Response->GetContentAsString();
+		
+		TSharedPtr<FJsonObject> CommitsObj;
+		if(!LoadJson(ResponseListOfCommitsSerialized, CommitsObj))
+		{
+			FString Message = FString::Printf(
+				TEXT("Error R1: List of Commits Object %s was recieved but was invalid and could not be deserialied"),
+											*ResponseListOfCommitsSerialized);
+			InvokeOnError(Message);
+			
+		} else
+		{
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON: Save Commit To %s"), *BranchName);
+			
+			TargetTransport->SaveObject(BranchName, CommitsObj);
+
+			ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(
+														TargetTransport->GetSpeckleObject(BranchName)),
+														TEXT("Complete handler was not bound properly")
+														);
+		}
+	};
+
+	// Handle the response
+	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
+	
+	// Send request
+	const bool RequestSent = Request->ProcessRequest();
+
+	if(!RequestSent)
+	{
+		FString Message = FString::Printf(
+			TEXT("Request for Commits object at %s failed: \nHTTP request failed to start"),
+					*PostPayload);
+		
+		InvokeOnError(Message);
+		return;
+	}
+	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for Commits object at %s, awaiting response"), *PostPayload );
+	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+}
+
+
+
+
+
+
+
+
+// Branches LIST
 void UServerTransport::CopyListOfBranches(
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,

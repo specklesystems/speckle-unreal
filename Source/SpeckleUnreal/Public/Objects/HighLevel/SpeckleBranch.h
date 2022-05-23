@@ -40,10 +40,10 @@ struct FSpeckleBranch
 	}
 	
 	FSpeckleBranch(){};
-	
-	FSpeckleBranch(const FString& ID, const FString& Name, const FString& Description):
-		ID(ID), Name(Name), Description(Description){}
-	
-	FSpeckleBranch(const FString& ID, const FString& Name, const FString& Description, const FString& Author, const FString& Commits):
-		ID(ID), Name(Name), Description(Description), Author(Author), Commits(Commits){}
+	//
+	// FSpeckleBranch(const FString& ID, const FString& Name, const FString& Description):
+	// 	ID(ID), Name(Name), Description(Description){}
+	//
+	// FSpeckleBranch(const FString& ID, const FString& Name, const FString& Description, const FString& Author, const FString& Commits):
+	// 	ID(ID), Name(Name), Description(Description), Author(Author), Commits(Commits){}
 };

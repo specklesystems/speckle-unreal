@@ -6,12 +6,50 @@
 #include "Objects/ObjectModelRegistry.h"
 #include "Objects/HighLevel/SpeckleStream.h"
 #include "Objects/HighLevel/SpeckleBranch.h"
+#include "Objects/HighLevel/SpeckleCommit.h"
 #include "Templates/SubclassOf.h"
 #include "Transports/Transport.h"
 #include "UObject/Package.h"
 
 
-// Create the Deserialization Base
+// Deserialization of the list of Commits
+TArray<FSpeckleCommit> USpeckleSerializer::DeserializeListOfCommits(const TSharedPtr<FJsonObject> Obj,
+													const TScriptInterface<ITransport> ReadTransport)
+{
+
+	TArray<FSpeckleCommit> ArrayOfCommits;
+
+	if(Obj == nullptr)
+	{
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON OBJ 156 is null"));
+		return ArrayOfCommits;
+	};
+	
+	ArrayOfCommits.Empty();
+			
+	// {"data":{"user":{"streams":{"totalCount":23,"items":[{"id":"2171b53ac6","name":"Test Push","description":"Mindesk code","updatedAt":"2022-05-17T09:10:40.841Z","createdAt":"2022-05-17T07:18:29.541Z","isPublic":false,"role":"stream:owner"},{"id":"a18f8c8569","name":"ZH Villa ","description"  ...}]
+
+	// FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamID +
+	// 			"\\\"){branch(name: \\\"" + BranchName + "\\\"){commits{items {id referencedObject sourceApplication totalChildrenCount " +
+	// 				"branchName parents authorName authorAvatar authorId message createdAt} } }}}\"}";
+	
+	TArray<TSharedPtr<FJsonValue>> CommitsArrJSON = Obj->GetObjectField(TEXT("data"))
+														 ->GetObjectField(TEXT("stream"))
+														   ->GetObjectField(TEXT("branch"))
+															 ->GetObjectField(TEXT("commits"))
+															   ->GetArrayField(TEXT("items"));
+	
+	for (TSharedPtr<FJsonValue> commitAsJSONValue : CommitsArrJSON)
+	{
+		FSpeckleCommit Commit = FSpeckleCommit( commitAsJSONValue );
+		ArrayOfCommits.Add( Commit );
+	}
+
+	return ArrayOfCommits;
+}
+
+
+// Deserialization of the list of Branches
 TArray<FSpeckleBranch> USpeckleSerializer::DeserializeListOfBranches(const TSharedPtr<FJsonObject> Obj,
 													const TScriptInterface<ITransport> ReadTransport)
 {

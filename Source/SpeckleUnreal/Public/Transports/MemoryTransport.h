@@ -39,6 +39,12 @@ public:
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) override { return; };
 
+	virtual void CopyListOfCommits(		
+										const FString& BranchName, 
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) override { return; };
+
 	
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
 	static UMemoryTransport* CreateEmptyMemoryTransport()

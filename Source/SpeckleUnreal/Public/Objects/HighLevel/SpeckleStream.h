@@ -13,10 +13,8 @@
 USTRUCT(BlueprintType)
 struct FSpeckleStream 
 {
-	GENERATED_BODY()
-	
-public:
-	
+	GENERATED_USTRUCT_BODY()
+
 	UPROPERTY(BlueprintReadWrite)
 	FString ID;
 
@@ -26,8 +24,8 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	FString Description;
 
-	UPROPERTY(BlueprintReadWrite)
-	bool IsPublic;
+	// UPROPERTY(BlueprintReadWrite)
+	// bool IsStreamPublic;
 
 	UPROPERTY(BlueprintReadWrite)
 	FString Role;
@@ -46,28 +44,28 @@ public:
 		UpdatedAt = StreamAsJSONValue->AsObject()->GetStringField("updatedAt");
 		CreatedAt = StreamAsJSONValue->AsObject()->GetStringField("createdAt");
 		Role = StreamAsJSONValue->AsObject()->GetStringField("role");
-		IsPublic = StreamAsJSONValue->AsObject()->GetBoolField("isPublic");
+		//IsStreamPublic = StreamAsJSONValue->AsObject()->GetBoolField("isPublic");
 	
 		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::White, RoleUser);
 	}
 
 	FSpeckleStream(){};
-	
-	FSpeckleStream(const FString& ID, const FString& Name, const FString& Description):
-			ID(ID), Name(Name), Description(Description){};
-	
-	FSpeckleStream( const FString& ID,
-					const FString& Name,
-					const FString& Description,
-					const bool& IsPublic,
-					const FString& Role,
-					const FString& CreatedAt,
-					const FString& UpdatedAt):
-			ID(ID),
-			Name(Name),
-			Description(Description),
-			IsPublic(IsPublic),
-			Role(Role),
-			CreatedAt(CreatedAt),
-			UpdatedAt(UpdatedAt){}
+	//
+	// FSpeckleStream(const FString& ID, const FString& Name, const FString& Description):
+	// 		ID(ID), Name(Name), Description(Description){};
+	//
+	// FSpeckleStream( const FString& ID,
+	// 				const FString& Name,
+	// 				const FString& Description,
+	// 				const bool& IsPublic,
+	// 				const FString& Role,
+	// 				const FString& CreatedAt,
+	// 				const FString& UpdatedAt):
+	// 		ID(ID),
+	// 		Name(Name),
+	// 		Description(Description),
+	// 		IsPublic(IsPublic),
+	// 		Role(Role),
+	// 		CreatedAt(CreatedAt),
+	// 		UpdatedAt(UpdatedAt){}
 };

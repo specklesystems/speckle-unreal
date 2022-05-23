@@ -33,8 +33,10 @@ protected:
 	
 	UPROPERTY()
 	FString ServerUrl;
+
 	UPROPERTY()
 	FString StreamId;
+
 	UPROPERTY(meta=(PasswordField))
 	FString AuthToken;
 
@@ -46,6 +48,9 @@ protected:
 
 	UPROPERTY()
 	FString ResponseListOfBranchesSerialized = "";
+
+	UPROPERTY()
+	FString ResponseListOfCommitsSerialized = "";
 	
 	UPROPERTY()
 	TArray<FSpeckleStream> ArrayOfStreams;
@@ -91,6 +96,12 @@ public:
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) override;
+
+	virtual void CopyListOfCommits( 
+									const FString& BranchName,
+									TScriptInterface<ITransport> TargetTransport,
+									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+									const FTransportErrorDelegate& OnErrorAction) override;
 	
 protected:
 	virtual void HandleRootObjectResponse(const FString& RootObjSerialized,

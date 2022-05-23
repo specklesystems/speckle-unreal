@@ -6,7 +6,6 @@
 #include "Dom/JsonObject.h"
 #include "Transports/Transport.h"
 #include "API/SpeckleSerializer.h"
-#include "Objects/Base.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
 

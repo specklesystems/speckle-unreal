@@ -40,7 +40,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations", meta = (WorldContext = "WorldContextObject"))
 	static UReceiveOperation* ReceiveOperation(UObject* WorldContextObject, const FString& ObjectId,
-							 TScriptInterface<ITransport> RemoteTransport, TScriptInterface<ITransport> LocalTransport);
+												TScriptInterface<ITransport> RemoteTransport, TScriptInterface<ITransport> LocalTransport);
 
 
 	virtual void Activate() override;

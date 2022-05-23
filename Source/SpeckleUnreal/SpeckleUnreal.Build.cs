@@ -32,7 +32,7 @@ public class SpeckleUnreal : ModuleRules
 				"ProceduralMeshComponent",
 				"MeshDescription",
 				"StaticMeshDescription", 
-				"LidarPointCloudRuntime",
+				"LidarPointCloudRuntime"
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);

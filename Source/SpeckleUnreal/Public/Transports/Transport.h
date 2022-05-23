@@ -58,4 +58,12 @@ public:
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) = 0;
 
+
+	virtual void CopyListOfCommits(		
+										const FString& BranchName,
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction) = 0;
+	
+
 };

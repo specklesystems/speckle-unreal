@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Objects/HighLevel/SpeckleStream.h"
 #include "Objects/HighLevel/SpeckleBranch.h"
+#include "Objects/HighLevel/SpeckleCommit.h"
 
 
 #include "SpeckleSerializer.generated.h"
@@ -28,4 +29,6 @@ public:
 	static TArray<FSpeckleStream> DeserializeListOfStreams(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
 
 	static TArray<FSpeckleBranch> DeserializeListOfBranches(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
+
+	static TArray<FSpeckleCommit> DeserializeListOfCommits(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
 };
