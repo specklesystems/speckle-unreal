@@ -64,6 +64,10 @@ public:
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) = 0;
-	
+
+	virtual void CopyMyUserData(		
+									TScriptInterface<ITransport> TargetTransport,
+									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+									const FTransportErrorDelegate& OnErrorAction) = 0;
 
 };

@@ -238,7 +238,104 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 
 
 
-// Branches LIST
+
+// My User Data
+void UServerTransport::CopyMyUserData(
+										TScriptInterface<ITransport> TargetTransport,
+										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+										const FTransportErrorDelegate& OnErrorAction)
+{
+	this->OnComplete = OnCompleteAction;
+	this->OnError = OnErrorAction;
+
+	
+	// Create Request for Root Object
+	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+
+	// FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamId +
+	// 	"\\\"){ commits{items {id referencedObject sourceApplication totalChildrenCount branchName parents authorName authorId message createdAt commentCount}}}}\"}";
+	
+	FString PostPayload = "{\"query\": \"query{user{id,name,email,company,role,suuid,bio,profiles,avatar}}\"}"; 
+
+	UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON MyUserData Payload: %s"), *PostPayload);
+	
+	Request->SetURL(ServerUrl + "/graphql");
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetContentAsString(PostPayload);
+	
+	// Response Callback
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+	{
+		if(!bWasSuccessful)
+		{
+			FString Message = FString::Printf(TEXT("MyUserData: Request for MyUserData %s returned %s. It was unsuccessful"),
+													*Response->GetURL(), *Response->GetContentAsString());
+			InvokeOnError(Message);
+		}
+		
+		const int32 ResponseCode = Response->GetResponseCode();
+		if (ResponseCode != 200)
+		{
+			FString Message = FString::Printf(TEXT("MyUserData: Request for MyUserData object with %s failed with HTTP response %d"),
+													*Response->GetURL(), ResponseCode);
+			InvokeOnError(Message);
+		}
+
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON MyUserData: %s"), *Response->GetContentAsString());
+		
+		ResponseListOfCommitsSerialized = Response->GetContentAsString();
+		
+		TSharedPtr<FJsonObject> CommitsObj;
+		if(!LoadJson(ResponseListOfCommitsSerialized, CommitsObj))
+		{
+			FString Message = FString::Printf(
+				TEXT("Error R2: MyUserData Object %s was recieved but was invalid and could not be deserialied"),
+											*ResponseListOfCommitsSerialized);
+			InvokeOnError(Message);
+			
+		} else
+		{
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON: Save Commit To %s"), TEXT("MyUserData"));
+			
+			TargetTransport->SaveObject("MyUserData", CommitsObj);
+
+			ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(
+														TargetTransport->GetSpeckleObject("MyUserData")),
+														TEXT("Complete handler was not bound properly")
+														);
+		}
+	};
+
+	// Handle the response
+	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
+	
+	// Send request
+	const bool RequestSent = Request->ProcessRequest();
+
+	if(!RequestSent)
+	{
+		FString Message = FString::Printf(
+			TEXT("Request for Commits object at %s failed: \nHTTP request failed to start"),
+					*PostPayload);
+		
+		InvokeOnError(Message);
+		return;
+	}
+	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for Commits object at %s, awaiting response"), *PostPayload );
+	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+}
+
+
+
+
+
+
+
+
+// Commits LIST
 void UServerTransport::CopyListOfCommits(
 										const FString& BranchName,
 										TScriptInterface<ITransport> TargetTransport,
@@ -330,9 +427,6 @@ void UServerTransport::CopyListOfCommits(
 	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for Commits object at %s, awaiting response"), *PostPayload );
 	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
 }
-
-
-
 
 
 

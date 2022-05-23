@@ -4,12 +4,40 @@
 #include "LogSpeckle.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Objects/ObjectModelRegistry.h"
+#include "Objects/HighLevel/SpeckleUser.h"
 #include "Objects/HighLevel/SpeckleStream.h"
 #include "Objects/HighLevel/SpeckleBranch.h"
 #include "Objects/HighLevel/SpeckleCommit.h"
 #include "Templates/SubclassOf.h"
 #include "Transports/Transport.h"
 #include "UObject/Package.h"
+ 
+
+
+// Deserialize user object
+FSpeckleUser USpeckleSerializer::DeserializeMyUserData(const TSharedPtr<FJsonObject> Obj,
+													const TScriptInterface<ITransport> ReadTransport)
+{
+
+	FSpeckleUser MyUserData;
+
+	if(Obj == nullptr)
+	{
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON OBJ is null"));
+		return MyUserData;
+	};
+	
+	
+			
+	// {"data":{"user":{"id": "93c67be9d1",	"name": "Dimitrios Ververidis",	"email": "ververid@iti.gr",	"company": "CERTH",
+
+	TSharedPtr<FJsonObject> MyUserDataJSONObject = Obj->GetObjectField(TEXT("data"))
+															->GetObjectField(TEXT("user"));
+
+	MyUserData = FSpeckleUser( MyUserDataJSONObject );
+	
+	return MyUserData;
+}
 
 
 // Deserialization of the list of Commits
@@ -38,6 +66,7 @@ TArray<FSpeckleCommit> USpeckleSerializer::DeserializeListOfCommits(const TShare
 														   ->GetObjectField(TEXT("branch"))
 															 ->GetObjectField(TEXT("commits"))
 															   ->GetArrayField(TEXT("items"));
+
 	
 	for (TSharedPtr<FJsonValue> commitAsJSONValue : CommitsArrJSON)
 	{

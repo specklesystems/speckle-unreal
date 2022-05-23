@@ -102,6 +102,11 @@ public:
 									TScriptInterface<ITransport> TargetTransport,
 									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 									const FTransportErrorDelegate& OnErrorAction) override;
+
+	virtual void CopyMyUserData( 
+									TScriptInterface<ITransport> TargetTransport,
+									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+									const FTransportErrorDelegate& OnErrorAction) override;
 	
 protected:
 	virtual void HandleRootObjectResponse(const FString& RootObjSerialized,

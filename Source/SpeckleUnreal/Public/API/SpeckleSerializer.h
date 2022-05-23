@@ -7,6 +7,7 @@
 #include "Objects/HighLevel/SpeckleStream.h"
 #include "Objects/HighLevel/SpeckleBranch.h"
 #include "Objects/HighLevel/SpeckleCommit.h"
+#include "Objects/HighLevel/SpeckleUser.h"
 
 
 #include "SpeckleSerializer.generated.h"
@@ -31,4 +32,6 @@ public:
 	static TArray<FSpeckleBranch> DeserializeListOfBranches(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
 
 	static TArray<FSpeckleCommit> DeserializeListOfCommits(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
+
+	static FSpeckleUser DeserializeMyUserData(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport);
 };
