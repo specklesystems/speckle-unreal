@@ -8,10 +8,44 @@
 #include "Objects/HighLevel/SpeckleStream.h"
 #include "Objects/HighLevel/SpeckleBranch.h"
 #include "Objects/HighLevel/SpeckleCommit.h"
+#include "Objects/HighLevel/SpeckleGlobals.h"
 #include "Templates/SubclassOf.h"
 #include "Transports/Transport.h"
 #include "UObject/Package.h"
- 
+
+
+
+void USpeckleSerializer::DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj)
+{
+	FString OutputString;
+	TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(Obj.ToSharedRef(), Writer);
+	UE_LOG(LogTemp, Log, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
+}
+
+
+// Deserialize Globals
+FSpeckleGlobals USpeckleSerializer::DeserializeGlobals(const TSharedPtr<FJsonObject> Obj,
+													const TScriptInterface<ITransport> ReadTransport)
+{
+	FSpeckleGlobals Globals;
+
+	if(Obj == nullptr)
+	{
+		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON OBJ is null"));
+		return Globals;
+	};
+	
+	TSharedPtr<FJsonObject> GlobalsJSONObject = Obj->GetObjectField(TEXT("data"))
+														->GetObjectField(TEXT("stream"))
+															->GetObjectField(TEXT("object"))
+																->GetObjectField(TEXT("data"));
+
+	DisplayAsString("GLOBALS result",Obj);
+	Globals = FSpeckleGlobals( GlobalsJSONObject );
+	
+	return Globals;
+}
 
 
 // Deserialize user object

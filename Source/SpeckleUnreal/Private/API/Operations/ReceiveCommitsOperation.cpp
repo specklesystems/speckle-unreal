@@ -6,30 +6,23 @@
 #include "Dom/JsonObject.h"
 #include "Transports/Transport.h"
 #include "API/SpeckleSerializer.h"
-#include "Objects/Base.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
 
 
 // ReceiveOperation
 UReceiveCommitsOperation* UReceiveCommitsOperation::ReceiveCommitsOperation(
-
 														UObject* WorldContextObject,
 														const FString& BranchName,
 														TScriptInterface<ITransport> RemoteTransport,
 														TScriptInterface<ITransport> LocalTransport)
 {
-
 	FString ObjectId = "Commits";
-
-	
-	
     UReceiveCommitsOperation* Node = NewObject<UReceiveCommitsOperation>();
     Node->ObjectId = ObjectId;
 	Node->BranchName = BranchName;
     Node->RemoteTransport = RemoteTransport;
     Node->LocalTransport = LocalTransport;
-
 	Node->RegisterWithGameInstance(WorldContextObject);
     return Node;
 }

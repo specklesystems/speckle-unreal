@@ -239,6 +239,114 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 
 
 
+
+
+
+
+
+// Globals branch of a Stream
+void UServerTransport::CopyGlobals( const FString& ReferencedObjectId,
+									TScriptInterface<ITransport> TargetTransport,
+									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+									const FTransportErrorDelegate& OnErrorAction)
+{
+	this->OnComplete = OnCompleteAction;
+	this->OnError = OnErrorAction;
+	
+
+	UE_LOG(LogSpeckle, Log, TEXT("-----------> Copy Globals A32"));
+	
+	// Create Request for Root Object
+	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+
+	FString PostPayload = "{\"query\": \"query{stream (id:\\\"" + StreamId +
+							 "\\\"){id name description updatedAt createdAt role isPublic object(id:\\\"" +
+								ReferencedObjectId +
+							    	"\\\"){id data}}}\"}";
+	
+	UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON Globals Payload: %s"), *PostPayload);
+	
+	Request->SetURL(ServerUrl + "/graphql");
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader("Accept-Encoding", TEXT("gzip"));
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetContentAsString(PostPayload);
+	
+	// Response Callback
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+	{
+		if(!bWasSuccessful)
+		{
+			FString Message = FString::Printf(TEXT("Globals: Request for Globals %s returned %s. It was unsuccessful"),
+													*Response->GetURL(), *Response->GetContentAsString());
+			InvokeOnError(Message);
+		}
+		
+		const int32 ResponseCode = Response->GetResponseCode();
+		if (ResponseCode != 200)
+		{
+			FString Message = FString::Printf(TEXT("Globals: Request for Globals object with %s failed with HTTP response %d"),
+													*Response->GetURL(), ResponseCode);
+			InvokeOnError(Message);
+		}
+
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON Globals: %s"), *Response->GetContentAsString());
+		
+		ResponseGlobalsSerialized = Response->GetContentAsString();
+		
+		TSharedPtr<FJsonObject> GlobalsObj;
+		if(!LoadJson(ResponseGlobalsSerialized, GlobalsObj))
+		{
+			FString Message = FString::Printf(
+				TEXT("Error R15: Globals Object %s was recieved but was invalid and could not be deserialized"),
+											*ResponseGlobalsSerialized);
+			InvokeOnError(Message);
+			
+		} else
+		{
+			UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON: Save Globals To %s"), TEXT("Globals"));
+			
+			TargetTransport->SaveObject("Globals", GlobalsObj);
+
+			ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(
+															TargetTransport->GetSpeckleObject("Globals")),
+															TEXT("Complete handler was not bound properly")
+															);
+		}
+	};
+
+	// Handle the response
+	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
+	
+	// Send request
+	const bool RequestSent = Request->ProcessRequest();
+
+	if(!RequestSent)
+	{
+		FString Message = FString::Printf(
+			TEXT("Request for Commits object at %s failed: \nHTTP request failed to start"),
+					*PostPayload);
+		
+		InvokeOnError(Message);
+		return;
+	}
+	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for Globals object at %s, awaiting response"), *PostPayload );
+	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 // My User Data
 void UServerTransport::CopyMyUserData(
 										TScriptInterface<ITransport> TargetTransport,
@@ -355,7 +463,7 @@ void UServerTransport::CopyListOfCommits(
 	FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamId +
 		"\\\"){id name createdAt updatedAt branch(name: \\\"" + BranchName + "\\\" ){id name description author{name id email} " +
 					"commits{totalCount items {id referencedObject sourceApplication totalChildrenCount " +
-					"branchName parents authorName authorId authorAvatar message createdAt commentCount}}}}}\"}"; 
+					"branchName parents authorName authorId message createdAt commentCount}}}}}\"}"; // authorAvatar 
 
 	UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON Commits Payload: %s"), *PostPayload);
 	

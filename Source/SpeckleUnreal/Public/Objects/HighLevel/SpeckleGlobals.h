@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FSpeckleGlobals.generated.h"
+#include "SpeckleGlobals.generated.h"
 
 
 /*
@@ -33,6 +33,18 @@ struct FSpeckleGlobals
 	{
 	};
 
+
+	FSpeckleGlobals(const TSharedPtr<FJsonObject> GlobalsJSONObject)
+	{
+		ID       = *GlobalsJSONObject->GetStringField("id");
+		//TArray<TSharedPtr<FJsonValue>> RegionAsArray = GlobalsJSONObject->GetArrayField("region");
+		Region = ""; // RegionAsArray[0]->AsString();
+		Latitude = static_cast<float>(GlobalsJSONObject->GetNumberField("Latitude"));
+		Longitude= static_cast<float>(GlobalsJSONObject->GetNumberField("Longitude"));
+		Height   = static_cast<float>(GlobalsJSONObject->GetNumberField("Height"));
+	}
+
+	
 	FSpeckleGlobals(const FString& ID, const FString& Region, float Latitude, float Longitude)
 	: ID(ID),
 	Region(Region),

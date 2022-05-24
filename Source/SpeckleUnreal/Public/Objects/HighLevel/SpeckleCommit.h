@@ -20,9 +20,6 @@ struct FSpeckleCommit
 	FString ReferenceObjectID;
 
 	UPROPERTY(BlueprintReadWrite)
-	FString Author;
-
-	UPROPERTY(BlueprintReadWrite)
 	FString Message;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -56,19 +53,28 @@ struct FSpeckleCommit
 
 	FSpeckleCommit(const TSharedPtr<FJsonValue> CommitAsJSONValue)
 	{
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 1"));
+		
 		ID = CommitAsJSONValue->AsObject()->GetStringField("id");
-		ReferenceObjectID = CommitAsJSONValue->AsObject()->GetStringField("referenceObject");
+
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 2"));
+		
+		ReferenceObjectID = CommitAsJSONValue->AsObject()->GetStringField("referencedObject");
 		Message = CommitAsJSONValue->AsObject()->GetStringField("message");
-		Author = CommitAsJSONValue->AsObject()->GetStringField("author");
 		SourceApplication = CommitAsJSONValue->AsObject()->GetStringField("sourceApplication");
 		TotalChildrenCount= CommitAsJSONValue->AsObject()->GetStringField("totalChildrenCount");
 		BranchName = CommitAsJSONValue->AsObject()->GetStringField("branchName");
 		Parents = CommitAsJSONValue->AsObject()->GetStringField("parents");
+
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 5"));
+		
 		AuthorId = CommitAsJSONValue->AsObject()->GetStringField("authorId");
 		AuthorName = CommitAsJSONValue->AsObject()->GetStringField("authorName");
-		AuthorAvatar = CommitAsJSONValue->AsObject()->GetStringField("authorAvatar");
+		//AuthorAvatar = CommitAsJSONValue->AsObject()->GetStringField("authorAvatar");
 		CreatedAt = CommitAsJSONValue->AsObject()->GetStringField("createdAt");
 		CommentCount = CommitAsJSONValue->AsObject()->GetStringField("commentCount");
+
+		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 10"));
 	}
 	
 

@@ -51,6 +51,9 @@ protected:
 
 	UPROPERTY()
 	FString ResponseListOfCommitsSerialized = "";
+
+	UPROPERTY()
+	FString ResponseGlobalsSerialized = "";
 	
 	UPROPERTY()
 	TArray<FSpeckleStream> ArrayOfStreams;
@@ -67,8 +70,9 @@ public:
 
 
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
-	static UServerTransport* CreateServerTransport(UPARAM(ref) FString& _ServerUrl, UPARAM(ref)  FString& _StreamId,
-																						UPARAM(ref) FString& _AuthToken)
+	static UServerTransport* CreateServerTransport(UPARAM(ref) FString& _ServerUrl,
+												   UPARAM(ref)  FString& _StreamId,
+												   UPARAM(ref) FString& _AuthToken)
 	{
 		UServerTransport* Transport = NewObject<UServerTransport>();
 		Transport->ServerUrl = _ServerUrl;
@@ -104,6 +108,11 @@ public:
 									const FTransportErrorDelegate& OnErrorAction) override;
 
 	virtual void CopyMyUserData( 
+									TScriptInterface<ITransport> TargetTransport,
+									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+									const FTransportErrorDelegate& OnErrorAction) override;
+
+	virtual void CopyGlobals(       const FString& ReferencedObjectId,
 									TScriptInterface<ITransport> TargetTransport,
 									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 									const FTransportErrorDelegate& OnErrorAction) override;

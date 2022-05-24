@@ -41,7 +41,7 @@ public:
 	 * @return 
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations",
-						meta = (WorldContext = "WorldContextObject", BranchName = "main"))
+																meta = (WorldContext = "WorldContextObject"))
 	static UReceiveMyUserDataOperation* ReceiveMyUserDataOperation(UObject* WorldContextObject,
 															 TScriptInterface<ITransport> RemoteTransport,
 															 TScriptInterface<ITransport> LocalTransport);
