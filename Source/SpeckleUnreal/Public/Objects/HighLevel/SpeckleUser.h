@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SpeckleCollaborator.h"
 #include "SpeckleUser.generated.h"
 
 /*
@@ -38,6 +39,7 @@ struct FSpeckleUser
 	UPROPERTY(BlueprintReadWrite)
 	FString Avatar;
 
+	
 	// UPROPERTY(BlueprintReadWrite)
 	// FString Profiles;
 	//
@@ -48,9 +50,18 @@ struct FSpeckleUser
 	// FString TimelineCollection;
 
 	FSpeckleUser(){};
+	
+	void DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj) const
+    {
+    		FString OutputString;
+    		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+    		FJsonSerializer::Serialize(Obj.ToSharedRef(), Writer);
+    		UE_LOG(LogTemp, Log, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
+    }
 
 	FSpeckleUser(TSharedPtr<FJsonObject> MyUserDataJSONObject)
 	{
+		
 		Id      = *MyUserDataJSONObject->GetStringField("id");
 		Name    = *MyUserDataJSONObject->GetStringField("name");
 		Company = *MyUserDataJSONObject->GetStringField("company");
@@ -59,6 +70,8 @@ struct FSpeckleUser
 		Email   = *MyUserDataJSONObject->GetStringField("email");
 		Bio     = *MyUserDataJSONObject->GetStringField("bio");
 		Avatar  = *MyUserDataJSONObject->GetStringField("avatar");
+
+		
 	}
 
 	

@@ -78,7 +78,6 @@ FSpeckleUser USpeckleSerializer::DeserializeMyUserData(const TSharedPtr<FJsonObj
 TArray<FSpeckleCommit> USpeckleSerializer::DeserializeListOfCommits(const TSharedPtr<FJsonObject> Obj,
 													const TScriptInterface<ITransport> ReadTransport)
 {
-
 	TArray<FSpeckleCommit> ArrayOfCommits;
 
 	if(Obj == nullptr)
@@ -101,6 +100,8 @@ TArray<FSpeckleCommit> USpeckleSerializer::DeserializeListOfCommits(const TShare
 															 ->GetObjectField(TEXT("commits"))
 															   ->GetArrayField(TEXT("items"));
 
+
+	DisplayAsString("Commits", Obj);
 	
 	for (TSharedPtr<FJsonValue> commitAsJSONValue : CommitsArrJSON)
 	{

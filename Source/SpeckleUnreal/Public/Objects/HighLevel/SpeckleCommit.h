@@ -48,33 +48,35 @@ struct FSpeckleCommit
 
 	UPROPERTY(BlueprintReadWrite)
 	FString CommentCount;
+
+
+
+	void DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj) const
+	{
+		FString OutputString;
+		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		FJsonSerializer::Serialize(Obj.ToSharedRef(), Writer);
+		UE_LOG(LogTemp, Log, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
+	}
 	
 	FSpeckleCommit(){};
 
 	FSpeckleCommit(const TSharedPtr<FJsonValue> CommitAsJSONValue)
 	{
-		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 1"));
-		
-		ID = CommitAsJSONValue->AsObject()->GetStringField("id");
-
-		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 2"));
-		
-		ReferenceObjectID = CommitAsJSONValue->AsObject()->GetStringField("referencedObject");
-		Message = CommitAsJSONValue->AsObject()->GetStringField("message");
-		SourceApplication = CommitAsJSONValue->AsObject()->GetStringField("sourceApplication");
-		TotalChildrenCount= CommitAsJSONValue->AsObject()->GetStringField("totalChildrenCount");
-		BranchName = CommitAsJSONValue->AsObject()->GetStringField("branchName");
-		Parents = CommitAsJSONValue->AsObject()->GetStringField("parents");
-
-		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 5"));
-		
-		AuthorId = CommitAsJSONValue->AsObject()->GetStringField("authorId");
-		AuthorName = CommitAsJSONValue->AsObject()->GetStringField("authorName");
+		TSharedPtr<FJsonObject> obj = CommitAsJSONValue->AsObject();
+		ID = obj->GetStringField("id");
+		ReferenceObjectID = obj->GetStringField("referencedObject");
+		Message = obj->GetStringField("message");
+		SourceApplication = obj->GetStringField("sourceApplication");
+		TotalChildrenCount= obj->GetStringField("totalChildrenCount");
+		BranchName = obj->GetStringField("branchName");
+		Parents = obj->GetStringField("parents");
+		AuthorId = obj->GetStringField("authorId");
+		AuthorName = obj->GetStringField("authorName");
 		//AuthorAvatar = CommitAsJSONValue->AsObject()->GetStringField("authorAvatar");
-		CreatedAt = CommitAsJSONValue->AsObject()->GetStringField("createdAt");
-		CommentCount = CommitAsJSONValue->AsObject()->GetStringField("commentCount");
+		CreatedAt = obj->GetStringField("createdAt");
+		CommentCount = obj->GetStringField("commentCount");
 
-		UE_LOG(LogSpeckle, Log, TEXT("-----------> Speckle Commit Assignment 10"));
 	}
 	
 

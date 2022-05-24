@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "LogSpeckle.h"
+#include "SpeckleCollaborator.h"
 
 #include "SpeckleStream.generated.h"
 
@@ -36,14 +37,39 @@ struct FSpeckleStream
 	UPROPERTY(BlueprintReadWrite)
 	FString UpdatedAt;
 
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FSpeckleCollaborator> Collaborators;
+
+
+	void DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj) const
+	{
+		FString OutputString;
+		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		FJsonSerializer::Serialize(Obj.ToSharedRef(), Writer);
+		UE_LOG(LogTemp, Log, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
+	}
+	
 	FSpeckleStream(const TSharedPtr<FJsonValue> StreamAsJSONValue)
 	{
-		ID = StreamAsJSONValue->AsObject()->GetStringField("id");
-		Name = StreamAsJSONValue->AsObject()->GetStringField("name");
-		Description = StreamAsJSONValue->AsObject()->GetStringField("description");
-		UpdatedAt = StreamAsJSONValue->AsObject()->GetStringField("updatedAt");
-		CreatedAt = StreamAsJSONValue->AsObject()->GetStringField("createdAt");
-		Role = StreamAsJSONValue->AsObject()->GetStringField("role");
+		TSharedPtr<FJsonObject> Obj = StreamAsJSONValue->AsObject();
+		DisplayAsString("Collaborators insider --->", Obj);
+		
+		ID = Obj->GetStringField("id");
+		Name = Obj->GetStringField("name");
+		Description = Obj->GetStringField("description");
+		UpdatedAt = Obj->GetStringField("updatedAt");
+		CreatedAt = Obj->GetStringField("createdAt");
+		Role = Obj->GetStringField("role");
+
+		TArray<TSharedPtr<FJsonValue>> CollaboratorsArrJSONValues = Obj->GetArrayField("collaborators");
+
+		for (TSharedPtr<FJsonValue> collaboratorJSONValue : CollaboratorsArrJSONValues)
+		{
+			FSpeckleCollaborator Collaborator = FSpeckleCollaborator( collaboratorJSONValue );
+			Collaborators.Add( Collaborator );
+		}
+
+		
 		//IsStreamPublic = StreamAsJSONValue->AsObject()->GetBoolField("isPublic");
 	
 		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::White, RoleUser);

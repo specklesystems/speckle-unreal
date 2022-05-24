@@ -363,7 +363,8 @@ void UServerTransport::CopyMyUserData(
 	// FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamId +
 	// 	"\\\"){ commits{items {id referencedObject sourceApplication totalChildrenCount branchName parents authorName authorId message createdAt commentCount}}}}\"}";
 	
-	FString PostPayload = "{\"query\": \"query{user{id,name,email,company,role,suuid,bio,profiles,avatar}}\"}"; 
+	FString PostPayload =
+		"{\"query\": \"query{user{id name email company role suuid bio profiles avatar}}\"}"; 
 
 	UE_LOG(LogSpeckle, Log, TEXT("-----------> PJSON MyUserData Payload: %s"), *PostPayload);
 	
@@ -461,7 +462,8 @@ void UServerTransport::CopyListOfCommits(
 	// 	"\\\"){ commits{items {id referencedObject sourceApplication totalChildrenCount branchName parents authorName authorId message createdAt commentCount}}}}\"}";
 	
 	FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamId +
-		"\\\"){id name createdAt updatedAt branch(name: \\\"" + BranchName + "\\\" ){id name description author{name id email} " +
+		"\\\"){id name createdAt updatedAt "
+					+ "branch(name: \\\"" + BranchName + "\\\" ){id name description author{name id email} " +
 					"commits{totalCount items {id referencedObject sourceApplication totalChildrenCount " +
 					"branchName parents authorName authorId message createdAt commentCount}}}}}\"}"; // authorAvatar 
 
@@ -532,11 +534,10 @@ void UServerTransport::CopyListOfCommits(
 		InvokeOnError(Message);
 		return;
 	}
+	
 	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for Commits object at %s, awaiting response"), *PostPayload );
 	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
 }
-
-
 
 
 
@@ -553,8 +554,8 @@ void UServerTransport::CopyListOfBranches(
 	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 
 
-	FString PostPayload = "{\"query\": \"query{\\n stream (id: \\\"" +
-			StreamId + "\\\"){\\n id\\n name\\n branches {\\n totalCount\\n cursor\\n items{\\n id\\n name\\n description\\n}\\n }\\n }\\n}\"}";
+	FString PostPayload = "{\"query\": \"query{ stream (id: \\\"" +
+			StreamId + "\\\"){id name branches {totalCount cursor items{ id name description}}}}\"}";
 
 	// The above can be extended with author information 
 	//query{stream(id:"a18f8c8569"){id name branches{totalCount items{id name description author{id, name, email, commits{cursor}}}}}}
@@ -643,7 +644,7 @@ void UServerTransport::CopyListOfStreams(const FString& ObjectId,
 
 	// GraphQL: Here we have POST PAYLOAD but not endpoint
 	const FString PostPayload =
-		"{\"query\": \"query{user {streams(limit:50) {totalCount items {id name description updatedAt createdAt isPublic role}}}}\"}";
+		"{\"query\": \"query{user {streams(limit:50) {totalCount items {id name description updatedAt createdAt isPublic role  collaborators{id name role company avatar}}}}}\"}";
 	
 	Request->SetURL(ServerUrl + "/graphql");
 	Request->SetVerb(TEXT("POST"));
