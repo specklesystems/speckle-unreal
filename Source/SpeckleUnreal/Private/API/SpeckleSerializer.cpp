@@ -62,3 +62,18 @@ UBase* USpeckleSerializer::DeserializeBaseById(const FString& ObjectId,
 	auto Obj = ReadTransport->GetSpeckleObject(ObjectId);
 	return DeserializeBase(Obj, ReadTransport);
 }
+
+
+UBase* TrySetProperties(const TSubclassOf<UBase> BaseType, const FString& SerialisedObject, TScriptInterface<ITransport> Transport)
+{
+	UBase* Base = NewObject<UBase>(GetTransientPackage(), BaseType);
+
+	
+	TSharedRef<FJsonStringReader> Reader = FJsonStringReader::Create(SerialisedObject);
+	for(auto foo : Reader.)
+	{
+		
+	}
+	
+	return Base;
+}

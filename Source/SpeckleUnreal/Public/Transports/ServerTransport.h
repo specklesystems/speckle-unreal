@@ -7,7 +7,7 @@
 
 #include "ServerTransport.generated.h"
 
-
+class FBatchSender;
 class FHttpModule;
 
 // Data for graphQL request for object ids.
@@ -47,6 +47,8 @@ protected:
 public:
 
 
+	virtual ~UServerTransport() override;
+	
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
 	static UServerTransport* CreateServerTransport(UPARAM(ref) FString& _ServerUrl, UPARAM(ref)  FString& _StreamId, UPARAM(ref) FString& _AuthToken)
 	{
@@ -58,7 +60,10 @@ public:
 	}
 	
 	virtual TSharedPtr<FJsonObject> GetSpeckleObject(const FString& ObjectId) const override;
+	
 	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) override;
+	virtual void BeginWrite() override;
+	virtual void EndWrite() override;
 	
 	virtual bool HasObject(const FString& ObjectId) const override;
 	
@@ -88,6 +93,11 @@ protected:
 	static bool LoadJson(const FString& ObjectJson, TSharedPtr<FJsonObject>& OutJsonObject);
 	static int32 SplitLines(const FString& Content, TArray<FString>& OutLines);
 
+	FBatchSender BatchSender;
+	
+	// FCriticalSection Lock_SendBuffer;
+	// TArray<TTuple<const FString, const FString>> SendBuffer;
+	// FRunnableThread* SendingThread;
 };
 
 

@@ -36,13 +36,22 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	UObject* ConvertToNative(const UBase* SpeckleBase, UWorld* World, UPARAM(ref) TScriptInterface<ISpeckleConverter>& AvailableConverters);
 
-	/// Tries to convert a given Actor or Component into a Speckle Base
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	UBase* ConvertToSpeckle(const UObject* Object);
-
-	/// Clean up any cached assets that now may be unused
+	/// Clean up cached resources, and finish any pending build tasks to complete ToNative conversion.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void FinishConversion();
+
+	
+	/// Will return true if this converter can convert a given 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void CanConvertToSpeckle(const AActor* Actor);
+	
+	/// Tries to convert a given Actor or Component into a Speckle Base
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ConvertToSpeckle(const UObject* Object, UBase* SpeckleObject);
+
+
+
+	
 	
 };
 

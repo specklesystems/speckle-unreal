@@ -8,7 +8,6 @@ bool UMemoryTransport::HasObject(const FString& ObjectId) const
 	return SpeckleObjects.Contains(ObjectId);
 }
 
-
 TSharedPtr<FJsonObject> UMemoryTransport::GetSpeckleObject(const FString& ObjectId) const
 {
 	return SpeckleObjects.FindRef(ObjectId);

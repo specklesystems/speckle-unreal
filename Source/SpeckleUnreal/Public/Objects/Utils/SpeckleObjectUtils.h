@@ -37,6 +37,6 @@ public:
 	UFUNCTION(BlueprintPure)
 	static FTransform CreateTransform(UPARAM(ref) const FMatrix& TransformMatrix);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "Class"))
 	static AActor* SpawnActorInWorld(const TSubclassOf<AActor> Class, UWorld* World, UPARAM(ref) const FTransform& Transform);
 };

@@ -74,7 +74,7 @@ public:
 	UStaticMeshConverter();
 	
 	virtual UObject* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters) override;
-	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
+	virtual void ConvertToSpeckle_Implementation(const UObject* Object, UBase* SpeckleObject) override;
 	virtual void FinishConversion_Implementation() override;
 	
 	// Converts a multiple Speckle Meshes to a native actor of type MeshActorType
@@ -89,12 +89,13 @@ public:
 		                                 FActorSpawnParameters());
 	
 	UFUNCTION(BlueprintCallable)
-	virtual UBase* MeshToSpeckle(const UStaticMeshComponent* Object);
+	virtual TArray<UMesh*> MeshToSpeckle(const UStaticMeshComponent* Object);
 
 	
 protected:
 
 	FCriticalSection Lock_StaticMeshesToBuild;
+	UPROPERTY(BlueprintReadWrite)
 	TArray<UStaticMesh*> StaticMeshesToBuild;
 	
 	virtual void GenerateMeshParams(UStaticMesh::FBuildMeshDescriptionsParams& MeshParams) const;

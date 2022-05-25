@@ -3,6 +3,7 @@
 
 #include "Transports/ServerTransport.h"
 
+#include "FBatchSender.h"
 #include "LogSpeckle.h"
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
@@ -11,20 +12,39 @@
 #include "Mixpanel.h"
 
 
+
+
 TSharedPtr<FJsonObject> UServerTransport::GetSpeckleObject(const FString& ObjectId) const
 {
 	unimplemented();
 	return nullptr;
 }
 
-void UServerTransport::SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject)
+void UServerTransport::SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> Object)
 {
-	unimplemented(); //TODO implement
+	FString SerializedObject;
+	{
+		auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&SerializedObject);
+		FJsonSerializerWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>> SerializerWriter(Writer);
+		FJsonSerializer::Serialize(Object.ToSharedRef(), Writer);
+	}
+
+	BatchSender.EnqueueSend(ObjectId, SerializedObject);
+}
+
+void UServerTransport::BeginWrite()
+{
+	
+}
+
+void UServerTransport::EndWrite()
+{
+	BatchSender.Flush();
 }
 
 bool UServerTransport::HasObject(const FString& ObjectId) const
 {
-	unimplemented(); //TODO implement
+	unimplemented();
 	return false;
 }
 

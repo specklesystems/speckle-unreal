@@ -34,11 +34,10 @@ void UAggregateConverter::PostEditChangeProperty(FPropertyChangedEvent& Property
 }
 #endif
 
-UBase* UAggregateConverter::ConvertToSpeckle_Implementation(const UObject* Object)
+void UAggregateConverter::ConvertToSpeckle_Implementation(const UObject* Object, UBase* SpeckleObject)
 {
 	//TODO implement ToSpeckle
 	unimplemented();
-	return nullptr;
 }
 
 
@@ -79,6 +78,7 @@ bool UAggregateConverter::CanConvertToNative_Implementation(TSubclassOf<UBase> B
 {
 	return GetConverter(BaseType).GetInterface() != nullptr;
 }
+
 
 TScriptInterface<ISpeckleConverter> UAggregateConverter::GetConverter(const TSubclassOf<UBase> BaseType)
 {

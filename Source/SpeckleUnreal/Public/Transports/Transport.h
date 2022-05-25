@@ -29,13 +29,16 @@ class SPECKLEUNREAL_API ITransport
 	GENERATED_BODY()
 
 public:
- 	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) = 0;
+	//TODO consider changing SerializedObject to FString&
+	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) = 0;
 
  	//virtual void SaveObjectFromTransport(FString& ObjectID, TScriptInterface<ITransport> SourceTransport) = 0;
 
  	virtual TSharedPtr<FJsonObject> GetSpeckleObject(const FString& ObjectId) const = 0;
+	virtual bool HasObject(const FString& ObjectId) const; 
 	
- 	virtual bool HasObject(const FString& ObjectId) const = 0;
+	virtual void BeginWrite();
+	virtual void EndWrite();
 	
  	virtual void CopyObjectAndChildren(const FString& ObjectId,
  		TScriptInterface<ITransport> TargetTransport,

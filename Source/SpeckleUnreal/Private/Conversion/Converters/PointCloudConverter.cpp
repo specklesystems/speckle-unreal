@@ -5,6 +5,7 @@
 
 #include "LidarPointCloudActor.h"
 #include "LidarPointCloudComponent.h"
+#include "../../../../../../../../../../../../Program Files/Epic Games/UE_4.26/Engine/Plugins/Experimental/GeometryProcessing/Source/GeometricObjects/Public/VectorTypes.h"
 #include "Objects/Geometry/PointCloud.h"
 
 
@@ -36,7 +37,14 @@ ALidarPointCloudActor* UPointCloudConverter::PointCloudToNative(const UPointClou
 	for(int i = 0; i < SpecklePointCloud->Points.Num(); i++)
 	{
 		FColor c = SpecklePointCloud->Colors.Num() > i? SpecklePointCloud->Colors[i] : FColor::White;
-		FLidarPointCloudPoint p = FLidarPointCloudPoint(SpecklePointCloud->Points[i], c, true, 0);
+
+#if ENGINE_MAJOR_VERSION >= 5
+		FVector3f Point = FVector3f(SpecklePointCloud->Points[i]);
+#else
+		FVector Point = SpecklePointCloud->Points[i];
+#endif
+		
+		FLidarPointCloudPoint p(Point, c, true, 0);
 		LidarPoints.Add(p);
 	}
 	

@@ -26,7 +26,7 @@ public class SpeckleUnreal : ModuleRules
 			new string[]
 			{
 				"Core",
-				"Http", 
+				"HTTP", 
 				"Json", 
 				"JsonUtilities", 
 				"ProceduralMeshComponent",

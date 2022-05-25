@@ -105,6 +105,64 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 	return Vertices.Num() > 0 && Faces.Num() > 0;
 }
 
+void UMesh::ToJson(TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>> Writer)
+{
+	Super::ToJson(Writer);
+
+	// Serialize Transform
+	// TODO todo transform
+
+	// Serialize Vertices
+	{
+		TArray<double> FlattenedVertices;
+		FlattenedVertices.Reserve(Vertices.Num() * 3);
+		for(size_t i = 0, j = 0; i < Vertices.Num(); i++)
+		{
+			const FVector& v = Vertices[i];
+			FlattenedVertices[j++] = v.X;
+			FlattenedVertices[j++] = -v.Y;
+			FlattenedVertices[j++] = v.Z;
+		}
+		Writer.WriteValue(TEXT("vertices"), FlattenedVertices);
+	}
+	
+	// Serialize Faces
+	Writer.WriteValue(TEXT("faces"), Faces);
+	
+
+	//Parse TextureCoords
+	{
+		TArray<double> FlattenedTexCoords;
+		FlattenedTexCoords.Reserve(TextureCoordinates.Num() * 2);
+		for(size_t i = 0, j = 0; i < TextureCoordinates.Num(); i++)
+		{
+			const FVector2D& c = TextureCoordinates[i];
+			FlattenedTexCoords[j++] = c.X;
+			FlattenedTexCoords[j++] = -c.Y;
+		}
+		Writer.WriteValue(TEXT("textureCoordinates"), FlattenedTexCoords);
+	}
+	
+	//Parse VertexColors
+	{
+		TArray<int32> ArgbColors;
+		ArgbColors.Reserve(VertexColors.Num());
+		for(size_t i = 0; i < VertexColors.Num(); i++)
+		{
+			ArgbColors[i] = VertexColors[i].ToPackedARGB();
+		}
+		Writer.WriteValue(TEXT("colors"), ArgbColors);
+	}
+	
+
+	// Parse Optional RenderMaterial
+	//if (RenderMaterial != nullptr)
+	{
+		//TODO renderMaterial
+	}
+	
+}
+
 
 /**
  * If not already so, this method will align vertices

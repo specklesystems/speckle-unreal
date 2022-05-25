@@ -35,7 +35,7 @@ public:
 	virtual bool CanConvertToNative_Implementation(TSubclassOf<UBase> BaseType) override;
 
 	
-	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
+	virtual void ConvertToSpeckle_Implementation(const UObject* Object, UBase* SpeckleObject) override;
 
 	
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")

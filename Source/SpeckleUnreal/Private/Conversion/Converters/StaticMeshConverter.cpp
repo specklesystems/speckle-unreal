@@ -355,7 +355,7 @@ void UStaticMeshConverter::GenerateMeshParams(UStaticMesh::FBuildMeshDescription
 }
 
 
-UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object)
+void UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Object, UBase* SpeckleObject)
 {
 	const UStaticMeshComponent* M = Cast<UStaticMeshComponent>(Object);
 
@@ -367,15 +367,68 @@ UBase* UStaticMeshConverter::ConvertToSpeckle_Implementation(const UObject* Obje
 			M = A->FindComponentByClass<UStaticMeshComponent>();
 		}
 	}
-	if(M == nullptr) return nullptr;
+	if(M == nullptr) return;
 	
-	return MeshToSpeckle(M);
+	//SpeckleObject->DynamicProperties.Add(TEXT("@displayValue"), MeshToSpeckle(M));
+	
 }
 
 
-UBase* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object)
+TArray<UMesh*> UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* MeshComponent)
 {
-	return nullptr; //TODO implement ToSpeckle function
+	
+	UStaticMeshDescription* StaticMeshDescription = NewObject<UStaticMeshDescription>(GetTransientPackage(), NAME_None, RF_Transient);
+	const FMeshDescription* MeshDescription = MeshComponent->GetStaticMesh()->GetMeshDescription(0);;
+	StaticMeshDescription->SetMeshDescription(*MeshDescription);
+	StaticMeshDescription->RegisterAttributes();
+	
+	const FVertexArray& nVertices = StaticMeshDescription->Vertices();
+	TArray<FVector> sVertices;
+	sVertices.Reserve(nVertices.Num()); // * 3));
+	
+	TMap<FVertexID, int32> VertexIdToIndex;
+	VertexIdToIndex.Reserve(nVertices.Num() * 3);
+
+	int32 i = 0;
+	for (const FVertexID& VertexId : nVertices.GetElementIDs())
+	{
+		const FVector Vert = StaticMeshDescription->GetVertexPosition(VertexId);
+		sVertices.Add(Vert);
+		
+		VertexIdToIndex.Add(VertexId, i);
+		i++;
+	}
+
+
+	FTriangleArray& nTriangles = StaticMeshDescription->Triangles();
+	TArray<int32> sFaces;
+	sFaces.Reserve(nTriangles.Num());
+
+	for (const FTriangleID& TriangleId : nTriangles.GetElementIDs())
+	{
+		TArray<FVertexID> Tri;
+		StaticMeshDescription->GetTriangleVertices(TriangleId, Tri);
+
+		sFaces.Add(3);
+		sFaces.Add(VertexIdToIndex[Tri[0]]);
+		sFaces.Add(VertexIdToIndex[Tri[1]]);
+		sFaces.Add(VertexIdToIndex[Tri[2]]);		
+	}
+
+	//TODO colors
+
+	//TODO tex-coords
+
+	//TODO split mesh by material
+	UMesh* Mesh = NewObject<UMesh>(GetTransientPackage(), NAME_None, RF_Transient);
+      
+	Mesh->Vertices = sVertices;
+	Mesh->Faces = sFaces;
+	//Mesh->Colors = sColors;
+	//Mesh->TextureCoordinates = sTexCoords;
+	Mesh->Units = "cm";
+
+	return TArray<UMesh*>{Mesh};
 }
 
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DynamicBase.h"
 #include "Dom/JsonObject.h"
 
 #include "Base.generated.h"
@@ -14,7 +15,7 @@ class ASpeckleUnrealManager;
  * Base type that all Object Models inherit from
  */
 UCLASS(BlueprintType)
-class SPECKLEUNREAL_API UBase : public UObject
+class SPECKLEUNREAL_API UBase : public UDynamicBase
 {
 public:
 
@@ -33,8 +34,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString Id;
 	
-	TMap<FString, TSharedPtr<FJsonValue>> DynamicProperties; //TODO this won't be serialised!
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString Units;
 
@@ -44,7 +43,12 @@ public:
 	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 	{
 		bool IsValid = false;
-		DynamicProperties = Obj->Values;
+		DynamicProperties.Reserve(Obj->Values.Num());
+		for(const auto kvp : Obj->Values)
+		{
+			SetDynamicProperty(kvp.Key, kvp.Value->Type);
+		}
+
 		if(Obj->TryGetStringField("id", Id))
 		{
 			IsValid = true;
@@ -57,37 +61,18 @@ public:
 		return IsValid;
 	}
 
-protected:
 
-	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	int32 RemoveDynamicProperty(UPARAM(ref) const FString& Key)
+	virtual void ToJson(TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>> Writer)
 	{
-		return DynamicProperties.Remove(Key);
-	}
+		Writer.WriteValue(TEXT("units"), Units);
+		Writer.WriteValue(TEXT("speckle_type"), SpeckleType);
 
-public:
-	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	bool TryGetDynamicString(UPARAM(ref) const FString& Key, FString& OutString) const
-	{
-		const TSharedPtr<FJsonValue> Value = DynamicProperties.FindRef(Key);
-		if(Value == nullptr) return false;
-		return Value->TryGetString(OutString);
+		for(const auto& p : DynamicProperties)
+		{
+			//Writer.WriteValue(p.Key, p.Value.mmmmmm));
+		}
 	}
+	
 
-	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	bool TryGetDynamicNumber(UPARAM(ref) const FString& Key, float& OutNumber) const
-	{
-		const TSharedPtr<FJsonValue> Value = DynamicProperties.FindRef(Key);
-		if(Value == nullptr) return false;
-		return Value->TryGetNumber(OutNumber);
-	}
 
-	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	bool TryGetDynamicBool(UPARAM(ref) const FString& Key, bool& OutBool) const
-	{
-		const TSharedPtr<FJsonValue> Value = DynamicProperties.FindRef(Key);
-		if(Value == nullptr) return false;
-		return Value->TryGetBool(OutBool);
-	}
 };
-

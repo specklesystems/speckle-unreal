@@ -41,6 +41,8 @@ public:
 	
 	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
 
+	virtual void ToJson(TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>> Writer) override;
+
 protected:
 	virtual void AlignVerticesWithTexCoordsByIndex();
 };
