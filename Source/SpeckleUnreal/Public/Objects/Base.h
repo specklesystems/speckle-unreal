@@ -13,7 +13,7 @@ class ASpeckleUnrealManager;
 /**
  * Base type that all Object Models inherit from
  */
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, meta=(ScriptName="Base (Speckle.Objects)"))
 class SPECKLEUNREAL_API UBase : public UObject
 {
 public:
@@ -22,7 +22,7 @@ public:
 	
 protected:
 	
-	explicit UBase(const wchar_t* SpeckleType): SpeckleType(SpeckleType) {}
+	explicit UBase(const TCHAR* SpeckleType): SpeckleType(FString(SpeckleType)) {}
 	explicit UBase(const FString& SpeckleType) : SpeckleType(SpeckleType) {}
 	
 public:

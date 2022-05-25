@@ -47,7 +47,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 	{
 		const TArray<TSharedPtr<FJsonValue>> FaceVertices = USpeckleObjectUtils::CombineChunks(Obj->GetArrayField("faces"), ReadTransport);
 		Faces.Reserve(FaceVertices.Num());
-		for(const auto VertIndex : FaceVertices)
+		for(const auto& VertIndex : FaceVertices)
 		{
 			Faces.Add(VertIndex->AsNumber());
 		}
