@@ -37,7 +37,7 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 		return false;
 	}
 	
-	for(const auto Geo : Geometries)
+	for(const auto& Geo : Geometries)
 	{
 		const TSharedPtr<FJsonObject> MeshReference = Geo->AsObject();
 		const FString ChildId = MeshReference->GetStringField("referencedId");

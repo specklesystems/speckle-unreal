@@ -2,6 +2,7 @@
 
 #include "Objects/Other/BlockInstance.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
+#include "Engine/World.h"
 
 UBlockConverter::UBlockConverter()
 {

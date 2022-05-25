@@ -4,12 +4,12 @@
 #include "Transports/MemoryTransport.h"
 #include "Transports/ServerTransport.h"
 #include "LogSpeckle.h"
-#include "Alembic/Abc/Base.h"
 #include "API/SpeckleSerializer.h"
 #include "Conversion/SpeckleConverterComponent.h"
 #include "Misc/ScopedSlowTask.h"
 #include "Objects/Base.h"
 #include "Mixpanel.h"
+#include "Engine/Engine.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 

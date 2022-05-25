@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #pragma once
 
@@ -7,9 +7,9 @@
 
 #include "ReceiveOperation.generated.h"
 
-
 class ITransport;
 class UBase;
+class FJsonObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FRecieveOperationHandler, UBase*, RootBase, FString, ErrorMessage);
 

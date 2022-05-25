@@ -23,10 +23,10 @@ public:
 	bool bAllowAbstract;
 
 	/** Classes that can be picked */
-	TArray<const UClass*> AllowedClassFilters;
+	TArray<UClass*> AllowedClassFilters;
 
 	/** Classes that can't be picked */
-	TArray<const UClass*> DisallowedClassFilters;
+	TArray<UClass*> DisallowedClassFilters;
 
 	virtual bool IsClassAllowed(const FClassViewerInitializationOptions& InInitOptions, const UClass* InClass, TSharedRef< FClassViewerFilterFuncs > InFilterFuncs ) override
 	{

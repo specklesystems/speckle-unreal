@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
+
+#pragma once
+
+#include "CoreMinimal.h"
 
 ///  Anonymous telemetry to help us understand how to make a better Speckle.
 ///  This really helps us to deliver a better open source project and product!

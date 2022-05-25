@@ -1,9 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Conversion/SpeckleConverter.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/World.h"
 
 #include "ProceduralMeshConverter.generated.h"
 
@@ -30,10 +32,10 @@ class SPECKLEUNREAL_API UProceduralMeshConverter :  public UObject, public ISpec
 	
 public:
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
 	TSubclassOf<AActor> MeshActorType;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
 	TEnumAsByte<EComponentMobility::Type> ActorMobility;
 	
 	// Sets default values for this actor's properties
@@ -42,10 +44,10 @@ public:
 	virtual UObject* ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters) override;
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="ToNative")
 	virtual AActor* MeshToNative(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter);
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="ToNative")
 	virtual UMesh* MeshToSpeckle(const UProceduralMeshComponent* Object);
 	
 	virtual AActor* CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());

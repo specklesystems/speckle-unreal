@@ -1,6 +1,8 @@
 ﻿#include "Objects/ObjectModelRegistry.h"
 
 #include "Objects/Base.h"
+#include "Templates/SubclassOf.h"
+#include "UObject/UObjectIterator.h"
 
 TMap<FString, TSubclassOf<UBase>> UObjectModelRegistry::TypeRegistry;
 

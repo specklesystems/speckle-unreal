@@ -1,16 +1,14 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Objects/Base.h"
 #include "UObject/Interface.h"
+#include "Templates/SubclassOf.h"
 
 #include "SpeckleConverter.generated.h"
 
-class UBase;
-class ASpeckleUnrealManager;
-class ISpeckleConverter;
 
 UINTERFACE()
 class SPECKLEUNREAL_API USpeckleConverter : public UInterface
@@ -29,24 +27,24 @@ class SPECKLEUNREAL_API ISpeckleConverter
 
 public:
 	/// Will return true if this converter can convert a given BaseType
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ToNative")
 	bool CanConvertToNative(TSubclassOf<UBase> BaseType);
 	
 	/// Tries to convert a given SpeckleBase into a native Actor
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ToNative")
 	UObject* ConvertToNative(const UBase* SpeckleBase, UWorld* World, UPARAM(ref) TScriptInterface<ISpeckleConverter>& AvailableConverters);
 
 	/// Clean up cached resources, and finish any pending build tasks to complete ToNative conversion.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ToNative")
 	void FinishConversion();
 
 	
 	/// Will return true if this converter can convert a given 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ToSpeckle")
 	void CanConvertToSpeckle(const AActor* Actor);
 	
 	/// Tries to convert a given Actor or Component into a Speckle Base
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ToSpeckle")
 	void ConvertToSpeckle(const UObject* Object, UBase* SpeckleObject);
 
 
@@ -57,7 +55,7 @@ public:
 
 #define CONVERTS_SPECKLE_TYPES() \
 protected: \
-	UPROPERTY(EditAnywhere, BlueprintReadWrite) \
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Conversion") \
 	TSet<TSubclassOf<UBase>> SpeckleTypes; \
 public: \
 	virtual bool CanConvertToNative_Implementation(TSubclassOf<UBase> BaseType) override { return SpeckleTypes.Contains(BaseType); } \

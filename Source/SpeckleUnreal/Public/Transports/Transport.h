@@ -1,13 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "Dom/JsonObject.h"
-#include "Transport.generated.h"
 
-class ITransport;
+#include "Transport.generated.h"
 
 DECLARE_DELEGATE_OneParam(FTransportCopyObjectCompleteDelegate, TSharedPtr<FJsonObject>);
 DECLARE_DELEGATE_OneParam(FTransportErrorDelegate, FString&);

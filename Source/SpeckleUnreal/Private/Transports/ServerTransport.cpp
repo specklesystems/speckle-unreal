@@ -10,6 +10,7 @@
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Mixpanel.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
 
 
 

@@ -5,7 +5,9 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Objects/Other/RenderMaterial.h"
+#include "UObject/ConstructorHelpers.h"
 
 
 UMaterialConverter::UMaterialConverter()
@@ -107,7 +109,7 @@ UMaterialInterface* UMaterialConverter::RenderMaterialToNative(const URenderMate
 		//TStrongObjectPtr< UMaterialInstanceConstantFactoryNew > MaterialFact( NewObject< UMaterialInstanceConstantFactoryNew >() );
 		//MaterialFact->InitialParent = MaterialBase;
 		//UMaterialInstanceConstant* ConstMaterial = Cast< UMaterialInstanceConstant >( MaterialFact->FactoryCreateNew( UMaterialInstanceConstant::StaticClass(), Package, Name, RF_Public, nullptr, GWarn ) );
-		UMaterialInstanceConstant* ConstMaterial = NewObject<UMaterialInstanceConstant>(Package, Name, RF_Public);
+		UMaterialInstanceConstant* ConstMaterial = NewObject<UMaterialInstanceConstant>(Package, Name, RF_Public | RF_Standalone);
 		
 		MaterialInstance = ConstMaterial;
 		ConstMaterial->SetParentEditorOnly(MaterialBase);

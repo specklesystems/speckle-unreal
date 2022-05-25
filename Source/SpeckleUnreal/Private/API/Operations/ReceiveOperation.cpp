@@ -3,6 +3,7 @@
 
 #include "API/Operations/ReceiveOperation.h"
 
+#include "Dom/JsonObject.h"
 #include "Transports/Transport.h"
 #include "API/SpeckleSerializer.h"
 #include "Objects/Base.h"

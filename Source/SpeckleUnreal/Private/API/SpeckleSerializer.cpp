@@ -4,7 +4,9 @@
 #include "LogSpeckle.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Objects/ObjectModelRegistry.h"
+#include "Templates/SubclassOf.h"
 #include "Transports/Transport.h"
+#include "UObject/Package.h"
 
 
 UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)

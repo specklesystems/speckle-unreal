@@ -1,9 +1,15 @@
 ﻿#include "Mixpanel.h"
 
+#include "Containers/UnrealString.h"
 #include "HttpModule.h"
 #include "Kismet/GameplayStatics.h"
 #include "LogSpeckle.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Launch/Resources/Version.h"
+#include "Misc/Base64.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
+#include "Serialization/JsonSerializerMacros.h"
+#include "Serialization/JsonWriter.h"
 
 const FString FAnalytics::MixpanelToken = TEXT("acd87c5a50b56df91a795e999812a3a4");
 const FString FAnalytics::MixpanelServer = TEXT("https://analytics.speckle.systems");

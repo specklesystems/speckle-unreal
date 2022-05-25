@@ -3,7 +3,7 @@
 #include "Conversion/Converters/AggregateConverter.h"
 
 #include "LogSpeckle.h"
-
+#include "Templates/SubclassOf.h"
 
 
 void UAggregateConverter::OnConvertersChangeHandler()

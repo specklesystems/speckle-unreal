@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #pragma once
 
@@ -14,7 +14,7 @@ class ASpeckleUnrealManager;
 /**
  * Base type that all Object Models inherit from
  */
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, meta=(ScriptName="Base (Speckle.Objects)"))
 class SPECKLEUNREAL_API UBase : public UDynamicBase
 {
 public:
@@ -23,7 +23,7 @@ public:
 	
 protected:
 	
-	explicit UBase(const wchar_t* SpeckleType): SpeckleType(SpeckleType) {}
+	explicit UBase(const TCHAR* SpeckleType): SpeckleType(FString(SpeckleType)) {}
 	explicit UBase(const FString& SpeckleType) : SpeckleType(SpeckleType) {}
 	
 public:

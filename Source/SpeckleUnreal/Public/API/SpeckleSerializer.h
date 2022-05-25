@@ -1,9 +1,15 @@
-﻿#pragma once
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "SpeckleSerializer.generated.h"
 
 class UBase;
 class ITransport;
+class FJsonObject;
 
 UCLASS()
 class USpeckleSerializer : public UBlueprintFunctionLibrary

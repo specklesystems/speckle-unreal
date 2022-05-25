@@ -1,12 +1,19 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "Templates/SubclassOf.h"
 #include "SpeckleObjectUtils.generated.h"
 
 class ITransport;
 class UBase;
+class FJsonValue;
+class FJsonObject;
+class UWorld;
+class AActor;
+
 /**
  *  Several helper functions useful for handling JSON Speckle Objects
  */
@@ -30,13 +37,13 @@ public:
 	static bool ParseSpeckleObject(const TSharedPtr<FJsonObject> Object, const TScriptInterface<ITransport> Transport, T*& OutObject);
 
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Speckle/ObjectUtils")
 	static float ParseScaleFactor(const FString& UnitsString);
 
 	// Given a Right Handed Z-up transformation matrix (Speckle's system), will create an equivalent Left Handed Z-up FTransform (UE's system)
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category="Speckle/ObjectUtils")
 	static FTransform CreateTransform(UPARAM(ref) const FMatrix& TransformMatrix);
 
-	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "Class"))
+	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "Class"), Category="Speckle/ObjectUtils")
 	static AActor* SpawnActorInWorld(const TSubclassOf<AActor> Class, UWorld* World, UPARAM(ref) const FTransform& Transform);
 };
