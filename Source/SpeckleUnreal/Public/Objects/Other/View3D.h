@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ScriptName="View3D (Speckle.Objects)"))
 class SPECKLEUNREAL_API UView3D : public UBase
 {
 	GENERATED_BODY()

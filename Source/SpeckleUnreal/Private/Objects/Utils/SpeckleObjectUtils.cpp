@@ -143,6 +143,41 @@ bool USpeckleObjectUtils::ParseVector(const TSharedPtr<FJsonObject> Object,
 	return ParseSpeckleObject<UMesh>(Obj, Transport, Mesh);
 }
 
+bool USpeckleObjectUtils::ParseIntervalProperty(const TSharedPtr<FJsonObject> Base, const FString& PropertyName,
+	const TScriptInterface<ITransport> ReadTransport, FVector2f<float>& OutObject)
+{
+	const TSharedPtr<FJsonObject>* OriginObject;
+	if(Base->TryGetObjectField(PropertyName, OriginObject)
+		&& ParseInterval(*OriginObject, ReadTransport, OutObject))
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+bool USpeckleObjectUtils::ParseInterval(const TSharedPtr<FJsonObject> Object,
+	const TScriptInterface<ITransport> Transport, FVector2f& OutObject)
+{
+	if(!ensure(Object != nullptr)) return false;
+	
+	TSharedPtr<FJsonObject> Obj;
+	if(!ResolveReference(Object, Transport, Obj)) Obj = Object;
+	
+	double x = 0, y = 0, z = 0;
+	
+	if(!(Obj->TryGetNumberField("start", x)
+		&& Obj->TryGetNumberField("end", y)) return false;
+
+	OutObject = FVector2f(x,y,z);
+	//return true;
+
+	UMesh* Mesh;
+	return ParseSpeckleObject<UMesh>(Obj, Transport, Mesh);
+}
+
+
+
 template <typename TBase>  
 bool USpeckleObjectUtils::ParseSpeckleObject(const TSharedPtr<FJsonObject> Object,
 	const TScriptInterface<ITransport> Transport, TBase*& OutObject)

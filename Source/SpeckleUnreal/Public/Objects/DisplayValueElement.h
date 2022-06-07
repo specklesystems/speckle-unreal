@@ -13,7 +13,7 @@ class UMesh;
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ScriptName="Display Value Element (Speckle.Objects)"))
 class SPECKLEUNREAL_API UDisplayValueElement : public UBase
 {
 	GENERATED_BODY()

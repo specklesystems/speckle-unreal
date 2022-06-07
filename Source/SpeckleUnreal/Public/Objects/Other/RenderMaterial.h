@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ScriptName="Render Material (Speckle.Objects)"))
 class SPECKLEUNREAL_API URenderMaterial : public UBase
 {
 	GENERATED_BODY()

@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ScriptName="Block Instance (Speckle.Objects)"))
 class SPECKLEUNREAL_API UBlockInstance : public UBase
 {
 	GENERATED_BODY()

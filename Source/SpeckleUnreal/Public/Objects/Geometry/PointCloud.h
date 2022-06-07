@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ScriptName="Point Cloud (Speckle.Objects)"))
 class SPECKLEUNREAL_API UPointCloud : public UBase
 {
 	GENERATED_BODY()

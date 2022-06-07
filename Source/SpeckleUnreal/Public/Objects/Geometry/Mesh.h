@@ -12,7 +12,7 @@ class URenderMaterial;
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ScriptName="Mesh (Speckle.Objects)"))
 class SPECKLEUNREAL_API UMesh : public UBase
 {
 	GENERATED_BODY()

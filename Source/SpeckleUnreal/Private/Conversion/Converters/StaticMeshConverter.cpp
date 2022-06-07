@@ -14,15 +14,25 @@
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Misc/ScopedSlowTask.h"
 #include "Objects/DisplayValueElement.h"
+#include "Objects/Geometry/Box.h"
 #include "Objects/Other/RenderMaterial.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
+bool UStaticMeshConverter::CanConvertToNative_Implementation(TSubclassOf<UBase> BaseType)
+{
+	if(EnabledTypes.Contains(BaseType))
+		return EnabledTypes[BaseType];
+	
+	return false;
+}
+
 UStaticMeshConverter::UStaticMeshConverter()
 {
-	SpeckleTypes.Add(UMesh::StaticClass());
-	SpeckleTypes.Add(UDisplayValueElement::StaticClass());
+	EnabledTypes.Add(UMesh::StaticClass(), true);
+	EnabledTypes.Add(UDisplayValueElement::StaticClass(), true);
+	EnabledTypes.Add(UBoxx::StaticClass(), true);
 	
 #if WITH_EDITORONLY_DATA
 	UseFullBuild = true;
@@ -55,6 +65,15 @@ UObject* UStaticMeshConverter::ConvertToNative_Implementation(const UBase* Speck
 	if(m != nullptr)
 	{
 		//Handle Single Mesh
+		return MeshToNativeActor(m, World, AvailableConverters);
+	}
+	
+	
+	const UBoxx* b = Cast<UBoxx>(SpeckleBase);
+	if(b != nullptr)
+	{
+		//Handle Element with Display Values
+		const UMesh* m = b->ToMesh();
 		return MeshToNativeActor(m, World, AvailableConverters);
 	}
 	

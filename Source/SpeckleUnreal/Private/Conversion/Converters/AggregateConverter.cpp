@@ -57,6 +57,13 @@ UObject* UAggregateConverter::ConvertToNativeInternal(const UBase* Object, UWorl
 	UObject* Converter = GetConverter(Type).GetObject();
 	if(!IsValid(Converter))
 	{
+		//TODO convert displayValues then halt traversal
+			
+		
+		
+
+		
+		
 		if(Type != UBase::StaticClass())
 		{
 			UE_LOG(LogSpeckle, Warning, TEXT("Skipping Object %s: No conversion functions exist for %s"), *Object->Id, *Type->GetName());
