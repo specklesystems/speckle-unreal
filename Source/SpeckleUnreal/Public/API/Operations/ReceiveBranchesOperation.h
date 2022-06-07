@@ -9,14 +9,9 @@
 #include "ReceiveBranchesOperation.generated.h"
 
 
-class ITransport;
-class UBase;
-class FJsonObject;
-
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveBranchesOperationHandler,
 											const TArray<FSpeckleBranch>&, Branches,
-												FString, ErrorMessage);
+											const FString&, ErrorMessage);
 
 /**
  *   Receive All streams	
@@ -36,19 +31,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations", meta = (WorldContext = "WorldContextObject"))
 	static UReceiveBranchesOperation* ReceiveBranchesOperation(UObject* WorldContextObject,
-															const FString& StreamId,
-															TScriptInterface<ITransport> RemoteTransport,
-															TScriptInterface<ITransport> LocalTransport);
+															const FString& ServerUrl, const FString& AuthToken, const FString& StreamId, int32 Limit = 20);
 	virtual void Activate() override;
 	
 protected:
-	void Receive();
+	void Request();
 	
+	FString ServerUrl;
+	FString AuthToken;
 	FString StreamId;
-	TScriptInterface<ITransport> RemoteTransport;
-	TScriptInterface<ITransport> LocalTransport;
+	int32 Limit;
 
-	void HandleReceive(TSharedPtr<FJsonObject> Object);
+	void HandleReceive(const TArray<FSpeckleBranch>& Branches);
 	
-	void HandleError(FString& Message);
+	void HandleError(const FString& Message);
 };

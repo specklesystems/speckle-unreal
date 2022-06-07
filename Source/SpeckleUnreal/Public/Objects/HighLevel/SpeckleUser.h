@@ -2,7 +2,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SpeckleCollaborator.h"
 #include "SpeckleUser.generated.h"
 
 /*
@@ -13,65 +12,54 @@
 USTRUCT(BlueprintType)
 struct FSpeckleUser
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Id;
 	
-	UPROPERTY(BlueprintReadWrite)
-	FString Name;
-
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Email;
 	
-	UPROPERTY(BlueprintReadWrite)
-	FString Company;
-
-	UPROPERTY(BlueprintReadWrite)
-	FString Suuid;
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString Name;
 	
-	UPROPERTY(BlueprintReadWrite)
-	FString Role;
-	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Bio;
 	
-	UPROPERTY(BlueprintReadWrite)
-	FString Avatar;
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString Company;
 
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString Avatar;
 	
-	// UPROPERTY(BlueprintReadWrite)
-	// FString Profiles;
-	//
-	// UPROPERTY(BlueprintReadWrite)
-	// FString ActivityCollection;
-	//
-	// UPROPERTY(BlueprintReadWrite)
-	// FString TimelineCollection;
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString Suuid;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString Role;
+	
 
 	FSpeckleUser(){};
 	
-	void DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj) const
+	FString DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj) const
     {
     		FString OutputString;
-    		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+    		TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
     		FJsonSerializer::Serialize(Obj.ToSharedRef(), Writer);
-    		UE_LOG(LogTemp, Log, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
+    		UE_LOG(LogSpeckle, Log, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
     }
 
-	FSpeckleUser(TSharedPtr<FJsonObject> MyUserDataJSONObject)
+	FSpeckleUser(const TSharedPtr<FJsonObject> MyUserDataJSONObject)
 	{
-		
-		Id      = *MyUserDataJSONObject->GetStringField("id");
-		Name    = *MyUserDataJSONObject->GetStringField("name");
-		Company = *MyUserDataJSONObject->GetStringField("company");
-		Role    = *MyUserDataJSONObject->GetStringField("role");
-		Suuid   = *MyUserDataJSONObject->GetStringField("suuid");
-		Email   = *MyUserDataJSONObject->GetStringField("email");
-		Bio     = *MyUserDataJSONObject->GetStringField("bio");
-		Avatar  = *MyUserDataJSONObject->GetStringField("avatar");
+		ensureAlways(MyUserDataJSONObject->TryGetStringField("id", Id));
+		MyUserDataJSONObject->TryGetStringField("name", Name);
+		MyUserDataJSONObject->TryGetStringField("company", Company);
+		MyUserDataJSONObject->TryGetStringField("role", Role);
+		MyUserDataJSONObject->TryGetStringField("suuid", Suuid); //TODO Is this a prop?
+		MyUserDataJSONObject->TryGetStringField("email", Email);
+		MyUserDataJSONObject->TryGetStringField("bio", Bio);
+		MyUserDataJSONObject->TryGetStringField("avatar", Avatar);
 
-		
 	}
 
 	
@@ -80,21 +68,21 @@ struct FSpeckleUser
 	
 	FSpeckleUser(
 				 const FString& Id,
-		         const FString& Name,
 		         const FString& Email,
-		         const FString& Company,
-		         const FString& Suuid,
-		         const FString& Role,
 		         const FString& Bio,
-				 const FString& Avatar)
+		         const FString& Company,
+		         const FString& Name,
+				 const FString& Avatar,
+		         const FString& Suuid,
+		         const FString& Role)
 				 :
 		Id(Id),
-		Name(Name),
 		Email(Email),
-		Company(Company),
-		Suuid(Suuid),
-		Role(Role),
+		Name(Name),
 		Bio(Bio),
-		Avatar(Avatar)
+		Company(Company),
+		Avatar(Avatar),
+		Suuid(Suuid),
+		Role(Role)
 	{}
 };

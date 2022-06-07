@@ -6,12 +6,7 @@
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "Objects/HighLevel/SpeckleGlobals.h"
 
-
 #include "ReceiveGlobalsOperation.generated.h"
-
-class ITransport;
-class UBase;
-class FJsonObject;
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveGlobalsOperationHandler, const FSpeckleGlobals, Globals, FString, ErrorMessage);
@@ -33,33 +28,21 @@ public:
 	UPROPERTY(BlueprintAssignable)
     FReceiveGlobalsOperationHandler OnError;
 	
-	/**
-	 * @brief 
-	 * @param WorldContextObject
-	 * @param ReferenceObjectId : The id of the Speckle Object to fetch     
-	 * @param RemoteTransport  
-	 * @param LocalTransport 
-	 * @return 
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations",
-						meta = (WorldContext = "WorldContextObject"))
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations", meta = (WorldContext = "WorldContextObject"))
 	static UReceiveGlobalsOperation* ReceiveGlobalsOperation(UObject* WorldContextObject,
-															 const FString& ReferenceObjectId,
-															 TScriptInterface<ITransport> RemoteTransport,
-															 TScriptInterface<ITransport> LocalTransport);
+	                                                         const FString& ServerUrl, const FString& AuthToken,
+	                                                         const FString& StreamId, const FString& ReferencedObjectId);
 	virtual void Activate() override;
 
-	static void DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj);
 protected:
-	void ReceiveGlobals();
+	void Request();
 	
-	FString ObjectId;
-	FString ReferenceObjectId;
-	
-	TScriptInterface<ITransport> RemoteTransport;
-	TScriptInterface<ITransport> LocalTransport;
+	FString ServerUrl;
+	FString AuthToken;
+	FString StreamId;
+	FString ReferencedObjectId;
 
-	void HandleGlobalsReceive(TSharedPtr<FJsonObject> Object);
+	void HandleReceive(const FSpeckleGlobals& Object);
 	
-	void HandleGlobalsError(FString& Message);
+	void HandleError(const FString& Message);
 };

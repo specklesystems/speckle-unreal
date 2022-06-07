@@ -27,7 +27,7 @@ struct FObjectIdRequest
 UCLASS(BlueprintType)
 class SPECKLEUNREAL_API UServerTransport : public UObject, public ITransport
 {
- GENERATED_BODY()
+	GENERATED_BODY()
 	
 protected:
 	
@@ -90,32 +90,7 @@ public:
  										TScriptInterface<ITransport> TargetTransport,
  										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  										const FTransportErrorDelegate& OnErrorAction) override;
-	
-	virtual void CopyListOfStreams(const FString& ObjectId,
-										TScriptInterface<ITransport> TargetTransport,
-										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-										const FTransportErrorDelegate& OnErrorAction) override;
 
-	virtual void CopyListOfBranches(
-										TScriptInterface<ITransport> TargetTransport,
-										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-										const FTransportErrorDelegate& OnErrorAction) override;
-
-	virtual void CopyListOfCommits( 
-									const FString& BranchName,
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) override;
-
-	virtual void CopyMyUserData( 
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) override;
-
-	virtual void CopyGlobals(       const FString& ReferencedObjectId,
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) override;
 	
 protected:
 	virtual void HandleRootObjectResponse(const FString& RootObjSerialized,

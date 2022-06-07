@@ -8,10 +8,6 @@
 
 #include "ReceiveStreamsOperation.generated.h"
 
-class ITransport;
-class UBase;
-class FJsonObject;
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveStreamsOperationHandler, const TArray<FSpeckleStream>&, Streams, FString, ErrorMessage);
 
@@ -32,20 +28,17 @@ public:
     FReceiveStreamsOperationHandler OnError;
 
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations", meta = (WorldContext = "WorldContextObject"))
-	static UReceiveStreamsOperation* ReceiveStreamsOperation(UObject* WorldContextObject,
-															
-															TScriptInterface<ITransport> RemoteTransport,
-															TScriptInterface<ITransport> LocalTransport);
+	static UReceiveStreamsOperation* ReceiveStreamsOperation(UObject* WorldContextObject, const FString& ServerUrl, const FString& AuthToken, const int32 Limit = 20);
 	virtual void Activate() override;
 	
 protected:
-	void Receive();
+	void Request();
 	
-	FString ObjectId;
-	TScriptInterface<ITransport> RemoteTransport;
-	TScriptInterface<ITransport> LocalTransport;
+	FString ServerUrl;
+	FString AuthToken;
+	int32 Limit;
 
-	void HandleReceive(TSharedPtr<FJsonObject> Object);
+	void HandleReceive(const TArray<FSpeckleStream>& Streams);
 	
-	void HandleError(FString& Message);
+	void HandleError(const FString& Message);
 };

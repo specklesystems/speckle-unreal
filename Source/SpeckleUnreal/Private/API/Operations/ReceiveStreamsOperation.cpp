@@ -3,111 +3,67 @@
 
 #include "API/Operations/ReceiveStreamsOperation.h"
 
-#include "Dom/JsonObject.h"
-#include "Transports/Transport.h"
-#include "API/SpeckleSerializer.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
+#include "API/ClientAPI.h"
 
 
-// ReceiveOperation
 UReceiveStreamsOperation* UReceiveStreamsOperation::ReceiveStreamsOperation(UObject* WorldContextObject,
-													 
-							                           TScriptInterface<ITransport> RemoteTransport,
-							                           TScriptInterface<ITransport> LocalTransport)
+                                                                            const FString& ServerUrl,
+                                                                            const FString& AuthToken,
+                                                                            const int32 Limit)
 {
-
 	FString ObjectId = "Streams";
 	
     UReceiveStreamsOperation* Node = NewObject<UReceiveStreamsOperation>();
-    Node->ObjectId = ObjectId;
-    Node->RemoteTransport = RemoteTransport;
-    Node->LocalTransport = LocalTransport;
+    Node->ServerUrl = ServerUrl.TrimEnd();;
+	Node->AuthToken = AuthToken.TrimEnd();;
+	Node->Limit = Limit;
 
 	Node->RegisterWithGameInstance(WorldContextObject);
     return Node;
 }
 
-// Activate
 void UReceiveStreamsOperation::Activate()
 {
 	FAnalytics::TrackEvent("unknown",
-		"unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+		ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
 
-	//Async(EAsyncExecution::Thread, [this]{Receive();});
-	Receive();
+	Request();
 }
 
-void UReceiveStreamsOperation::Receive()
+void UReceiveStreamsOperation::Request()
 {
-	check(LocalTransport != nullptr);
-	
-	// 1. Try and get object from local transport
-	auto Obj = LocalTransport->GetSpeckleObject(ObjectId);
-
-	if (Obj != nullptr )
-	{
-		HandleReceive(Obj);
-		return;
-	}
-
-	// 2. Try and get object from remote transport
-	if(RemoteTransport == nullptr)
-	{
-		FString ErrorMessage = TEXT(
-			"Could not find specified object using the local transport, and you didn't provide a fallback remote from which to pull it.");
-
-		HandleError(ErrorMessage);
-		return;
-	}
-
-	FTransportCopyObjectCompleteDelegate CompleteDelegate;
+	FFetchStreamDelegate CompleteDelegate;
 	CompleteDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleReceive);
 
-	FTransportErrorDelegate ErrorDelegate;
+	FErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleError);
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
-	
-	RemoteTransport->CopyListOfStreams(ObjectId, LocalTransport, CompleteDelegate, ErrorDelegate);
+
+	FClientAPI::StreamsGet(ServerUrl, AuthToken, Limit, CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveStreamsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
+void UReceiveStreamsOperation::HandleReceive(const TArray<FSpeckleStream>& Streams)
 {
-	check(IsInGameThread())
-		
+	check(IsInGameThread());
+	UE_LOG(LogSpeckle, Log, TEXT("%s to %s Succeeded"), *StaticClass()->GetName(), *ServerUrl);
+	
 	FEditorScriptExecutionGuard ScriptGuard;
-	if(Object == nullptr)
-	{
-		TArray<FSpeckleStream> EmptyListOfStreams;
-		OnError.Broadcast(EmptyListOfStreams, FString::Printf(TEXT("Failed to get Stream object %s from transport"), *ObjectId));
-	}
-	else
-	{
-		// --- Here Deserialize the list of Streams ----
-		// It is not Deserializing the Streams well
-		TArray<FSpeckleStream> FullListOfStreams = USpeckleSerializer::DeserializeListOfStreams(Object, LocalTransport);
-
-		
-		if(FullListOfStreams.Num()>0)
-		{
-			OnReceiveSuccessfully.Broadcast(FullListOfStreams, "");
-		}else
-		{
-			TArray<FSpeckleStream> EmptyListOfStreams;
-			OnError.Broadcast(EmptyListOfStreams,
-				FString::Printf(TEXT("Root Speckle Stream Object %s failed to deserialize"), *ObjectId));
-		}
-	}
-		
+	OnReceiveSuccessfully.Broadcast(Streams, "");		
 	
 	SetReadyToDestroy();
 }
 
-void UReceiveStreamsOperation::HandleError(FString& Message)
+void UReceiveStreamsOperation::HandleError(const FString& Message)
 {
+	check(IsInGameThread());
+	UE_LOG(LogSpeckle, Warning, TEXT("%s failed - %s"), *StaticClass()->GetName(), *Message);
+	
 	FEditorScriptExecutionGuard ScriptGuard;
-	TArray<FSpeckleStream> EmptyListOfStreams;
-	OnError.Broadcast(EmptyListOfStreams, Message);
+	
+	const TArray<FSpeckleStream> EmptyList;
+	OnError.Broadcast(EmptyList, Message);
+		
 	SetReadyToDestroy();
 }
 

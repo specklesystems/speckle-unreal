@@ -11,42 +11,43 @@
 USTRUCT(BlueprintType)
 struct FSpeckleCommit
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString ID;
 	
-    UPROPERTY(BlueprintReadWrite)
-	FString ReferenceObjectID;
-
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Message;
-
-	UPROPERTY(BlueprintReadWrite)
+	
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString BranchName;
+	
 
-	UPROPERTY(BlueprintReadWrite)
-	FString SourceApplication;
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString AuthorName;
 
-	UPROPERTY(BlueprintReadWrite)
-	FString TotalChildrenCount;
-
-	UPROPERTY(BlueprintReadWrite)
-	FString Parents;
-
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString AuthorId;
 
-	UPROPERTY(BlueprintReadWrite)
-	FString AuthorName;
-	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString AuthorAvatar;
-
-	UPROPERTY(BlueprintReadWrite)
+	
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString CreatedAt;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString SourceApplication;
+	
+    UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString ReferenceObjectID;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	FString TotalChildrenCount;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	TArray<FString> Parents;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString CommentCount;
 
 
@@ -64,18 +65,18 @@ struct FSpeckleCommit
 	FSpeckleCommit(const TSharedPtr<FJsonValue> CommitAsJSONValue)
 	{
 		TSharedPtr<FJsonObject> obj = CommitAsJSONValue->AsObject();
-		ID = obj->GetStringField("id");
-		ReferenceObjectID = obj->GetStringField("referencedObject");
-		Message = obj->GetStringField("message");
-		SourceApplication = obj->GetStringField("sourceApplication");
-		TotalChildrenCount= obj->GetStringField("totalChildrenCount");
-		BranchName = obj->GetStringField("branchName");
-		Parents = obj->GetStringField("parents");
-		AuthorId = obj->GetStringField("authorId");
-		AuthorName = obj->GetStringField("authorName");
-		//AuthorAvatar = CommitAsJSONValue->AsObject()->GetStringField("authorAvatar");
-		CreatedAt = obj->GetStringField("createdAt");
-		CommentCount = obj->GetStringField("commentCount");
+		ensureAlways(obj->TryGetStringField("id", ID));
+		obj->TryGetStringField("message", Message);
+		obj->TryGetStringField("branchName", BranchName);
+		obj->TryGetStringField("authorName", AuthorName);
+		obj->TryGetStringField("authorId", AuthorId);
+		obj->TryGetStringField("authorAvatar", AuthorAvatar);
+		obj->TryGetStringField("createdAt", CreatedAt);
+		obj->TryGetStringField("sourceApplication", SourceApplication);
+		obj->TryGetStringField("totalChildrenCount", TotalChildrenCount);
+		ensureAlways(obj->TryGetStringField("referencedObject", ReferenceObjectID));
+		obj->TryGetStringArrayField("parents", Parents);
+		obj->TryGetStringField("commentCount", CommentCount); //TODO is this a prop?
 
 	}
 	

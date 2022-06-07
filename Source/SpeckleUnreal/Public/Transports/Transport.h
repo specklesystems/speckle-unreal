@@ -48,31 +48,4 @@ public:
  									   const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
  									   const FTransportErrorDelegate& OnErrorAction) = 0;
 
-	virtual void CopyListOfStreams(const FString& ObjectId,
-										TScriptInterface<ITransport> TargetTransport,
-										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-										const FTransportErrorDelegate& OnErrorAction) = 0;
-
-	virtual void CopyListOfBranches(
-										TScriptInterface<ITransport> TargetTransport,
-										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-										const FTransportErrorDelegate& OnErrorAction) = 0;
-
-
-	virtual void CopyListOfCommits(		
-										const FString& BranchName,
-										TScriptInterface<ITransport> TargetTransport,
-										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-										const FTransportErrorDelegate& OnErrorAction) = 0;
-
-	virtual void CopyMyUserData(		
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) = 0;
-
-	virtual void CopyGlobals(		const FString& ReferencedObjectId,
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) = 0;
-
 };

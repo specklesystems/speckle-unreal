@@ -3,114 +3,62 @@
 
 #include "API/Operations/ReceiveMyUserDataOperation.h"
 
-#include "Dom/JsonObject.h"
-#include "Transports/Transport.h"
-#include "API/SpeckleSerializer.h"
-#include "Objects/Base.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
+#include "API/ClientAPI.h"
 
 
-// ReceiveOperation
 UReceiveMyUserDataOperation* UReceiveMyUserDataOperation::ReceiveMyUserDataOperation(
-
-														UObject* WorldContextObject,
-						
-														TScriptInterface<ITransport> RemoteTransport,
-														TScriptInterface<ITransport> LocalTransport)
+	UObject* WorldContextObject, const FString& ServerUrl, const FString& AuthToken)
 {
-
-	FString ObjectId = "MyUserData";
-
-	
-	
     UReceiveMyUserDataOperation* Node = NewObject<UReceiveMyUserDataOperation>();
-    Node->ObjectId = ObjectId;
-    Node->RemoteTransport = RemoteTransport;
-    Node->LocalTransport = LocalTransport;
+    Node->ServerUrl = ServerUrl.TrimEnd();;
+	while(Node->ServerUrl.RemoveFromEnd("/")) { }
+    Node->AuthToken = AuthToken.TrimEnd();;
 
 	Node->RegisterWithGameInstance(WorldContextObject);
     return Node;
 }
 
-// Activate
 void UReceiveMyUserDataOperation::Activate()
 {
 	FAnalytics::TrackEvent("unknown",
-		"unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+		ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
 
-	//Async(EAsyncExecution::Thread, [this]{Receive();});
-	Receive();
+	Request();
 }
 
-void UReceiveMyUserDataOperation::Receive()
+
+void UReceiveMyUserDataOperation::Request()
 {
-	check(LocalTransport != nullptr);
-	
-	// 1. Try and get object from local transport
-	auto Obj = LocalTransport->GetSpeckleObject(ObjectId);
-
-	if (Obj != nullptr )
-	{
-		HandleReceive(Obj);
-		return;
-	}
-
-	// 2. Try and get object from remote transport
-	if(RemoteTransport == nullptr)
-	{
-		FString ErrorMessage = TEXT(
-			"Could not find specified object using the local transport, and you didn't provide a fallback remote from which to pull it.");
-
-		HandleError(ErrorMessage);
-		return;
-	}
-
-	FTransportCopyObjectCompleteDelegate CompleteDelegate;
+	FFetchUserDelegate CompleteDelegate;
 	CompleteDelegate.BindUObject(this, &UReceiveMyUserDataOperation::HandleReceive);
 
-	FTransportErrorDelegate ErrorDelegate;
+	FErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindUObject(this, &UReceiveMyUserDataOperation::HandleError);
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
 	
-	RemoteTransport->CopyMyUserData(LocalTransport, CompleteDelegate, ErrorDelegate);
+	FClientAPI::FetchUserData(ServerUrl, AuthToken, CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveMyUserDataOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
+
+
+void UReceiveMyUserDataOperation::HandleReceive(const FSpeckleUser& Object)
 {
-	check(IsInGameThread())
-		
+	check(IsInGameThread());
+	UE_LOG(LogSpeckle, Log, TEXT("%s to %s Succeeded"), *StaticClass()->GetName(), *ServerUrl);
 	FEditorScriptExecutionGuard ScriptGuard;
-	if(Object == nullptr)
-	{
-		FSpeckleUser MyUserData;
-		OnError.Broadcast(MyUserData, FString::Printf(TEXT("Speckle user object %s from transport"), *ObjectId));
-	}
-	else
-	{
-		// --- Here Deserialize the list of Commits ----
-		// It is not Deserializing the Commits well
-		FSpeckleUser MyUserData = USpeckleSerializer::DeserializeMyUserData(Object, LocalTransport);
-		
-		if(!MyUserData.Id.IsEmpty())
-		{
-			OnReceiveSuccessfully.Broadcast(MyUserData, "");
-		}else
-		{
-			OnError.Broadcast(MyUserData,
-				FString::Printf(TEXT("R4 Speckle User Object %s failed to deserialize"), *ObjectId));
-		}
-	}
-		
+	OnReceiveSuccessfully.Broadcast(Object, "");		
 	
 	SetReadyToDestroy();
 }
 
-void UReceiveMyUserDataOperation::HandleError(FString& Message)
+void UReceiveMyUserDataOperation::HandleError(const FString& Message)
 {
+	check(IsInGameThread());
+	UE_LOG(LogSpeckle, Warning, TEXT("%s failed - %s"), *StaticClass()->GetName(), *Message);
+	
 	FEditorScriptExecutionGuard ScriptGuard;
-	FSpeckleUser MyUserData;
-	OnError.Broadcast(MyUserData, Message);
+	const FSpeckleUser BlankUser;
+	OnError.Broadcast(BlankUser, Message);
 	SetReadyToDestroy();
 }
-

@@ -13,21 +13,21 @@
 USTRUCT(BlueprintType)
 struct FSpeckleBranch
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString ID;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Name;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Description;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Author;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Commits;
 
 	void DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj) const
@@ -38,16 +38,11 @@ struct FSpeckleBranch
 		UE_LOG(LogTemp, Log, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
 	}
 
-	FSpeckleBranch(const TSharedPtr<FJsonValue> StreamAsJSONValue)
+	FSpeckleBranch(const TSharedPtr<FJsonObject> Obj)
 	{
-
-		TSharedPtr<FJsonObject> obj = StreamAsJSONValue->AsObject();
-		
-		ID = obj->GetStringField("id");
-		Name = obj->GetStringField("name");
-		Description = obj->GetStringField("description");
-		//Author = StreamAsJSONValue->AsObject()->GetStringField("author");
-		//Commits = StreamAsJSONValue->AsObject()->GetStringField("commits");
+		ensureAlways(Obj->TryGetStringField("id", ID));
+		ensureAlways(Obj->TryGetStringField("name", Name));
+		Obj->TryGetStringField("description", Description);
 	}
 	
 	FSpeckleBranch(){};

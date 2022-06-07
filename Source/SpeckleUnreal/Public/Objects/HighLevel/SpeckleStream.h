@@ -14,30 +14,30 @@
 USTRUCT(BlueprintType)
 struct FSpeckleStream 
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString ID;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Name;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Description;
 
 	// UPROPERTY(BlueprintReadWrite)
 	// bool IsStreamPublic;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Role;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString	CreatedAt;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString UpdatedAt;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	TArray<FSpeckleCollaborator> Collaborators;
 
 
@@ -52,27 +52,28 @@ struct FSpeckleStream
 	FSpeckleStream(const TSharedPtr<FJsonValue> StreamAsJSONValue)
 	{
 		TSharedPtr<FJsonObject> Obj = StreamAsJSONValue->AsObject();
-		DisplayAsString("Collaborators insider --->", Obj);
+		//DisplayAsString("Collaborators insider --->", Obj);
+
+		ensureAlways(Obj->TryGetStringField("id", ID));
+		ensureAlways(Obj->TryGetStringField("name", Name));
+		Obj->TryGetStringField("description", Description);
+		Obj->TryGetStringField("updatedAt", UpdatedAt);
+		Obj->TryGetStringField("createdAt", CreatedAt);
+		Obj->TryGetStringField("role", Role);
 		
-		ID = Obj->GetStringField("id");
-		Name = Obj->GetStringField("name");
-		Description = Obj->GetStringField("description");
-		UpdatedAt = Obj->GetStringField("updatedAt");
-		CreatedAt = Obj->GetStringField("createdAt");
-		Role = Obj->GetStringField("role");
+		const TArray<TSharedPtr<FJsonValue>>* CollaboratorsArrJSONValues;
+		Obj->TryGetArrayField("collaborators", CollaboratorsArrJSONValues);
 
-		TArray<TSharedPtr<FJsonValue>> CollaboratorsArrJSONValues = Obj->GetArrayField("collaborators");
-
-		for (TSharedPtr<FJsonValue> collaboratorJSONValue : CollaboratorsArrJSONValues)
+		for (const TSharedPtr<FJsonValue>& c : *CollaboratorsArrJSONValues)
 		{
-			FSpeckleCollaborator Collaborator = FSpeckleCollaborator( collaboratorJSONValue );
-			Collaborators.Add( Collaborator );
+			const TSharedPtr<FJsonObject>* o;
+			if(ensure(c->TryGetObject(o)))
+			{
+				FSpeckleCollaborator Collaborator = FSpeckleCollaborator(*o);
+				Collaborators.Add(Collaborator);
+			}
 		}
-
 		
-		//IsStreamPublic = StreamAsJSONValue->AsObject()->GetBoolField("isPublic");
-	
-		//GEngine->AddOnScreenDebugMessage(-1, 25.f, FColor::White, RoleUser);
 	}
 
 	FSpeckleStream(){};

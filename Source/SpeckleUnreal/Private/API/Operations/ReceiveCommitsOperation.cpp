@@ -3,26 +3,23 @@
 
 #include "API/Operations/ReceiveCommitsOperation.h"
 
-#include "Dom/JsonObject.h"
-#include "Transports/Transport.h"
-#include "API/SpeckleSerializer.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
+#include "API/ClientAPI.h"
 
 
 // ReceiveOperation
-UReceiveCommitsOperation* UReceiveCommitsOperation::ReceiveCommitsOperation(
-														UObject* WorldContextObject,
-														const FString& BranchName,
-														TScriptInterface<ITransport> RemoteTransport,
-														TScriptInterface<ITransport> LocalTransport)
+UReceiveCommitsOperation* UReceiveCommitsOperation::ReceiveCommitsOperation(UObject* WorldContextObject,
+	const FString& ServerUrl, const FString& AuthToken,
+	const FString& StreamId, const FString& BranchName, const int32 Limit)
 {
-	FString ObjectId = "Commits";
     UReceiveCommitsOperation* Node = NewObject<UReceiveCommitsOperation>();
-    Node->ObjectId = ObjectId;
+    Node->ServerUrl = ServerUrl.TrimEnd();
+	while(Node->ServerUrl.RemoveFromEnd("/")) { }
+	Node->AuthToken = AuthToken.TrimEnd();
+    Node->StreamId = StreamId.TrimEnd();
 	Node->BranchName = BranchName;
-    Node->RemoteTransport = RemoteTransport;
-    Node->LocalTransport = LocalTransport;
+    Node->Limit = Limit;
 	Node->RegisterWithGameInstance(WorldContextObject);
     return Node;
 }
@@ -30,82 +27,46 @@ UReceiveCommitsOperation* UReceiveCommitsOperation::ReceiveCommitsOperation(
 // Activate
 void UReceiveCommitsOperation::Activate()
 {
-	FAnalytics::TrackEvent("unknown",
-		"unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
-
-	//Async(EAsyncExecution::Thread, [this]{Receive();});
-	Receive();
+	FAnalytics::TrackEvent("unknown", ServerUrl,
+		 "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+	
+	Request();
 }
 
-void UReceiveCommitsOperation::Receive()
+void UReceiveCommitsOperation::Request()
 {
-	check(LocalTransport != nullptr);
-	
-	// 1. Try and get object from local transport
-	auto Obj = LocalTransport->GetSpeckleObject(ObjectId);
+	ensureAlways(Limit > 0);
 
-	if (Obj != nullptr )
-	{
-		HandleReceive(Obj);
-		return;
-	}
-
-	// 2. Try and get object from remote transport
-	if(RemoteTransport == nullptr)
-	{
-		FString ErrorMessage = TEXT(
-			"Could not find specified object using the local transport, and you didn't provide a fallback remote from which to pull it.");
-
-		HandleError(ErrorMessage);
-		return;
-	}
-
-	FTransportCopyObjectCompleteDelegate CompleteDelegate;
+	FFetchCommitDelegate CompleteDelegate;
 	CompleteDelegate.BindUObject(this, &UReceiveCommitsOperation::HandleReceive);
 
-	FTransportErrorDelegate ErrorDelegate;
+	FErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindUObject(this, &UReceiveCommitsOperation::HandleError);
-	UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON RECEIVE 1"));
-	
-	RemoteTransport->CopyListOfCommits( BranchName, LocalTransport, CompleteDelegate, ErrorDelegate);
+
+	FClientAPI::StreamGetCommits(ServerUrl, AuthToken, StreamId, BranchName, Limit, CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveCommitsOperation::HandleReceive(TSharedPtr<FJsonObject> Object)
+void UReceiveCommitsOperation::HandleReceive(const TArray<FSpeckleCommit>& Commits)
 {
-	check(IsInGameThread())
-		
+	check(IsInGameThread());
+	UE_LOG(LogSpeckle, Log, TEXT("%s to %s Succeeded"), *StaticClass()->GetName(), *ServerUrl);
 	FEditorScriptExecutionGuard ScriptGuard;
-	if(Object == nullptr)
-	{
-		TArray<FSpeckleCommit> EmptyListOfCommits;
-		OnError.Broadcast(EmptyListOfCommits, FString::Printf(TEXT("Speckle list of commits object %s from transport"), *ObjectId));
-	}
-	else
-	{
-		// --- Here Deserialize the list of Commits ----
-		// It is not Deserializing the Commits well
-		TArray<FSpeckleCommit> FullListOfCommits = USpeckleSerializer::DeserializeListOfCommits(Object, LocalTransport);
-		
-		if(FullListOfCommits.Num()>0)
-		{
-			OnReceiveSuccessfully.Broadcast(FullListOfCommits, "");
-		}else
-		{
-			TArray<FSpeckleCommit> EmptyListOfCommits;
-			OnError.Broadcast(EmptyListOfCommits,
-				FString::Printf(TEXT("Speckle list of commits Object %s failed to deserialize"), *ObjectId));
-		}
-	}
-		
+	
+	OnReceiveSuccessfully.Broadcast(Commits, "");
 	
 	SetReadyToDestroy();
 }
 
-void UReceiveCommitsOperation::HandleError(FString& Message)
+void UReceiveCommitsOperation::HandleError(const FString& Message)
 {
+	check(IsInGameThread());
+	UE_LOG(LogSpeckle, Warning, TEXT("%s failed - %s"), *StaticClass()->GetName(), *Message);
+	
 	FEditorScriptExecutionGuard ScriptGuard;
-	TArray<FSpeckleCommit> EmptyListOfCommits;
-	OnError.Broadcast(EmptyListOfCommits, Message);
+	
+	const TArray<FSpeckleCommit> EmptyList;
+	OnError.Broadcast(EmptyList, Message);
+	
 	SetReadyToDestroy();
 }
 

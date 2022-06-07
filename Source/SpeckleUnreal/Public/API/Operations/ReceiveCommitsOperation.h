@@ -6,13 +6,7 @@
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "Objects/HighLevel/SpeckleCommit.h"
 
-
 #include "ReceiveCommitsOperation.generated.h"
-
-class ITransport;
-class UBase;
-class FJsonObject;
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveCommitsOperationHandler, const TArray<FSpeckleCommit>&, Commits, FString, ErrorMessage);
 
@@ -33,39 +27,27 @@ public:
 	UPROPERTY(BlueprintAssignable)
     FReceiveCommitsOperationHandler OnError;
 
-	
-	
-	
-	/**
-	 * @brief 
-	 * @param WorldContextObject    
-	 * @param BranchName : Give the Branch Name, e.g. main
-	 * @param RemoteTransport  
-	 * @param LocalTransport 
-	 * @return 
-	 */
+
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations",
 						meta = (WorldContext = "WorldContextObject", BranchName = "main"))
 	static UReceiveCommitsOperation* ReceiveCommitsOperation(UObject* WorldContextObject,
-	                                                         const FString& BranchName,
-															 TScriptInterface<ITransport> RemoteTransport,
-															 TScriptInterface<ITransport> LocalTransport);
+																const FString& ServerUrl,
+																const FString& AuthToken,
+																const FString& StreamId,
+																const FString& BranchName,
+																const int32 Limit = 20);
 	virtual void Activate() override;
 	
 protected:
-	void Receive();
+	void Request();
 	
-	FString ObjectId;
-	FString BranchName;
-	
+	FString ServerUrl;
+	FString AuthToken;
 	FString StreamId;
-	
+	FString BranchName;
+	int32 Limit;
 
+	void HandleReceive(const TArray<FSpeckleCommit>& Commits);
 	
-	TScriptInterface<ITransport> RemoteTransport;
-	TScriptInterface<ITransport> LocalTransport;
-
-	void HandleReceive(TSharedPtr<FJsonObject> Object);
-	
-	void HandleError(FString& Message);
+	void HandleError(const FString& Message);
 };

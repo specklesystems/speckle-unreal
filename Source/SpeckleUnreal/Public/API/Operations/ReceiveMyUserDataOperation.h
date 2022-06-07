@@ -6,13 +6,9 @@
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "Objects/HighLevel/SpeckleUser.h"
 
-
 #include "ReceiveMyUserDataOperation.generated.h"
 
-class ITransport;
-class UBase;
-class FJsonObject;
-
+struct FSpeckleUser;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveMyUserDataOperationHandler, const FSpeckleUser, MyUserData, FString, ErrorMessage);
 
@@ -33,29 +29,21 @@ public:
 	UPROPERTY(BlueprintAssignable)
     FReceiveMyUserDataOperationHandler OnError;
 	
-	/**
-	 * @brief 
-	 * @param WorldContextObject    
-	 * @param RemoteTransport  
-	 * @param LocalTransport 
-	 * @return 
-	 */
+
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "Speckle|Operations",
 																meta = (WorldContext = "WorldContextObject"))
 	static UReceiveMyUserDataOperation* ReceiveMyUserDataOperation(UObject* WorldContextObject,
-															 TScriptInterface<ITransport> RemoteTransport,
-															 TScriptInterface<ITransport> LocalTransport);
+		const FString& ServerUrl, const FString& AuthToken);
+	
 	virtual void Activate() override;
 	
 protected:
-	void Receive();
+	void Request();
 	
-	FString ObjectId;
-	
-	TScriptInterface<ITransport> RemoteTransport;
-	TScriptInterface<ITransport> LocalTransport;
+	FString ServerUrl;
+	FString AuthToken;
 
-	void HandleReceive(TSharedPtr<FJsonObject> Object);
+	void HandleReceive(const FSpeckleUser& Object);
 	
-	void HandleError(FString& Message);
+	void HandleError(const FString& Message);
 };

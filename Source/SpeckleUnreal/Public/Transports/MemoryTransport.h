@@ -28,33 +28,7 @@ public:
 										TScriptInterface<ITransport> TargetTransport,
 										const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
 										const FTransportErrorDelegate& OnErrorAction) override { unimplemented(); }
-
-	virtual void CopyListOfStreams(const FString& ObjectId,
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) override { return; };
-
-	virtual void CopyListOfBranches(
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) override { return; };
-
-	virtual void CopyListOfCommits(		
-									const FString& BranchName, 
-									TScriptInterface<ITransport> TargetTransport,
-									const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-									const FTransportErrorDelegate& OnErrorAction) override { return; };
-
-	virtual void CopyMyUserData(		
-								TScriptInterface<ITransport> TargetTransport,
-								const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-								const FTransportErrorDelegate& OnErrorAction) override { return; };
-
-	virtual void CopyGlobals(	const FString& ReferencedObjectId,	
-							    TScriptInterface<ITransport> TargetTransport,
-							    const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
-							    const FTransportErrorDelegate& OnErrorAction) override { return; };
-
+	
 	
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
 	static UMemoryTransport* CreateEmptyMemoryTransport()
