@@ -1,4 +1,6 @@
-﻿#include "API/SpeckleSerializer.h"
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
+
+#include "API/SpeckleSerializer.h"
 
 #include "Objects/Base.h"
 #include "LogSpeckle.h"
@@ -9,7 +11,6 @@
 #include "UObject/Package.h"
 
 
-// Create the Deserialization Base
 UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj,
 										   const TScriptInterface<ITransport> ReadTransport)
 {

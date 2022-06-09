@@ -14,8 +14,8 @@ protected:
 	static const FString VersionedApplicationName;
 
 public:
-	static void TrackEvent(const FString& Email, const FString& Server, const FString& EventName);
-	static void TrackEvent(const FString& Email, const FString& Server, const FString& EventName,
-																		const TMap<FString, FString>& CustomProperties);
+	static void TrackEvent(const FString& Server, const FString& EventName);
+	static void TrackEvent(const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties);
+	static void TrackEvent(const FString& Email, const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties);
 	static FString Hash(const FString& Input);
 };

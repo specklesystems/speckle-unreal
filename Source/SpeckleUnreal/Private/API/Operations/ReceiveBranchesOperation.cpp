@@ -1,11 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "API/Operations/ReceiveBranchesOperation.h"
 
+#include "JsonObjectConverter.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
 #include "API/ClientAPI.h"
+#include "API/Models/SpeckleStream.h"
 
 
 UReceiveBranchesOperation* UReceiveBranchesOperation::ReceiveBranchesOperation(UObject* WorldContextObject,
@@ -27,33 +28,42 @@ UReceiveBranchesOperation* UReceiveBranchesOperation::ReceiveBranchesOperation(U
 
 void UReceiveBranchesOperation::Activate()
 {
-	FAnalytics::TrackEvent("unknown",
-		ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+	FAnalytics::TrackEvent(ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName()} });
 	
 	Request();
 }
 
 void UReceiveBranchesOperation::Request()
 {
-	ensureAlways(Limit > 0);
-
-	FFetchBranchDelegate CompleteDelegate;
-	CompleteDelegate.BindUObject(this, &UReceiveBranchesOperation::HandleReceive);
+	const FString Query = FString::Printf(TEXT("{\"query\": \"query{ stream (id: \\\"%s\\\"){id name branches(limit: %s) {totalCount cursor items{ id name description}}}}\"}"),
+		*StreamId, *FString::FromInt(Limit));
 	
+	FAPIResponceDelegate CompleteDelegate;
+	CompleteDelegate.BindUObject(this, &UReceiveBranchesOperation::HandleReceive);
+
 	FErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindUObject(this, &UReceiveBranchesOperation::HandleError);
-
-	FClientAPI::StreamGetBranches(ServerUrl, AuthToken, StreamId, Limit, CompleteDelegate, ErrorDelegate);
+	FClientAPI::MakeGraphQLRequest(ServerUrl, AuthToken, "stream", Query,StaticClass()->GetName() , CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveBranchesOperation::HandleReceive(const TArray<FSpeckleBranch>& Branches)
+
+
+void UReceiveBranchesOperation::HandleReceive(const FString& ResponseJson)
 {
 	check(IsInGameThread());
+	
+	FSpeckleStream Response;
+
+	if(!FJsonObjectConverter::JsonObjectStringToUStruct(*ResponseJson, &Response, 0, 0))
+	{
+		HandleError("Failed to deserialize object to SpeckleStreams");
+		return;
+	}
+	
 	UE_LOG(LogSpeckle, Log, TEXT("%s to %s Succeeded"), *StaticClass()->GetName(), *ServerUrl);
 	
-	
 	FEditorScriptExecutionGuard ScriptGuard;
-	OnReceiveSuccessfully.Broadcast(Branches, "");		
+	OnReceiveSuccessfully.Broadcast(Response.Branches.Items, "");		
 	
 	SetReadyToDestroy();
 }

@@ -1,4 +1,6 @@
-﻿#include "Mixpanel.h"
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
+
+#include "Mixpanel.h"
 
 #include "Containers/UnrealString.h"
 #include "HttpModule.h"
@@ -15,17 +17,27 @@ const FString FAnalytics::MixpanelToken = TEXT("acd87c5a50b56df91a795e999812a3a4
 const FString FAnalytics::MixpanelServer = TEXT("https://analytics.speckle.systems");
 const FString FAnalytics::VersionedApplicationName = FString::Printf(TEXT("Unreal Engine %d.%d"), ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION);
 
-void FAnalytics::TrackEvent(const FString& Email, const FString& Server, const FString& EventName)
+void FAnalytics::TrackEvent(const FString& Server, const FString& EventName)
 {
+#if !SUPPRESS_SPECKLE_ANALYTICS
 	const TMap<FString, FString> CustomProperties;
+	TrackEvent( Server, EventName, CustomProperties);
+#endif
+}
+
+void FAnalytics::TrackEvent(const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties)
+{
+#if !SUPPRESS_SPECKLE_ANALYTICS
+	//Since we don't have access to users email address, we will hash the system user name instead (better than not tracking users at all) 
+	const FString Email = FString(FGenericPlatformProcess::ComputerName()) + FString(FGenericPlatformProcess::UserName());
 	TrackEvent(Email, Server, EventName, CustomProperties);
+#endif
 }
 
 void FAnalytics::TrackEvent(const FString& Email, const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties)
 {
 #if !SUPPRESS_SPECKLE_ANALYTICS
 
-	
 	FString HashedEmail = "@" + Hash(Email); //prepending an @ so we distinguish logged and non-logged users
 	FString HashedServer = Hash(Server);
 	

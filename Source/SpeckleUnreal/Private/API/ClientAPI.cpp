@@ -1,220 +1,18 @@
-﻿#include "API/ClientAPI.h"
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
+
+#include "API/ClientAPI.h"
 
 #include "HttpModule.h"
+#include "JsonObjectConverter.h"
 #include "Interfaces/IHttpResponse.h"
 #include "LogSpeckle.h"
 #include "Mixpanel.h"
-#include "Objects/HighLevel/SpeckleBranch.h"
-#include "Objects/HighLevel/SpeckleCommit.h"
-#include "Objects/HighLevel/SpeckleGlobals.h"
-#include "Objects/HighLevel/SpeckleUser.h"
-#include "Transports/Transport.h"
 
-
-void FClientAPI::StreamsGet(const FString& ServerUrl, const FString& AuthToken,
-	const int Limit,
-	const FFetchStreamDelegate OnCompleteAction, const FErrorDelegate OnErrorAction)
+void FClientAPI::MakeGraphQLRequest(const FString& ServerUrl, const FString& AuthToken,
+	const FString& ResponsePropertyName,
+	const FString& PostPayload, const FString& RequestLogName,
+	const FAPIResponceDelegate OnCompleteAction, const FErrorDelegate OnErrorAction)
 {
-	const FString RequestLogName = FString(__FUNCTION__);
-	
-	const FString PostPayload =
-		"{\"query\": \"query{user {streams(limit:" + FString::FromInt(Limit) + ") {totalCount items {id name description updatedAt createdAt isPublic role  collaborators{id name role company avatar}}}}}\"}";
-	
-	auto OnError = [=](const FString& Message) mutable 
-	{
-		ensureAlwaysMsgf(OnErrorAction.ExecuteIfBound(Message), TEXT("%s: Unhandled error - %s"), *RequestLogName , *Message);
-	};
-	
-	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
-	{
-		if(CheckRequestFailed(bWasSuccessful, Response, RequestLogName, OnError)) return;
-		
-		TSharedPtr<FJsonObject> Obj;
-		if(!GetResponseAsJSON(Response, RequestLogName, Obj, OnError)) return;
-	
-		TArray<TSharedPtr<FJsonValue>> StreamsArrJSON = Obj->GetObjectField(TEXT("data"))
-																   ->GetObjectField(TEXT("user"))
-																	  ->GetObjectField(TEXT("streams"))
-																		   ->GetArrayField(TEXT("items"));
-	
-		TArray<FSpeckleStream> Streams;
-		Streams.Reserve(StreamsArrJSON.Num());
-	
-		for (const TSharedPtr<FJsonValue> v : StreamsArrJSON)
-		{
-			FSpeckleStream Stream = FSpeckleStream(v);
-			Streams.Add(Stream);
-		}
-		
-		UE_LOG(LogSpeckle, Log, TEXT("Operation %s completed successfully. Fetched %d items"), *RequestLogName, Streams.Num());
-		ensureAlwaysMsgf(OnCompleteAction.ExecuteIfBound(Streams), TEXT("%s: Complete handler was not bound properly"), *RequestLogName);
-	};
-	
-	
-	const FHttpRequestRef Request = CreateGraphQLRequest(ServerUrl, AuthToken, PostPayload);
-	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
-	
-	SendGraphQLRequest(Request, RequestLogName, OnError);
-}
-
-void FClientAPI::StreamGetBranches(
-	const FString& ServerUrl, const FString& AuthToken,
-	const FString& StreamId, const int32 Limit,
-	const FFetchBranchDelegate OnCompleteAction, const FErrorDelegate OnErrorAction)
-{
-	const FString RequestLogName = FString(__FUNCTION__);
-	
-	//TODO limit
-	FString PostPayload = "{\"query\": \"query{ stream (id: \\\"" +
-			StreamId + "\\\"){id name branches(limit : " + FString::FromInt(Limit) + ") {totalCount cursor items{ id name description}}}}\"}";
-
-	// The above can be extended with author information 
-	//query{stream(id:"a18f8c8569"){id name branches{totalCount items{id name description author{id, name, email, commits{cursor}}}}}}
-	
-	auto OnError = [=](const FString& Message) mutable 
-	{
-		ensureAlwaysMsgf(OnErrorAction.ExecuteIfBound(Message), TEXT("%s: Unhandled error - %s"), *RequestLogName , *Message);
-	};
-	
-	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
-	{
-		if(CheckRequestFailed(bWasSuccessful, Response, RequestLogName, OnError)) return;
-		
-		TSharedPtr<FJsonObject> Obj;
-		if(!GetResponseAsJSON(Response, RequestLogName, Obj, OnError)) return;
-		
-		TArray<TSharedPtr<FJsonValue>> BranchesArrJSON = Obj->GetObjectField(TEXT("data"))
-																	->GetObjectField(TEXT("stream"))
-																		->GetObjectField(TEXT("branches"))
-																				->GetArrayField(TEXT("items"));
-		TArray<FSpeckleBranch> Branches;
-		Branches.Reserve(BranchesArrJSON.Num());
-	
-		for (const TSharedPtr<FJsonValue>& v : BranchesArrJSON)
-		{
-			const TSharedPtr<FJsonObject>* BranchObj;
-			if(ensureAlways(v->TryGetObject(BranchObj)))
-			{
-				FSpeckleBranch Branch = FSpeckleBranch(*BranchObj);
-				Branches.Add(Branch);
-			}
-		}
-		
-		UE_LOG(LogSpeckle, Log, TEXT("Operation %s completed successfully. Fetched %d items"), *RequestLogName, Branches.Num());
-		ensureAlwaysMsgf(OnCompleteAction.ExecuteIfBound(Branches), TEXT("%s: Complete handler was not bound properly"), *RequestLogName);
-	};
-	
-	
-	const FHttpRequestRef Request = CreateGraphQLRequest(ServerUrl, AuthToken, PostPayload);
-	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
-	
-	SendGraphQLRequest(Request, RequestLogName, OnError);
-}
-
-
-void FClientAPI::StreamGetCommits(const FString& ServerUrl, const FString& AuthToken,
-	const FString& StreamId, const FString& BranchName, const int32 Limit,
-	const FFetchCommitDelegate OnCompleteAction, const FErrorDelegate OnErrorAction)
-{
-	const FString RequestLogName = FString(__FUNCTION__);
-	
-	FString PostPayload = "{\"query\": \"query{stream (id: \\\"" + StreamId +
-		"\\\"){id name createdAt updatedAt "
-					+ "branch(name: \\\"" + BranchName + "\\\" ){id name description author{name id email} " +
-					"commits(limit: " + FString::FromInt(Limit) + "){totalCount items {id referencedObject sourceApplication totalChildrenCount " +
-					"branchName parents authorName authorId message createdAt commentCount}}}}}\"}"; // authorAvatar 
-	
-	auto OnError = [=](const FString& Message) mutable 
-	{
-		ensureAlwaysMsgf(OnErrorAction.ExecuteIfBound(Message), TEXT("%s: Unhandled error - %s"), *RequestLogName , *Message);
-	};
-	
-	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
-	{
-		if(CheckRequestFailed(bWasSuccessful, Response, RequestLogName, OnError)) return;
-		
-		TSharedPtr<FJsonObject> Obj;
-		if(!GetResponseAsJSON(Response, RequestLogName, Obj, OnError)) return;
-		
-		TArray<TSharedPtr<FJsonValue>> CommitsArrJSON = Obj->GetObjectField(TEXT("data"))
-															 ->GetObjectField(TEXT("stream"))
-															   ->GetObjectField(TEXT("branch"))
-																 ->GetObjectField(TEXT("commits"))
-																   ->GetArrayField(TEXT("items"));
-	
-		TArray<FSpeckleCommit> ArrayOfCommits;
-		ArrayOfCommits.Reserve(CommitsArrJSON.Num());
-	
-		for (const TSharedPtr<FJsonValue> v : CommitsArrJSON)
-		{
-			FSpeckleCommit Commit = FSpeckleCommit(v);
-			ArrayOfCommits.Add( Commit );
-		}
-
-		UE_LOG(LogSpeckle, Log, TEXT("Operation %s completed successfully. Fetched %d items"), *RequestLogName, ArrayOfCommits.Num());
-		ensureAlwaysMsgf(OnCompleteAction.ExecuteIfBound(ArrayOfCommits), TEXT("%s: Complete handler was not bound properly"), *RequestLogName);
-	};
-	
-	
-	const FHttpRequestRef Request = CreateGraphQLRequest(ServerUrl, AuthToken, PostPayload);
-	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
-	
-	SendGraphQLRequest(Request, RequestLogName, OnError);
-}
-
-
-void FClientAPI::FetchGlobals(const FString& ServerUrl, const FString& AuthToken,
-	const FString& StreamId, const FString& ReferencedObjectId,
-    const FFetchGlobalsDelegate OnCompleteAction, const FErrorDelegate OnErrorAction)
-{
-	const FString RequestLogName = FString(__FUNCTION__);
-	
-	FString PostPayload = "{\"query\": \"query{stream (id:\\\"" + StreamId +
-							 "\\\"){id name description updatedAt createdAt role isPublic object(id:\\\"" +
-								ReferencedObjectId +
-							    	"\\\"){id data}}}\"}";
-	
-	auto OnError = [=](const FString& Message) mutable 
-	{
-		ensureAlwaysMsgf(OnErrorAction.ExecuteIfBound(Message), TEXT("%s: Unhandled error - %s"), *RequestLogName , *Message);
-	};
-	
-	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
-	{
-		if(CheckRequestFailed(bWasSuccessful, Response, RequestLogName, OnError)) return;
-		
-		TSharedPtr<FJsonObject> Obj;
-		if(!GetResponseAsJSON(Response, RequestLogName, Obj, OnError)) return;
-		
-		TSharedPtr<FJsonObject> GlobalsJSONObject = Obj->GetObjectField(TEXT("data"))
-															->GetObjectField(TEXT("stream"))
-																->GetObjectField(TEXT("object"))
-																	->GetObjectField(TEXT("data"));
-
-
-		
-		
-		FSpeckleGlobals Globals = FSpeckleGlobals(GlobalsJSONObject);
-		
-		UE_LOG(LogSpeckle, Log, TEXT("Operation %s completed successfully"), *RequestLogName);
-		ensureAlwaysMsgf(OnCompleteAction.ExecuteIfBound(Globals), TEXT("%s: Complete handler was not bound properly"), *RequestLogName);
-	};
-	
-	
-	const FHttpRequestRef Request = CreateGraphQLRequest(ServerUrl, AuthToken, PostPayload);
-	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
-	
-	SendGraphQLRequest(Request, RequestLogName, OnError);
-}
-
-void FClientAPI::FetchUserData(const FString& ServerUrl, const FString& AuthToken,
-    const FFetchUserDelegate OnCompleteAction, const FErrorDelegate OnErrorAction)
-{
-	const FString RequestLogName = FString(__FUNCTION__);
-	
-	const FString PostPayload =
-		"{\"query\": \"query{user{id name email company role suuid bio profiles avatar}}\"}"; 
-	
 	
 	auto OnError = [=](const FString& Message) mutable 
 	{
@@ -228,22 +26,62 @@ void FClientAPI::FetchUserData(const FString& ServerUrl, const FString& AuthToke
 		
 		TSharedPtr<FJsonObject> Obj;
 		if(!GetResponseAsJSON(Response, RequestLogName, Obj, OnError)) return;
+
+		const TSharedPtr<FJsonObject>* DataObjectPtr;
+		if(!Obj->TryGetObjectField("data", DataObjectPtr))
+		{
+			OnError(TEXT("%s responce was invalid, expected to find a \"data\" property in response"));
+			return;
+		}
+		const TSharedPtr<FJsonObject> DataObject = *DataObjectPtr;
 		
-		TSharedPtr<FJsonObject> UserJSONObject = Obj->GetObjectField(TEXT("data"))
-													    ->GetObjectField(TEXT("user"));
+		const TSharedPtr<FJsonObject>* RequestedJson;
+		if(!DataObject->TryGetObjectField(ResponsePropertyName, RequestedJson))
+		{
+			TArray<FString> Options;
+			Options.Reserve(DataObject->Values.Num());
+			for(const auto& Properties : DataObject->Values)
+			{
+				Options.Add(FString::Printf(TEXT("\"%s\" "), *Properties.Key));
+			}
+			
+			FString Message = FString::Printf(TEXT("%s: Could not find the requested property name \"%s\" in responce data.\n Got { %s} instead."),
+				*RequestLogName, *ResponsePropertyName, *FString::Join(Options, TEXT(", ")));
+			OnError(Message);
+			return;
+		}
 		
-		FSpeckleUser MyUserData = FSpeckleUser( UserJSONObject );
+		FString OutputString;
+		const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+		ensureAlways(FJsonSerializer::Serialize(RequestedJson->ToSharedRef(), Writer));
+
+		// Commented out, deserialisation done by caller
+		//void* DeserializedData;
+		//FSpeckleUser DeserializedData = FSpeckleUser( UserJSONObject );
+		// if(!FJsonObjectConverter::JsonObjectToUStruct(*RequestedJson, OutStructType::StaticStruct(), &DeserializedData, 0, 0))
+		// {
+		// 	OnError("Failed to deserialize user object");
+		// 	return;
+		// }
 		
 		UE_LOG(LogSpeckle, Log, TEXT("Operation %s completed successfully"), *RequestLogName);
-		ensureAlwaysMsgf(OnCompleteAction.ExecuteIfBound(MyUserData), TEXT("%s: Complete handler was not bound properly"), *RequestLogName);
+		ensureAlwaysMsgf(OnCompleteAction.ExecuteIfBound(OutputString), TEXT("%s: Complete handler was not bound properly"), *RequestLogName);
 	};
 
-	const FHttpRequestRef Request = CreateGraphQLRequest(ServerUrl, AuthToken, PostPayload);
+	const FHttpRequestRef Request = CreatePostRequest(ServerUrl, AuthToken, PostPayload);
 	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
 	
-	SendGraphQLRequest(Request, RequestLogName, OnError);
+	if(Request->ProcessRequest())
+	{
+		UE_LOG(LogSpeckle, Log, TEXT("POST Request %s to %s was sent, awaiting response"), *RequestLogName, *Request->GetURL() );
+	}
+	else
+	{
+		UE_LOG(LogSpeckle, Warning, TEXT("POST Request %s to %s failed to send"), *RequestLogName, *Request->GetURL() );
+	}
+	
+	FAnalytics::TrackEvent(Request->GetURL(), "NodeRun", TMap<FString, FString> { {"name", __FUNCTION__}});
 }
-
 
 
 bool FClientAPI::GetResponseAsJSON(const FHttpResponsePtr Response, const FString& RequestLogName, TSharedPtr<FJsonObject>& OutObject, const TFunctionRef<void(const FString& Message)> OnErrorAction)
@@ -273,7 +111,7 @@ bool FClientAPI::GetResponseAsJSON(const FHttpResponsePtr Response, const FStrin
 	return true;
 }
 
-FHttpRequestRef FClientAPI::CreateGraphQLRequest(const FString& ServerUrl, const FString AuthToken, const FString& PostPayload, const FString& Encoding)
+FHttpRequestRef FClientAPI::CreatePostRequest(const FString& ServerUrl, const FString AuthToken, const FString& PostPayload, const FString& Encoding)
 {
 	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 
@@ -287,26 +125,6 @@ FHttpRequestRef FClientAPI::CreateGraphQLRequest(const FString& ServerUrl, const
 	return Request;
 }
 
-bool FClientAPI::SendGraphQLRequest(const FHttpRequestRef Request, const FString& RequestName,
- const TFunctionRef<void(const FString& Message)> OnErrorAction)
-{
-	const bool RequestSent = Request->ProcessRequest();
-
-	if(!RequestSent)
-	{
-		const FString Message = FString::Printf(TEXT("Request \"%s\" at \"%s\" failed: \nHTTP request failed to start"),
-					*RequestName, *Request->GetURL());
-		
-		OnErrorAction(Message);
-	}
-	else
-	{
-		UE_LOG(LogSpeckle, Log, TEXT("POST Request %s to %s was sent, awaiting response"), *RequestName, *Request->GetURL() );
-		FAnalytics::TrackEvent("unknown", Request->GetURL(), "NodeRun", TMap<FString, FString> { {"name", RequestName }});
-	}
-	
-	return RequestSent;
-}
 
 
 bool FClientAPI::CheckRequestFailed(bool bWasSuccessful, FHttpResponsePtr Response,  const FString& RequestLogName, const TFunctionRef<void(const FString& Message)> OnErrorAction)

@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Conversion/Converters/ProceduralMeshConverter.h"
 
@@ -10,7 +10,6 @@
 #include "Objects/Other/RenderMaterial.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 
-// Setup some basics
 UProceduralMeshConverter::UProceduralMeshConverter()
 {
     SpeckleTypes.Add(UMesh::StaticClass());
@@ -20,7 +19,6 @@ UProceduralMeshConverter::UProceduralMeshConverter()
     ActorMobility = EComponentMobility::Static;
 }
 
-// Blueprint for converting data to 3D model 
 UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World,
                                                             TScriptInterface<ISpeckleConverter>& AvailableConverters )
 {

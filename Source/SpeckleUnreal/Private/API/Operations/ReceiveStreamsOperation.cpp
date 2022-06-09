@@ -1,11 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "API/Operations/ReceiveStreamsOperation.h"
 
+#include "JsonObjectConverter.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
 #include "API/ClientAPI.h"
+#include "API/Models/SpeckleUser.h"
 
 
 UReceiveStreamsOperation* UReceiveStreamsOperation::ReceiveStreamsOperation(UObject* WorldContextObject,
@@ -26,30 +27,41 @@ UReceiveStreamsOperation* UReceiveStreamsOperation::ReceiveStreamsOperation(UObj
 
 void UReceiveStreamsOperation::Activate()
 {
-	FAnalytics::TrackEvent("unknown",
-		ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+	FAnalytics::TrackEvent(ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName()} });
+
 
 	Request();
 }
 
 void UReceiveStreamsOperation::Request()
 {
-	FFetchStreamDelegate CompleteDelegate;
+	const FString Query = FString::Printf(TEXT("{\"query\": \"query{user {streams(limit:%s) {totalCount items {id name description updatedAt createdAt isPublic role  collaborators{id name role company avatar}}}}}\"}"),
+		*FString::FromInt(Limit));
+	
+	FAPIResponceDelegate CompleteDelegate;
 	CompleteDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleReceive);
 
 	FErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindUObject(this, &UReceiveStreamsOperation::HandleError);
-
-	FClientAPI::StreamsGet(ServerUrl, AuthToken, Limit, CompleteDelegate, ErrorDelegate);
+	FClientAPI::MakeGraphQLRequest(ServerUrl, AuthToken, "user", Query,StaticClass()->GetName() , CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveStreamsOperation::HandleReceive(const TArray<FSpeckleStream>& Streams)
+void UReceiveStreamsOperation::HandleReceive(const FString& ResponseJson)
 {
 	check(IsInGameThread());
+	
+	FSpeckleUser Response;
+
+	 if(!FJsonObjectConverter::JsonObjectStringToUStruct(*ResponseJson, &Response, 0, 0))
+	 {
+	 	HandleError("Failed to deserialize object to SpeckleStreams");
+	 	return;
+	 }
+	
 	UE_LOG(LogSpeckle, Log, TEXT("%s to %s Succeeded"), *StaticClass()->GetName(), *ServerUrl);
 	
 	FEditorScriptExecutionGuard ScriptGuard;
-	OnReceiveSuccessfully.Broadcast(Streams, "");		
+	OnReceiveSuccessfully.Broadcast(Response.Streams.Items, "");		
 	
 	SetReadyToDestroy();
 }

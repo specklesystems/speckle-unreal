@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "API/Operations/ReceiveOperation.h"
 
@@ -10,7 +9,6 @@
 #include "Mixpanel.h"
 
 
-// ReceiveOperation
 UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObject,
 													   const FString& ObjectId,
 							                           TScriptInterface<ITransport> RemoteTransport,
@@ -25,13 +23,10 @@ UReceiveOperation* UReceiveOperation::ReceiveOperation(UObject* WorldContextObje
     return Node;
 }
 
-// Activate
 void UReceiveOperation::Activate()
 {
-	FAnalytics::TrackEvent("unknown",
-		"unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+	FAnalytics::TrackEvent("unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName()} });
 
-	//Async(EAsyncExecution::Thread, [this]{Receive();});
 	Receive();
 }
 

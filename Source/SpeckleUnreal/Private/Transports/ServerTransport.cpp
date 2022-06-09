@@ -1,10 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Transports/ServerTransport.h"
+
 #include "LogSpeckle.h"
 #include "Mixpanel.h"
-
 #include "JsonObjectConverter.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
@@ -29,7 +28,6 @@ bool UServerTransport::HasObject(const FString& ObjectId) const
 	return false;
 }
 
-// Parse Root JSON
 void UServerTransport::HandleRootObjectResponse(const FString& RootObjSerialized,
 												TScriptInterface<ITransport> TargetTransport,
 												const FString& ObjectId) const
@@ -62,7 +60,6 @@ void UServerTransport::HandleRootObjectResponse(const FString& RootObjSerialized
 }
 
 
-// Create HTTP Request for Commit Root objects (only ids of children)
 void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 											 TScriptInterface<ITransport> TargetTransport,
 											 const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
@@ -112,17 +109,16 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 		return;
 	}
 	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *Endpoint );
-	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+	FAnalytics::TrackEvent(ServerUrl, "Receive");
 }
 
-// Fetch Children JSON and parse it
 void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTransport, const FString& ObjectId,
-																const TArray<FString>& ChildrenIds, int32 CStart) const
+									const TArray<FString>& ChildrenIds, int32 CStart) const
 {
 	// Check if all children have been fetched
 	if(ChildrenIds.Num() <= CStart)
 	{
-		UE_LOG(LogSpeckle, Log, TEXT("----------->PJSON < CSTART <-----------"));
+		UE_LOG(LogSpeckle, Log, TEXT("Finished fetching child Speckle objects"));
 		ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(ObjectId)),
 		                                                               TEXT("Complete handler was not bound properly"));
 		return;
@@ -138,8 +134,7 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 		for (int32 i = CStart; i < CEnd; i++)
 		{
 			Writer->WriteValue(ChildrenIds[i]);
-		}
-		Writer->WriteArrayEnd();
+		}		Writer->WriteArrayEnd();
 		Writer->Close();
 	}
 
@@ -167,7 +162,7 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 	// Response Callback
 	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
 	{
-		// Any Fail
+		// Request Fail
 		if(!bWasSuccessful)
 		{
 			FString Message = FString::Printf(TEXT("Request for children of root object %s/%s failed: %s"),
@@ -193,7 +188,7 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 		
 		UE_LOG(LogSpeckle, Verbose, TEXT("Parsing %d downloaded objects..."), LineCount)
 
-		// Warning: Less objects then expected
+		// Warning: Fewer/More objects then expected
 		if(LineCount != CEnd - CStart)
 		{
 			UE_LOG(LogSpeckle, Warning, TEXT("Requested %d objects, but received %d"), CEnd - CStart, LineCount);

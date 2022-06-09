@@ -1,11 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "API/Operations/ReceiveCommitsOperation.h"
 
+#include "JsonObjectConverter.h"
 #include "Mixpanel.h"
 #include "LogSpeckle.h"
 #include "API/ClientAPI.h"
+#include "API/Models/SpeckleStream.h"
 
 
 // ReceiveOperation
@@ -27,32 +28,45 @@ UReceiveCommitsOperation* UReceiveCommitsOperation::ReceiveCommitsOperation(UObj
 // Activate
 void UReceiveCommitsOperation::Activate()
 {
-	FAnalytics::TrackEvent("unknown", ServerUrl,
-		 "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }});
+	FAnalytics::TrackEvent(ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName()} });
+
 	
 	Request();
 }
 
 void UReceiveCommitsOperation::Request()
 {
-	ensureAlways(Limit > 0);
-
-	FFetchCommitDelegate CompleteDelegate;
+	const FString Query = "{\"query\": \"query{stream (id: \\\"" + StreamId +
+		"\\\"){id name createdAt updatedAt "
+					+ "branch(name: \\\"" + BranchName + "\\\" ){id name description author{name id email} " +
+					"commits(limit: " + FString::FromInt(Limit) + "){totalCount items {id referencedObject sourceApplication totalChildrenCount " +
+					"branchName parents authorName authorId message createdAt commentCount}}}}}\"}"; // authorAvatar
+	
+	FAPIResponceDelegate CompleteDelegate;
 	CompleteDelegate.BindUObject(this, &UReceiveCommitsOperation::HandleReceive);
 
 	FErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindUObject(this, &UReceiveCommitsOperation::HandleError);
-
-	FClientAPI::StreamGetCommits(ServerUrl, AuthToken, StreamId, BranchName, Limit, CompleteDelegate, ErrorDelegate);
+	FClientAPI::MakeGraphQLRequest(ServerUrl, AuthToken, "stream", Query,StaticClass()->GetName() , CompleteDelegate, ErrorDelegate);
 }
 
-void UReceiveCommitsOperation::HandleReceive(const TArray<FSpeckleCommit>& Commits)
+
+void UReceiveCommitsOperation::HandleReceive(const FString& ResponseJson)
 {
 	check(IsInGameThread());
-	UE_LOG(LogSpeckle, Log, TEXT("%s to %s Succeeded"), *StaticClass()->GetName(), *ServerUrl);
-	FEditorScriptExecutionGuard ScriptGuard;
 	
-	OnReceiveSuccessfully.Broadcast(Commits, "");
+	FSpeckleStream Response;
+
+	if(!FJsonObjectConverter::JsonObjectStringToUStruct(*ResponseJson, &Response, 0, 0))
+	{
+		HandleError("Failed to deserialize object to SpeckleStreams");
+		return;
+	}
+	
+	UE_LOG(LogSpeckle, Log, TEXT("%s to %s Succeeded"), *StaticClass()->GetName(), *ServerUrl);
+	
+	FEditorScriptExecutionGuard ScriptGuard;
+	OnReceiveSuccessfully.Broadcast(Response.Branch.Commits.Items, "");		
 	
 	SetReadyToDestroy();
 }

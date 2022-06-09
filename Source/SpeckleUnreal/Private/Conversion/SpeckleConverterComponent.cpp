@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Conversion/SpeckleConverterComponent.h"
 
@@ -11,13 +10,10 @@
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Misc/ScopedSlowTask.h"
-#include "Transports/Transport.h"
 #include "UObject/ConstructorHelpers.h"
-#include "LogSpeckle.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
-// Sets default values for this component's properties
 USpeckleConverterComponent::USpeckleConverterComponent()
 {
 	//TODO consider using an object library for default converters
@@ -59,21 +55,6 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 	FinishConversion();
 	return RootActor;
 }
-
-// We should convert JSON to Speckle Object Streams
-TArray<FSpeckleStream> USpeckleConverterComponent::ConvertStreamsToNative(AActor* AOwner, const UBase* Base,
-	const TScriptInterface<ITransport>& LocalTransport, bool DisplayProgressBar, TArray<AActor*>& OutActors)
-{
-
-	return ArrayOfStreams;
-}
-
-
-
-
-
-
-
 
 AActor* USpeckleConverterComponent::RecursivelyConvertToNative_Internal(AActor* AOwner, const UBase* Base,
                                                                         const TScriptInterface<ITransport>& LocalTransport,

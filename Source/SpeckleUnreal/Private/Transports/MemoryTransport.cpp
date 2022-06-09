@@ -1,7 +1,7 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Transports/MemoryTransport.h"
+
 #include "LogSpeckle.h"
 
 bool UMemoryTransport::HasObject(const FString& ObjectId) const
@@ -18,5 +18,5 @@ TSharedPtr<FJsonObject> UMemoryTransport::GetSpeckleObject(const FString& Object
 void UMemoryTransport::SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject)
 {
 	SpeckleObjects.Add(ObjectId, SerializedObject);
-	UE_LOG(LogSpeckle, Log, TEXT("-----------> ADDED <-------------- %d"), SpeckleObjects.Num());
+	UE_LOG(LogSpeckle, Verbose, TEXT("Added %s to in memory transport, now %d objects total "), *ObjectId, SpeckleObjects.Num());
 }

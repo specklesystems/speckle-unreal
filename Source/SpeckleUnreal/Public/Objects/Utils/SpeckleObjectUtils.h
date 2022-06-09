@@ -44,6 +44,11 @@ public:
 	UFUNCTION(BlueprintPure, Category="Speckle/ObjectUtils")
 	static FTransform CreateTransform(UPARAM(ref) const FMatrix& TransformMatrix);
 
-	UFUNCTION(BlueprintCallable, Category="Speckle/ObjectUtils")
-	static AActor* SpawnActorInWorld(const TSubclassOf<AActor> Class, UWorld* World, UPARAM(ref) const FTransform& Transform);
+	UFUNCTION(BlueprintCallable, Category="Speckle/ObjectUtils", meta=(CallableWithoutWorldContext, WorldContext="WorldContextObject", DeterminesOutputType="Class", DynamicOutputParam="ReturnValue"))
+	static AActor* SpawnActorInWorld(const UObject* WorldContextObject, const TSubclassOf<AActor> Class, UPARAM(ref) const FTransform& Transform);
+
+	// Helper function to print a json obj to console
+	static FString DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj);
+	
+	
 };

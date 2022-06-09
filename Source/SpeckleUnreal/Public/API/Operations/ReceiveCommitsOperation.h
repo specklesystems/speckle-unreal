@@ -1,10 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-#include "Objects/HighLevel/SpeckleCommit.h"
+#include "API/Models/SpeckleCommit.h"
 
 #include "ReceiveCommitsOperation.generated.h"
 
@@ -12,7 +12,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceiveCommitsOperationHandler, co
 
 
 /**
- *   Receive All Commits	
+ *   Receive all commits from a specified branch (up to limit)
  */
 UCLASS()
 class SPECKLEUNREAL_API UReceiveCommitsOperation : public UBlueprintAsyncActionBase
@@ -47,7 +47,7 @@ protected:
 	FString BranchName;
 	int32 Limit;
 
-	void HandleReceive(const TArray<FSpeckleCommit>& Commits);
+	void HandleReceive(const FString& ResponseJson);
 	
 	void HandleError(const FString& Message);
 };

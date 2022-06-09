@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Objects/Geometry/Mesh.h"
 
@@ -106,11 +105,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 }
 
 
-/**
- * If not already so, this method will align vertices
- * such that a vertex and its corresponding texture coordinates have the same index.
- * See "https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Geometry/Mesh.cs"
- */
+
 void UMesh::AlignVerticesWithTexCoordsByIndex()
 {
 	if(TextureCoordinates.Num() == 0) return;
