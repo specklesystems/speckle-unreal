@@ -109,7 +109,7 @@ void USpeckleConverterComponent::ConvertChild(const TSharedPtr<FJsonValue> Objec
 	const TArray<TSharedPtr<FJsonValue>>* ChildArr;
 	if (Object->TryGetArray(ChildArr))
 	{
-		for (const auto v : *ChildArr)
+		for (const auto& v : *ChildArr)
 		{
 			ConvertChild(v, AOwner, LocalTransport, Task, OutActors);
 		}
