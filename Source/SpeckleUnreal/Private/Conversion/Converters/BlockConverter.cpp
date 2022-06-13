@@ -1,4 +1,6 @@
-﻿#include "Conversion/Converters/BlockConverter.h"
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
+
+#include "Conversion/Converters/BlockConverter.h"
 
 #include "Objects/Other/BlockInstance.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"

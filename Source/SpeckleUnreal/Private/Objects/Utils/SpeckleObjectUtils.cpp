@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Objects/Utils/SpeckleObjectUtils.h"
 
@@ -158,7 +157,16 @@ bool USpeckleObjectUtils::ParseSpeckleObject(const TSharedPtr<FJsonObject> Objec
 }
 
 
-AActor* USpeckleObjectUtils::SpawnActorInWorld(const TSubclassOf<AActor> Class, UWorld* World, const FTransform& Transform)
+AActor* USpeckleObjectUtils::SpawnActorInWorld(const UObject* WorldContextObject, const TSubclassOf<AActor> Class, UPARAM(ref) const FTransform& Transform)
 {
-	return World->SpawnActor(Class, &Transform, FActorSpawnParameters());
+	return WorldContextObject->GetWorld()->SpawnActor(Class, &Transform, FActorSpawnParameters());
+}
+
+FString USpeckleObjectUtils::DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj)
+{
+	FString OutputString;
+	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(Obj.ToSharedRef(), Writer);
+	UE_LOG(LogSpeckle, Display, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
+	return OutputString;
 }

@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Conversion/SpeckleConverterComponent.h"
 
@@ -15,7 +14,6 @@
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
-// Sets default values for this component's properties
 USpeckleConverterComponent::USpeckleConverterComponent()
 {
 	//TODO consider using an object library for default converters
@@ -43,7 +41,11 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 {
 	float ObjectsToConvert{};
 	Base->TryGetDynamicNumber("totalChildrenCount", ObjectsToConvert);
-	FScopedSlowTask Progress(ObjectsToConvert + 2, LOCTEXT("SpeckleConvertoNative","Converting Speckle Objects to Native"), DisplayProgressBar);
+
+	// Progress bar
+	FScopedSlowTask Progress(ObjectsToConvert + 2,
+		LOCTEXT("SpeckleConvertoNative","Converting Speckle Objects to Native"), DisplayProgressBar);
+
 #if WITH_EDITOR
 	Progress.MakeDialog(true, false);
 #endif

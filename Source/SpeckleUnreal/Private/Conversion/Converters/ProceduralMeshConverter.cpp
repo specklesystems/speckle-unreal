@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Conversion/Converters/ProceduralMeshConverter.h"
 
@@ -19,7 +19,8 @@ UProceduralMeshConverter::UProceduralMeshConverter()
     ActorMobility = EComponentMobility::Static;
 }
 
-UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>& AvailableConverters )
+UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World,
+                                                            TScriptInterface<ISpeckleConverter>& AvailableConverters )
 {
     const UMesh* m = Cast<UMesh>(SpeckleBase);
     if(m != nullptr)	
@@ -47,7 +48,9 @@ UObject* UProceduralMeshConverter::ConvertToNative_Implementation(const UBase* S
     return nullptr;
 }
 
-AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh, UWorld* World, TScriptInterface<ISpeckleConverter>& MaterialConverter)
+AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh,
+                                               UWorld* World,
+                                               TScriptInterface<ISpeckleConverter>& MaterialConverter)
 {
     AActor* MeshActor = CreateEmptyActor(World, USpeckleObjectUtils::CreateTransform(SpeckleMesh->Transform));
     UProceduralMeshComponent* MeshComponent = NewObject<UProceduralMeshComponent>(MeshActor, FName("SpeckleMeshComponent"));

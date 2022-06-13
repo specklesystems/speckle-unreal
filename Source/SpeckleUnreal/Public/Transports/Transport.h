@@ -28,6 +28,7 @@ class SPECKLEUNREAL_API ITransport
 	GENERATED_BODY()
 
 public:
+	
  	virtual void SaveObject(const FString& ObjectId, const TSharedPtr<FJsonObject> SerializedObject) = 0;
 
  	//virtual void SaveObjectFromTransport(FString& ObjectID, TScriptInterface<ITransport> SourceTransport) = 0;
@@ -37,8 +38,8 @@ public:
  	virtual bool HasObject(const FString& ObjectId) const = 0;
 	
  	virtual void CopyObjectAndChildren(const FString& ObjectId,
- 		TScriptInterface<ITransport> TargetTransport,
- 		const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
- 		const FTransportErrorDelegate& OnErrorAction) = 0;
+ 									   TScriptInterface<ITransport> TargetTransport,
+ 									   const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
+ 									   const FTransportErrorDelegate& OnErrorAction) = 0;
 
 };

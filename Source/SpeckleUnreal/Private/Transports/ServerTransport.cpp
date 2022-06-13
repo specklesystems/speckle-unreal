@@ -1,14 +1,13 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
 
 #include "Transports/ServerTransport.h"
 
 #include "LogSpeckle.h"
-#include "HttpModule.h"
+#include "Mixpanel.h"
 #include "JsonObjectConverter.h"
+#include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
-#include "Mixpanel.h"
 #include "Policies/CondensedJsonPrintPolicy.h"
 
 
@@ -29,6 +28,38 @@ bool UServerTransport::HasObject(const FString& ObjectId) const
 	return false;
 }
 
+void UServerTransport::HandleRootObjectResponse(const FString& RootObjSerialized,
+												TScriptInterface<ITransport> TargetTransport,
+												const FString& ObjectId) const
+{
+	TSharedPtr<FJsonObject> RootObj;
+	if(!LoadJson(RootObjSerialized, RootObj))
+	{
+		FString Message = FString::Printf( TEXT("A Root Object %s was recieved but was invalid and could not be deserialied"), *ObjectId);
+		InvokeOnError(Message);
+		return;
+	}
+	
+	TargetTransport->SaveObject(ObjectId, RootObj);	
+	
+	// Find children are not already in the target transport
+	const auto Closures = RootObj->GetObjectField("__closure")->Values;
+	
+	TArray<FString> ChildrenIds; 
+	Closures.GetKeys(ChildrenIds);
+	TArray<FString> NewChildrenIds;
+	for(const FString& Id : ChildrenIds)
+	{
+		if(TargetTransport->HasObject(Id)) continue;
+		
+		NewChildrenIds.Add(Id);
+	}
+
+	
+	FetchChildren(TargetTransport, ObjectId, NewChildrenIds);	
+}
+
+
 void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 											 TScriptInterface<ITransport> TargetTransport,
 											 const FTransportCopyObjectCompleteDelegate& OnCompleteAction,
@@ -44,8 +75,7 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 	Request->SetURL(Endpoint);
 	Request->SetHeader("Accept", TEXT("text/plain"));
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
-	
-	
+		
 	// Response Callback
 	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
 	{
@@ -65,7 +95,6 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 		}
 
 		HandleRootObjectResponse(Response->GetContentAsString(), TargetTransport, ObjectId);
-
 	};
 	
 	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
@@ -80,18 +109,18 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 		return;
 	}
 	UE_LOG(LogSpeckle, Verbose, TEXT("GET Request sent for root object at %s, awaiting response"), *Endpoint );
-	FAnalytics::TrackEvent("unknown", ServerUrl, "Receive");
+	FAnalytics::TrackEvent(ServerUrl, "Receive");
 }
 
-
-
-
-void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTransport, const FString& ObjectId, const TArray<FString>& ChildrenIds, int32 CStart) const
+void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTransport, const FString& ObjectId,
+									const TArray<FString>& ChildrenIds, int32 CStart) const
 {
 	// Check if all children have been fetched
 	if(ChildrenIds.Num() <= CStart)
 	{
-		ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(ObjectId)), TEXT("Complete handler was not bound properly"));
+		UE_LOG(LogSpeckle, Log, TEXT("Finished fetching child Speckle objects"));
+		ensureAlwaysMsgf(this->OnComplete.ExecuteIfBound(TargetTransport->GetSpeckleObject(ObjectId)),
+		                                                               TEXT("Complete handler was not bound properly"));
 		return;
 	}
 	
@@ -105,8 +134,7 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 		for (int32 i = CStart; i < CEnd; i++)
 		{
 			Writer->WriteValue(ChildrenIds[i]);
-		}
-		Writer->WriteArrayEnd();
+		}		Writer->WriteArrayEnd();
 		Writer->Close();
 	}
 
@@ -134,30 +162,39 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 	// Response Callback
 	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
 	{
+		// Request Fail
 		if(!bWasSuccessful)
 		{
-			FString Message = FString::Printf(TEXT("Request for children of root object %s/%s failed: %s"), *StreamId,  *ObjectId, *Response->GetContentAsString());
-			InvokeOnError(Message);
-			return;
-		}
-		
-		const int32 ResponseCode = Response->GetResponseCode();
-		if (ResponseCode != 200)
-		{
-			FString Message = FString::Printf(TEXT("Request for children of root object %s/%s failed:\nHTTP response %d"), *StreamId,  *ObjectId, ResponseCode);
+			FString Message = FString::Printf(TEXT("Request for children of root object %s/%s failed: %s"),
+																*StreamId,  *ObjectId, *Response->GetContentAsString());
 			InvokeOnError(Message);
 			return;
 		}
 
+		// Any HTTP Fail
+		const int32 ResponseCode = Response->GetResponseCode();
+		if (ResponseCode != 200)
+		{
+			FString Message = FString::Printf(
+								TEXT("Request for children of root object %s/%s failed:\nHTTP response %d"),
+								                                               *StreamId,  *ObjectId, ResponseCode);
+			InvokeOnError(Message);
+			return;
+		}
+
+		// Success: Start parsing
 		TArray<FString> Lines;
 		const int32 LineCount = SplitLines(Response->GetContentAsString(), Lines);
 		
 		UE_LOG(LogSpeckle, Verbose, TEXT("Parsing %d downloaded objects..."), LineCount)
+
+		// Warning: Fewer/More objects then expected
 		if(LineCount != CEnd - CStart)
 		{
-			UE_LOG(LogSpeckle, Warning, TEXT("Requested %d objects, but recieved %d"), CEnd - CStart, LineCount);
+			UE_LOG(LogSpeckle, Warning, TEXT("Requested %d objects, but received %d"), CEnd - CStart, LineCount);
 		}
-		
+
+		// Load JSON as objects
 		for (const FString& Line : Lines)
 		{
 			FString Id, ObjectJson;
@@ -167,14 +204,13 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 			TSharedPtr<FJsonObject> JsonObject;
 			if(!LoadJson(ObjectJson, JsonObject)) continue;
 
-
 			TargetTransport->SaveObject(Id, JsonObject);
 		}
 
 		UE_LOG(LogSpeckle, Log, TEXT("Processed %d/%d Child objects"), CEnd, ChildrenIds.Num())
 		
 		//Iterate again for any missing children
-		FetchChildren(TargetTransport, ObjectId, ChildrenIds , CEnd);
+		FetchChildren(TargetTransport, ObjectId, ChildrenIds, CEnd);
 	};
 	
 	Request->OnProcessRequestComplete().BindLambda(ResponseHandler);
@@ -188,36 +224,15 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 		InvokeOnError(Message);
 		return;
 	}
+
 	
 	UE_LOG(LogSpeckle, Verbose, TEXT("Requesting %d child objects"), CEnd - CStart);
 }
 
-void UServerTransport::HandleRootObjectResponse(const FString& RootObjSerialized, TScriptInterface<ITransport> TargetTransport, const FString& ObjectId) const
+
+void UServerTransport::InvokeOnError(FString& Message) const
 {
-	TSharedPtr<FJsonObject> RootObj;
-	if(!LoadJson(RootObjSerialized, RootObj))
-	{
-		FString Message = FString::Printf( TEXT("A Root Object %s was recieved but was invalid and could not be deserialied"), *ObjectId);
-		InvokeOnError(Message);
-		return;
-	}
-	
-	TargetTransport->SaveObject(ObjectId, RootObj);	
-	
-	// Find children are not already in the target transport
-	const auto Closures = RootObj->GetObjectField("__closure")->Values;
-	
-	TArray<FString> ChildrenIds; 
-	Closures.GetKeys(ChildrenIds);
-	TArray<FString> NewChildrenIds;
-	for(const FString& Id : ChildrenIds)
-	{
-		if(TargetTransport->HasObject(Id)) continue;
-		
-		NewChildrenIds.Add(Id);
-	}
-	
-	FetchChildren(TargetTransport, ObjectId, NewChildrenIds);	
+	ensureAlwaysMsgf(this->OnError.ExecuteIfBound(Message), TEXT("ServerTransport: Unhandled error - %s"), *Message);
 }
 
 int32 UServerTransport::SplitLines(const FString& Content, TArray<FString>& OutLines)
@@ -231,14 +246,9 @@ int32 UServerTransport::SplitLines(const FString& Content, TArray<FString>& OutL
 	return LineCount;
 }
 
-bool UServerTransport::LoadJson(const FString& ObjectJson, TSharedPtr<FJsonObject>& OutJsonObject)
+bool UServerTransport::LoadJson(const FString& StringJson, TSharedPtr<FJsonObject>& OutJsonObject)
 {
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ObjectJson);
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(StringJson);
 	return FJsonSerializer::Deserialize(Reader, OutJsonObject);
-}
-
-void UServerTransport::InvokeOnError(FString& Message) const
-{
-	ensureAlwaysMsgf(this->OnError.ExecuteIfBound(Message), TEXT("ServerTransport: Unhandled error - %s"), *Message);
 }
 

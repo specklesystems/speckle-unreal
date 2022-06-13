@@ -46,7 +46,7 @@ void ASpeckleUnrealManager::Receive()
 	ObjectID.TrimEndInline();
 	AuthToken.TrimEndInline();
 
-	FAnalytics::TrackEvent("unknown", "unknown", "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }, {"worldType", FString::FromInt(GetWorld()->WorldType)}});
+	FAnalytics::TrackEvent( ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }, {"worldType", FString::FromInt(GetWorld()->WorldType)}});
 
 	if(!KeepCache && LocalObjectCache.GetObjectRef() != nullptr)
 	{
@@ -111,7 +111,7 @@ void ASpeckleUnrealManager::PrintMessage(FString& Message, bool IsError) const
 	{
 		UE_LOG(LogSpeckle, Log, TEXT("%s"), *Message);
 	}
-
+	
 	FColor Color = IsError? FColor::Red : FColor::Green;
 	GEngine->AddOnScreenDebugMessage(0, 5.0f, Color, Message);
 }

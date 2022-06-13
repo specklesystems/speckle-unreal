@@ -30,15 +30,16 @@ public:
 	
 	// Sets default values for this component's properties
 	USpeckleConverterComponent();
+
 	
 	// Converts the given Base and all children into native actors.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
-	UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, bool DisplayProgressBar, TArray<AActor*>& OutActors);
-
-	
+	UPARAM(DisplayName = "RootActor") AActor* RecursivelyConvertToNative(AActor* AOwner, const UBase* Base,
+		       const TScriptInterface<ITransport>& LocalTransport, bool DisplayProgressBar, TArray<AActor*>& OutActors);
+		
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")
 	virtual void FinishConversion();
-
+	
 protected:
 
 	virtual AActor* RecursivelyConvertToNative_Internal(AActor* AOwner, const UBase* Base, const TScriptInterface<ITransport>& LocalTransport, FSlowTask* Task, TArray<AActor*>& OutActors);

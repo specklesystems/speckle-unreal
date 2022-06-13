@@ -42,5 +42,10 @@ public:
 	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
 
 protected:
+	
+
+	/// If not already so, this method will align vertices
+	/// such that a vertex and its corresponding texture coordinates have the same index.
+	/// See "https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Geometry/Mesh.cs"
 	virtual void AlignVerticesWithTexCoordsByIndex();
 };

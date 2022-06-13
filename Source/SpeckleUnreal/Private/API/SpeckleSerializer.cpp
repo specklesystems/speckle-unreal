@@ -1,4 +1,6 @@
-﻿#include "API/SpeckleSerializer.h"
+﻿// Copyright 2022 AEC Systems, Licensed under the Apache License, Version 2.0
+
+#include "API/SpeckleSerializer.h"
 
 #include "Objects/Base.h"
 #include "LogSpeckle.h"
@@ -9,18 +11,18 @@
 #include "UObject/Package.h"
 
 
-UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
+UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj,
+										   const TScriptInterface<ITransport> ReadTransport)
 {
 	if(Obj == nullptr) return nullptr;
 
-	{ // Handle Detached Objects
-		TSharedPtr<FJsonObject> DetachedObject;
-		if(USpeckleObjectUtils::ResolveReference(Obj, ReadTransport, DetachedObject))
-		{
+	// Handle Detached Objects
+	TSharedPtr<FJsonObject> DetachedObject;
+	if(USpeckleObjectUtils::ResolveReference(Obj, ReadTransport, DetachedObject))
+	{
 			return DeserializeBase(DetachedObject, ReadTransport);
-		}
 	}
-	
+		
 	FString SpeckleType;	
 	if (!Obj->TryGetStringField("speckle_type", SpeckleType)) return nullptr;
 	FString ObjectId = "";	
@@ -59,7 +61,7 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj, co
 }
 
 UBase* USpeckleSerializer::DeserializeBaseById(const FString& ObjectId,
-	const TScriptInterface<ITransport> ReadTransport)
+                                               const TScriptInterface<ITransport> ReadTransport)
 {
 	auto Obj = ReadTransport->GetSpeckleObject(ObjectId);
 	return DeserializeBase(Obj, ReadTransport);
