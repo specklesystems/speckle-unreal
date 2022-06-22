@@ -52,9 +52,9 @@ public:
 
 
 	UFUNCTION(BlueprintPure, Category = "Speckle|Transports")
-	static UServerTransport* CreateServerTransport(UPARAM(ref) FString& _ServerUrl,
-												   UPARAM(ref) FString& _StreamId,
-												   UPARAM(ref) FString& _AuthToken)
+	static UServerTransport* CreateServerTransport(const FString& _ServerUrl,
+												   const FString& _StreamId,
+												   const FString& _AuthToken)
 	{
 		UServerTransport* Transport = NewObject<UServerTransport>();
 		Transport->ServerUrl = _ServerUrl;

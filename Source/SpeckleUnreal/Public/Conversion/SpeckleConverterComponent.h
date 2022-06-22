@@ -30,7 +30,6 @@ public:
 	
 	// Sets default values for this component's properties
 	USpeckleConverterComponent();
-
 	
 	// Converts the given Base and all children into native actors.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Conversion")

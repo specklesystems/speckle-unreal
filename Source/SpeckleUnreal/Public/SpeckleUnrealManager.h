@@ -8,6 +8,7 @@
 class UServerTransport;
 class ITransport;
 class USpeckleConverterComponent;
+class UReceiveSelectionComponent;
 class FJsonObject;
 
 /**
@@ -19,20 +20,10 @@ class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 	GENERATED_BODY()
 	
 public:
+
+	UPROPERTY(VisibleAnywhere, Category="Speckle", BlueprintReadWrite)
+	UReceiveSelectionComponent* ReceiveSelection;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle")
-	FString ServerUrl;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle")
-	FString StreamID;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle")
-	FString ObjectID;
-
-	// A Personal Access Token can be created from your Speckle Profile page (Treat tokens like passwords, do not share publicly) - Required for receiving private streams
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", meta=(PasswordField = true))
-	FString AuthToken;
-
 	// When true, will call `Receive` on BeginPlay
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", AdvancedDisplay)
 	bool ImportAtRuntime;
@@ -45,7 +36,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category="Speckle", BlueprintReadWrite)
 	USpeckleConverterComponent* Converter;
 	
-	// Used to stagger transport requests, useful when making requests for a large number of child objects
+	// When true, will display an editor progress bar while receiving objects
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", AdvancedDisplay)
 	bool DisplayProgressBar;
 	

@@ -87,7 +87,7 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative_Internal(AActor* 
 	{
 		if(Task->ShouldCancel()) break;
 		
-		ConvertChild(Kvp.Value, AOwner, LocalTransport, Task, OutActors);
+		ConvertChild(Kvp.Value, NextOwner, LocalTransport, Task, OutActors);
 	}
 	return AOwner;
 }

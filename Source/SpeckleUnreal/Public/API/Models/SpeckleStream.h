@@ -18,43 +18,47 @@ struct FSpeckleStream
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models", DisplayName="Stream Id")
 	FString ID;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	FString Name;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	FString Description;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	bool IsPublic;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	FString Role;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	FString	CreatedAt;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	FString UpdatedAt;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
-	FString FavoritedDate ;
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
+	FString FavoritedDate;
 	
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	TArray<FSpeckleCollaborator> Collaborators;
 
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+	// Object properties are only set if explicitly requested by a custom GraphQL request
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	FSpeckleBranches Branches;
-	
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+
+	// Object properties are only set if explicitly requested by a custom GraphQL request
+	UPROPERTY(BlueprintReadOnly, DisplayName="Branch (Request Only)", Category="Speckle|API Models", AdvancedDisplay)
 	FSpeckleBranch Branch;
-	
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+
+	// Object properties are only set if explicitly requested by a custom GraphQL request
+	UPROPERTY(BlueprintReadOnly, DisplayName="Commit (Request Only)", Category="Speckle|API Models", AdvancedDisplay)
 	FSpeckleCommit Commit;
-	
-	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
+
+	// Object properties are only set if explicitly requested by a custom GraphQL request
+	UPROPERTY(BlueprintReadOnly, Category="Speckle|API Models")
 	FSpeckleCommits Commits;
 };
 
