@@ -262,6 +262,13 @@ UStaticMesh* UStaticMeshConverter::MeshesToNativeMesh(UObject* Outer, const UBas
 			for(int j = 0; j < n; j ++)
 			{
 				int32 VertIndex = SpeckleMesh->Faces[i + 1 + j];
+				
+				if(VertIndex < 0 || VertIndex >= Vertices.Num())
+				{
+					UE_LOG(LogSpeckle, Warning, TEXT("Invalid Polygon while creating mesh %s - index %d was outside the bounds of the vertex array, face is ignored"), *SpeckleMesh->Id, VertIndex);
+					continue;
+				}
+				
 				FVertexID Vert = Vertices[VertIndex];
 				bool AlreadyInSet;
 				Verts.Add(Vert, &AlreadyInSet);
@@ -392,7 +399,8 @@ UBase* UStaticMeshConverter::MeshToSpeckle(const UStaticMeshComponent* Object)
 
 void UStaticMeshConverter::FinishConversion_Implementation()
 {
-
+	if(StaticMeshesToBuild.Num() <= 0) return;
+	
 	FScopeLock Lock(&Lock_StaticMeshesToBuild);
 
 #if WITH_EDITOR

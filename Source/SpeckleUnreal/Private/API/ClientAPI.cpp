@@ -38,6 +38,16 @@ void FClientAPI::MakeGraphQLRequest(const FString& ServerUrl, const FString& Aut
 		const TSharedPtr<FJsonObject>* RequestedJson;
 		if(!DataObject->TryGetObjectField(ResponsePropertyName, RequestedJson))
 		{
+			//Requested property has a null or non-object value
+			if(DataObject->HasField(ResponsePropertyName))
+			{
+				FString Message = FString::Printf(TEXT("%s: Response data contained the requested property \"%s\", but the value was null was or not an object."),
+				*RequestLogName, *ResponsePropertyName);
+				OnError(Message);
+				return;
+			}
+
+			//Requested property was missing
 			TArray<FString> Options;
 			Options.Reserve(DataObject->Values.Num());
 			for(const auto& Properties : DataObject->Values)
@@ -142,8 +152,8 @@ bool FClientAPI::CheckRequestFailed(bool bWasSuccessful, FHttpResponsePtr Respon
 	const int32 ResponseCode = Response->GetResponseCode();
 	if (ResponseCode != 200)
 	{
-		FString Message = FString::Printf(TEXT("Request \"%s\" to \"%s\" failed with HTTP response %d"),
-												*RequestLogName, *Response->GetURL(), ResponseCode);
+		FString Message = FString::Printf(TEXT("Request \"%s\" to \"%s\" failed with HTTP response %d - %s"),
+												*RequestLogName, *Response->GetURL(), ResponseCode, *Response->GetContentAsString());
 		OnErrorAction(Message);
 		return true;
 	}
@@ -159,7 +169,7 @@ bool FClientAPI::CheckForOperationErrors(const TSharedPtr<FJsonObject> GraphQLRe
 	
 	bool WasError = false;
 	const TArray<TSharedPtr<FJsonValue>>* Errors;
-	if(GraphQLResponse->TryGetArrayField(TEXT("Errors"), Errors))
+	if(GraphQLResponse->TryGetArrayField(TEXT("errors"), Errors))
 	{
 		for(const TSharedPtr<FJsonValue>& e : *Errors)
 		{
