@@ -13,7 +13,7 @@ class ASpeckleUnrealManager;
 /**
  * Base type that all Object Models inherit from
  */
-UCLASS(BlueprintType, meta=(ScriptName="Base (Speckle.Objects)"))
+UCLASS(BlueprintType, meta=(DisplayName="Base (Speckle.Objects)"))
 class SPECKLEUNREAL_API UBase : public UObject
 {
 public:
