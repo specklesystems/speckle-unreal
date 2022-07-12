@@ -1,0 +1,41 @@
+version: 2.1
+
+commands:
+  zip-source:
+    parameters:
+      target:
+        type: string
+      outputdir:
+        type: string
+    steps:
+      - run:
+          name: "create archive"
+          command: |
+            cp -r ".pluginconfig/${TARGET}/." "./"
+            git archive HEAD -ov "${OUTPUTDIR}/${TARGET}.zip" --worktree-attributes --prefix="speckle-unreal/"
+
+jobs:
+  marketplace-publish:
+    docker:
+      - image: cimg/base:stable
+    parameters:
+      target:
+        type: string
+    steps:
+      - checkout
+      - zip-source:
+            target: ${TARGET}
+            outputdir: "output/${TARGET}"
+      - store_artifacts:
+          path: "output/${TARGET}"
+          destination: unreal-marketplace/${TARGET}"
+
+workflows:
+  marketplace-publish:
+    jobs:
+      - marketplace-publish:
+          target: "4.26"
+      - marketplace-publish:
+          target: "4.27"
+      - marketplace-publish:
+          target: "5.0"
