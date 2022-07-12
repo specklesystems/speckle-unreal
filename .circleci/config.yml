@@ -1,0 +1,46 @@
+version: 2.1
+
+commands:
+  zip-source:
+    parameters:
+      target:
+        type: string
+      outputdir:
+        type: string
+    steps:
+      - run:
+          name: "Create Archive"
+          command: |
+            \cp -r ".pluginconfig/<<parameters.target>>/." "./"
+            mkdir -p "<<parameters.outputdir>>/"
+            stashName=`git stash create`;
+            git archive -o "<<parameters.outputdir>>/speckle-unreal-UE<<parameters.target>>.zip" --worktree-attributes --prefix="speckle-unreal/" $stashName
+
+jobs:
+  marketplace-publish:
+    docker:
+      - image: cimg/base:stable
+    parameters:
+      target:
+        type: string
+    steps:
+      - checkout
+      - zip-source:
+            target: <<parameters.target>>
+            outputdir: "output/<<parameters.target>>"
+      - store_artifacts:
+          path: "output/<<parameters.target>>"
+          destination: "unreal-marketplace/<<parameters.target>>"
+
+workflows:
+  marketplace-publish:
+    jobs:
+      - marketplace-publish:
+          name: "Marketplace Publish UE4.26"
+          target: "4.26"
+      - marketplace-publish:
+          name: "Marketplace Publish UE4.27"
+          target: "4.27"
+      - marketplace-publish:
+          name: "Marketplace Publish UE5.0"
+          target: "5.0"
