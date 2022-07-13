@@ -31,6 +31,18 @@ jobs:
       - store_artifacts:
           path: "output/<<parameters.target>>"
           destination: "unreal-marketplace/<<parameters.target>>"
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - "output/<<parameters.target>>"
+
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: ls "output/"
 
 workflows:
   marketplace-publish:
@@ -44,3 +56,9 @@ workflows:
       - marketplace-publish:
           name: "Marketplace Publish UE5.0"
           target: "5.0"
+      - deploy:
+          requires:
+            - "Marketplace Publish UE4.26"
+            - "Marketplace Publish UE4.27"
+            - "Marketplace Publish UE5.0"
+          
