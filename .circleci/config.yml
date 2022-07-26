@@ -1,0 +1,94 @@
+version: 2.1
+
+orbs:
+  aws-s3: circleci/aws-s3@2.0.0
+
+commands:
+  zip-source:
+    parameters:
+      target:
+        type: string
+      outputdir:
+        type: string
+    steps:
+      - run:
+          name: "Create Archive"
+          command: |
+            \cp -r ".pluginconfig/<<parameters.target>>/." "./"
+            mkdir -p "<<parameters.outputdir>>/"
+            stashName=`git stash create`;
+            git archive -o "<<parameters.outputdir>>/speckle-unreal-UE<<parameters.target>>.zip" --worktree-attributes --prefix="speckle-unreal/" $stashName
+
+jobs:
+  generate-source-zip:
+    docker:
+      - image: cimg/base:stable
+    parameters:
+      target:
+        type: string
+    steps:
+      - checkout
+      - zip-source:
+            target: <<parameters.target>>
+            outputdir: "output/unreal/<<parameters.target>>"
+      - store_artifacts:
+          path: "output/unreal/<<parameters.target>>"
+          destination: "unreal-marketplace/<<parameters.target>>"
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - "output/unreal/<<parameters.target>>"
+
+  marketplace-deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - attach_workspace:
+          at: ./
+      - aws-s3/copy:
+          arguments: "--recursive --endpoint=https://$SPACES_REGION.digitaloceanspaces.com --acl public-read"
+          aws-access-key-id: SPACES_KEY
+          aws-region: SPACES_REGION
+          aws-secret-access-key: SPACES_SECRET
+          from: '"output"'
+          to: s3://speckle-releases/installers/
+
+workflows:
+  marketplace-publish:
+    jobs:
+      - generate-source-zip:
+          name: "Generate Source Archive UE4.26"
+          target: "4.26"
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-\w+)?(\/all)?$/
+      - generate-source-zip:
+          name: "Generate Source Archive UE4.27"
+          target: "4.27"
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-\w+)?(\/all)?$/
+      - generate-source-zip:
+          name: "Generate Source Archive UE5.0"
+          target: "5.0"
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-\w+)?(\/all)?$/
+      - hold:
+          type: approval
+          requires: 
+            - "Generate Source Archive UE4.26"
+            - "Generate Source Archive UE4.27"
+            - "Generate Source Archive UE5.0"
+      - marketplace-deploy:
+          name: "Deploy to marketplace"
+          requires:
+            - hold
+
+          
