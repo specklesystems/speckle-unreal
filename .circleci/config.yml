@@ -82,13 +82,21 @@ workflows:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-\w+)?(\/all)?$/
       - hold:
           type: approval
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-\w+)?(\/all)?$/
           requires: 
             - "Generate Source Archive UE4.26"
             - "Generate Source Archive UE4.27"
             - "Generate Source Archive UE5.0"
       - marketplace-deploy:
           name: "Deploy to marketplace"
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-\w+)?(\/all)?$/
           requires:
             - hold
-
-          
