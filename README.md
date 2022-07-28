@@ -7,6 +7,9 @@ This plugin connects Unreal Engine to Speckle, allowing you to receive your vers
 enabling interoperable collaboration between Unreal and other Speckle connectors (Revit, Rhino, Blender, Sketchup, Unity, AutoCAD, [and more!](https://speckle.systems/features/connectors/))
 
 
+https://user-images.githubusercontent.com/45512892/181620836-9c7e6a7f-4f18-48e5-a574-5eebc2abd35f.mp4
+
+
 Checkout our dedicated [Tutorials and Docs](https://speckle.systems/tag/unreal/).
 
 If you are enjoying using Speckle, don't forget to ⭐ our [GitHub repositories](https://github.com/specklesystems),
