@@ -1,6 +1,6 @@
 # Speckle for Unreal Engine
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/SpeckleSystems?style=social)](https://twitter.com/SpeckleSystems) [![Community forum users](https://img.shields.io/discourse/users?server=https%3A%2F%2Fspeckle.community&style=flat-square&logo=discourse&logoColor=white)](https://speckle.community) [![website](https://img.shields.io/badge/https://-speckle.systems-royalblue?style=flat-square)](https://speckle.systems) [![docs](https://img.shields.io/badge/docs-speckle.guide-orange?style=flat-square&logo=read-the-docs&logoColor=white)](https://speckle.guide/dev/)
+[![Twitter Follow](https://img.shields.io/twitter/follow/SpeckleSystems?style=social)](https://twitter.com/SpeckleSystems) [![Community forum users](https://img.shields.io/discourse/users?server=https%3A%2F%2Fspeckle.community&style=flat-square&logo=discourse&logoColor=white)](https://speckle.community) [![website](https://img.shields.io/badge/https://-speckle.systems-royalblue?style=flat-square)](https://speckle.systems) [![docs](https://img.shields.io/badge/docs-speckle.guide-orange?style=flat-square&logo=read-the-docs&logoColor=white)](https://speckle.guide/user/unreal.html)
 
 Speckle makes integrating Unreal Engine with your 3D workflows even easier. </br>
 This plugin connects Unreal Engine to Speckle, allowing you to receive your versioned 3D data from Speckle inside Unreal Engine,
@@ -52,6 +52,8 @@ Speckle for Unreal Engine can be installed through the [Unreal Engine Marketplac
 Alternatively, developers may prefer to install manually.-->
 1. Git clone [this repo](https://github.com/specklesystems/speckle-unreal) (or download and extract the [archive zip](https://github.com/specklesystems/speckle-unreal/archive/refs/heads/main.zip)) into your project's `Plugins` directory (created as needed)
 2. Open/Restart your Unreal project. This will build the plugin for your environment.
+
+See our [docs](https://speckle.guide/user/unreal.html) for usage instructions.
 
 If you encounter build issues, try building your project from VS/Rider directly. Look at the `Saved\Logs\` files for error messages,
 and don't hesitate to reach out on our [community forums](https://speckle.community) for help!
