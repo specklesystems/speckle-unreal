@@ -1,5 +1,1 @@
-.gitattributes export-ignore
-.github/* export-ignore
-.circleci/* export-ignore
-.circleci/ export-ignore
 .pluginconfig/* export-ignore
