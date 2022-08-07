@@ -24,6 +24,22 @@ commands:
             stashName=`git stash create`;
             git archive -o "<<parameters.outputdir>>/speckle-unreal-UE<<parameters.target>>.zip" --worktree-attributes --prefix="speckle-unreal/" $stashName
 
+  add-source-copyright:
+    parameters:
+      copyright-string:
+        type: string
+    steps:
+      - run:
+          name: "Add copyright notice to source files"
+          command: |
+            shopt -s globstar
+            for file in Source/**/*.{cpp,hpp,c,h,cs};
+              do if [ -f $file ]; then
+                sed -i '1s/^/\/\/ <<parameters.copyright-string>>\n/' $file;
+                echo "added copyright notice to $file";
+              fi;
+            done;
+
 jobs:
   generate-source-zip:
     docker:
@@ -33,6 +49,8 @@ jobs:
         type: string
     steps:
       - checkout
+      - add-source-copyright:
+          copyright-string: "Copyright AEC SYSTEMS 2022"
       - zip-source:
             target: <<parameters.target>>
             outputdir: "output/unreal/<<parameters.target>>"
