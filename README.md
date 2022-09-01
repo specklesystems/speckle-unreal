@@ -7,7 +7,7 @@ This plugin connects Unreal Engine to Speckle, allowing you to receive your vers
 enabling interoperable collaboration between Unreal and other Speckle connectors (Revit, Rhino, Blender, Sketchup, Unity, AutoCAD, [and more!](https://speckle.systems/features/connectors/))
 
 
-https://user-images.githubusercontent.com/45512892/181620836-9c7e6a7f-4f18-48e5-a574-5eebc2abd35f.mp4
+https://user-images.githubusercontent.com/45512892/187969471-3f548b17-3388-48ee-a07c-bd3a0ecf5149.mp4
 
 
 Checkout our dedicated [Tutorials and Docs](https://speckle.systems/tag/unreal/).
@@ -46,10 +46,11 @@ We support Unreal Engine 4.26, 4.27, 5.0
  
 ## How to install
 
-<!--- Soon to be!
-Speckle for Unreal Engine can be installed through the [Unreal Engine Marketplace](com.epicgames.launcher://ue/marketplace/product/98770ce9d4f143de8dd7882a707a6f81).
+**Speckle for Unreal Engine** can be installed through the [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/product/speckle-for-unreal-engine).
 
-Alternatively, developers may prefer to install manually.-->
+---
+
+Alternatively, developers may prefer to install manually.
 1. Git clone [this repo](https://github.com/specklesystems/speckle-unreal) (or download and extract the [archive zip](https://github.com/specklesystems/speckle-unreal/archive/refs/heads/main.zip)) into your project's `Plugins` directory (created as needed)
 2. Open/Restart your Unreal project. This will build the plugin for your environment.
 
