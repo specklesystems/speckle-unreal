@@ -7,7 +7,7 @@ public class SpeckleUnreal : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
-		PublicDefinitions.Add("SUPPRESS_SPECKLE_ANALYTICS=0");
+		PublicDefinitions.Add("SPECKLE_CONNECTOR_VERSION=\"2.8.0\"");
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
