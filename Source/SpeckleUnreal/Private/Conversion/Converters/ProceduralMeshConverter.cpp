@@ -66,19 +66,19 @@ AActor* UProceduralMeshConverter::MeshToNative(const UMesh* SpeckleMesh,
         
         if (n == 3) //Triangles
         {
-            Faces.Add(SpeckleMesh->Faces[i + 3]);
-            Faces.Add(SpeckleMesh->Faces[i + 2]);
             Faces.Add(SpeckleMesh->Faces[i + 1]);
+            Faces.Add(SpeckleMesh->Faces[i + 2]);
+            Faces.Add(SpeckleMesh->Faces[i + 3]);
         }
         else if(n == 4) // Quads
         {
+            Faces.Add(SpeckleMesh->Faces[i + 1]);
+            Faces.Add(SpeckleMesh->Faces[i + 3]);
             Faces.Add(SpeckleMesh->Faces[i + 4]);
-            Faces.Add(SpeckleMesh->Faces[i + 3]);
-            Faces.Add(SpeckleMesh->Faces[i + 1]);
 
-            Faces.Add(SpeckleMesh->Faces[i + 3]);
-            Faces.Add(SpeckleMesh->Faces[i + 2]);
             Faces.Add(SpeckleMesh->Faces[i + 1]);
+            Faces.Add(SpeckleMesh->Faces[i + 2]);
+            Faces.Add(SpeckleMesh->Faces[i + 3]);
         }
         else
         {
