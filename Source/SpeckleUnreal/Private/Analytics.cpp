@@ -18,31 +18,26 @@ const FString FAnalytics::VersionedApplicationName = FString::Printf(TEXT("Unrea
 
 void FAnalytics::TrackEvent(const FString& Server, const FString& EventName)
 {
-#if !SUPPRESS_SPECKLE_ANALYTICS
 	const TMap<FString, FString> CustomProperties;
 	TrackEvent( Server, EventName, CustomProperties);
-#endif
 }
 
 void FAnalytics::TrackEvent(const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties)
 {
-#if !SUPPRESS_SPECKLE_ANALYTICS
 	//Since we don't have access to users email address, we will hash the system user name instead (better than not tracking users at all) 
-	const FString Email = FString(FGenericPlatformProcess::ComputerName()) + FString(FGenericPlatformProcess::UserName());
-	TrackEvent(Email, Server, EventName, CustomProperties);
-#endif
+	const FString UserID = FString(FGenericPlatformProcess::ComputerName()) + FString(FGenericPlatformProcess::UserName());
+	TrackEvent(UserID, Server, EventName, CustomProperties);
 }
 
-void FAnalytics::TrackEvent(const FString& Email, const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties)
+void FAnalytics::TrackEvent(const FString& UserID, const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties)
 {
-#if !SUPPRESS_SPECKLE_ANALYTICS
 
-	FString HashedEmail = "@" + Hash(Email); //prepending an @ so we distinguish logged and non-logged users
+	FString HashedUserID = "@" + Hash(UserID); //prepending an @ so we distinguish logged and non-logged users
 	FString HashedServer = Hash(Server);
 	
 	TMap<FString, FString> Properties 
 	{
-		{ "distinct_id", HashedEmail },
+		{ "distinct_id", HashedUserID },
 		{ "server_id", HashedServer },
 		{ "token", MixpanelToken },
 		{ "hostApp", "Unreal Engine" },
@@ -86,7 +81,6 @@ void FAnalytics::TrackEvent(const FString& Email, const FString& Server, const F
 	{
 		UE_LOG(LogSpeckle, Log, TEXT("Failed to send Mixpanel event to %s"), *MixpanelServer);
 	}
-#endif
 }
 
 FString FAnalytics::Hash(const FString& Input)

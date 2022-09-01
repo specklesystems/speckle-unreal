@@ -74,6 +74,8 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 	Request->SetURL(Endpoint);
 	Request->SetHeader("Accept", TEXT("text/plain"));
 	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetHeader("apollographql-client-name", "Unreal Engine");
+	Request->SetHeader("apollographql-client-version", SPECKLE_CONNECTOR_VERSION);
 		
 	// Response Callback
 	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
