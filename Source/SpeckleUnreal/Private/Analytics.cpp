@@ -25,7 +25,7 @@ void FAnalytics::TrackEvent(const FString& Server, const FString& EventName)
 void FAnalytics::TrackEvent(const FString& Server, const FString& EventName, const TMap<FString, FString>& CustomProperties)
 {
 	//Since we don't have access to users email address, we will hash the system user name instead (better than not tracking users at all) 
-	const FString UserID = FString(FGenericPlatformProcess::ComputerName()) + FString(FGenericPlatformProcess::UserName());
+	const FString UserID = FString(FPlatformProcess::ComputerName()) + FString(FPlatformProcess::UserName());
 	TrackEvent(UserID, Server, EventName, CustomProperties);
 }
 
