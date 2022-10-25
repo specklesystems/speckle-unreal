@@ -33,7 +33,8 @@ void FSpeckleUnrealEditorModule::StartupModule()
 
 			// Create FConverterActions for USpeckleConverter types
 			if ( Class->ImplementsInterface(USpeckleConverter::StaticClass())
-				&& !Class->HasAnyClassFlags(CLASS_Abstract))
+				&& !Class->HasAnyClassFlags(CLASS_Abstract)
+				&& !Class->GetFName().ToString().Contains(TEXT("REINST"))) //Ignore hot-reloaded BPs
 			{
 				AssetTools.RegisterAssetTypeActions(MakeShareable(new FConverterActions(Class, SpeckleAssetCategoryBit)));
 			}

@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "2.8.0",
+	"VersionName": "2.9.0",
 	"FriendlyName": "Speckle Unreal",
 	"Description": "Speckle is an open source data platform for Architecture, Engineering, and Construction. It has been open sourced under the Apache License 2.0, is customizable, and available in the cloud or via a self-hosted server. It allows users to exchange data between various AEC modelling and content creation platforms.",
 	"Category": "AEC",
