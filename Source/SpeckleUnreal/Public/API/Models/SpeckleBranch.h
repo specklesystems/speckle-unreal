@@ -35,7 +35,7 @@ struct FSpeckleBranches
 	GENERATED_BODY();
 	
 	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
-	int32 TotalCount;
+	int32 TotalCount = 0;
 	
 	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Cursor;
