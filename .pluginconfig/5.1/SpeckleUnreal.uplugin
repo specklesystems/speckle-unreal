@@ -14,7 +14,7 @@
 	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"EngineVersion": "4.27",
+	"EngineVersion": "5.1",
 	"Modules": [
 		{
 			"Name": "SpeckleUnreal",
