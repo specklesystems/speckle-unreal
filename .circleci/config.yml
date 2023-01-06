@@ -101,5 +101,6 @@ workflows:
             - "Generate Source Archive UE5.1"
       - marketplace-deploy:
           name: "Deploy to marketplace"
+          context: do-spaces-speckle-releases
           requires:
             - hold
