@@ -78,7 +78,7 @@ bool UMaterialConverter::TryGetOverride(const URenderMaterial* SpeckleMaterial, 
 	{
 		if(ensureAlways(IsValid(Mat)) && Mat->GetName() == Name)
 		{
-			OutMaterial = MaterialOverridesById[MaterialID];
+			OutMaterial = *MaterialOverridesByName.Find(Mat);
 			return true;
 		}
 	}
