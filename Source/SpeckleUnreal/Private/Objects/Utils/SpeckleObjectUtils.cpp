@@ -1,11 +1,14 @@
 
 #include "Objects/Utils/SpeckleObjectUtils.h"
 
+#include "LogSpeckle.h"
 #include "API/SpeckleSerializer.h"
 #include "Engine/World.h"
+#include "Objects/ObjectModelRegistry.h"
 #include "Objects/Geometry/Mesh.h"
 #include "Transports/Transport.h"
-
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 TArray<TSharedPtr<FJsonValue>> USpeckleObjectUtils::CombineChunks(const TArray<TSharedPtr<FJsonValue>>& ArrayField, const TScriptInterface<ITransport> Transport)
 {
@@ -69,6 +72,9 @@ float USpeckleObjectUtils::ParseScaleFactor(const FString& UnitsString)
 		if (LUnits == "miles" || LUnits == "mile" || LUnits == "mi")
 			return 160934.4;
 
+		if (LUnits == "us_ft" || LUnits == "ussurveyfeet")
+			return 12000.0 / 3937.0;
+
 		return 100;
 	};
 
@@ -93,7 +99,7 @@ bool USpeckleObjectUtils::TryParseTransform(const TSharedPtr<FJsonObject> Speckl
 	if(SpeckleObject->TryGetArrayField("transform", TransformData)) //Handle transform as array
 	{ }
 	else if(SpeckleObject->TryGetObjectField("transform", TransformObject)
-		&& (*TransformObject)->TryGetArrayField("value", TransformData)) //Handle transform as object
+		&& (*TransformObject)->TryGetArrayField("matrix", TransformData)) //Handle transform as object
 	{ }
 	else return false;
 		
@@ -168,4 +174,24 @@ FString USpeckleObjectUtils::DisplayAsString(const FString& msg, const TSharedPt
 	FJsonSerializer::Serialize(Obj.ToSharedRef(), Writer);
 	UE_LOG(LogSpeckle, Display, TEXT("resulting jsonString from %s -> %s"), *msg, *OutputString);
 	return OutputString;
+}
+
+FString USpeckleObjectUtils::GetFriendlyObjectName(const UBase* SpeckleObject)
+{
+	FString Prefix;
+	if(!(SpeckleObject->TryGetDynamicString("name", Prefix)
+		|| SpeckleObject->TryGetDynamicString("Name", Prefix)
+		|| SpeckleObject->TryGetDynamicString("Family", Prefix)))
+	{
+		Prefix = UObjectModelRegistry::GetSimplifiedTypeName(SpeckleObject->SpeckleType);
+	}
+	
+	return FString::Printf(TEXT("%s -- %s"), *Prefix, *SpeckleObject->Id);
+	
+}
+
+FString USpeckleObjectUtils::GetBoringObjectName(const UBase* SpeckleObject)
+{
+	const FString Prefix = UObjectModelRegistry::GetSimplifiedTypeName(SpeckleObject->SpeckleType);
+	return FString::Printf(TEXT("%s -- %s"), *Prefix, *SpeckleObject->Id);
 }

@@ -30,6 +30,9 @@ class SPECKLEUNREAL_API UStaticMeshConverter : public UObject, public ISpeckleCo
 public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
+	TSet<FString> HiddenTypes; 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")
 	TSubclassOf<AActor> MeshActorType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ToNative")

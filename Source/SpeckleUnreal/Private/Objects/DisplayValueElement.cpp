@@ -8,8 +8,6 @@
 TArray<FString> UDisplayValueElement::DisplayValueAliasStrings = {
 	"displayValue",
 	"@displayValue",
-	"displayMesh"
-	"@displayMesh"
 };
 
 

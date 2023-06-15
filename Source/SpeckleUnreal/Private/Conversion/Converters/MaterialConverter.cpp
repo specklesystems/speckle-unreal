@@ -6,12 +6,14 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Objects/Other/RenderMaterial.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInterface.h"
+#include "Misc/Paths.h"
 
 
 UMaterialConverter::UMaterialConverter()
 {
-	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleMaterial(TEXT("Material'/SpeckleUnreal/SpeckleMaterial.SpeckleMaterial'"));
-	static ConstructorHelpers::FObjectFinder<UMaterial> SpeckleGlassMaterial(TEXT("Material'/SpeckleUnreal/SpeckleGlassMaterial.SpeckleGlassMaterial'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> SpeckleMaterial(TEXT("Material'/SpeckleUnreal/SpeckleMaterial.SpeckleMaterial'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> SpeckleGlassMaterial(TEXT("Material'/SpeckleUnreal/SpeckleGlassMaterial.SpeckleGlassMaterial'"));
 
 	DefaultMeshMaterial = SpeckleMaterial.Object;
 	BaseMeshOpaqueMaterial = SpeckleMaterial.Object;

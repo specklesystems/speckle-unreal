@@ -9,7 +9,7 @@
 
 #include "BlockConverter.generated.h"
 
-class UBlockInstance;
+class UInstance;
 
 /**
  *  Converts Speckle Block Instance objects empty native actors with transform.
@@ -36,7 +36,7 @@ public:
 	virtual UBase* ConvertToSpeckle_Implementation(const UObject* Object) override;
 
 	UFUNCTION(BlueprintCallable, Category="ToNative")
-	virtual AActor* BlockToNative(const UBlockInstance* Block, UWorld* World);
+	virtual AActor* BlockToNative(const UInstance* Block, UWorld* World);
 	
 protected:
 	virtual AActor* CreateEmptyActor(UWorld* World, const FTransform& Transform, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());

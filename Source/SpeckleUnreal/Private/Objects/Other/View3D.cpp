@@ -10,7 +10,7 @@ bool UView3D::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<IT
 	const float ScaleFactor = USpeckleObjectUtils::ParseScaleFactor(Units);
 
 	// Parse optional Name property
-	if(Obj->TryGetStringField("name", Name)) DynamicProperties.Remove("name");
+	if(Obj->TryGetStringField("name", Name)) { }
 	
 	// Parse Origin
 	if(!USpeckleObjectUtils::ParseVectorProperty(Obj, "origin", ReadTransport, Origin)) return false;

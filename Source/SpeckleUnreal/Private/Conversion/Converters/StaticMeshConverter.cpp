@@ -15,6 +15,7 @@
 #include "Objects/DisplayValueElement.h"
 #include "Objects/Other/RenderMaterial.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
+#include "Components/StaticMeshComponent.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
@@ -22,6 +23,8 @@ UStaticMeshConverter::UStaticMeshConverter()
 {
 	SpeckleTypes.Add(UMesh::StaticClass());
 	SpeckleTypes.Add(UDisplayValueElement::StaticClass());
+
+	HiddenTypes.Add("Objects.BuiltElements.Room");
 	
 #if WITH_EDITORONLY_DATA
 	UseFullBuild = true;
@@ -115,6 +118,15 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 	}
 
 	MeshComponent->SetStaticMesh(Mesh);
+
+	for(const FString& t: HiddenTypes)
+	{
+		if(Parent->SpeckleType.Contains(t))
+		{
+			MeshComponent->SetVisibility(false);
+			break;
+		}
+	}
 	
 	int i = 0;
 	for(const UMesh* DisplayMesh : SpeckleMeshes)

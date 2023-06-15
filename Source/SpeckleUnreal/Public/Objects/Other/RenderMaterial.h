@@ -40,7 +40,7 @@ public:
 	{
 		if(!Super::Parse(Obj, ReadTransport)) return false;
 	
-		if(Obj->TryGetStringField("name", Name)) DynamicProperties.Remove("name");
+		if(!Obj->TryGetStringField("name", Name)) return false;
 		if(Obj->TryGetNumberField("opacity", Opacity)) DynamicProperties.Remove("opacity");
 		if(Obj->TryGetNumberField("metalness", Metalness)) DynamicProperties.Remove("metalness");
 		if(Obj->TryGetNumberField("roughness", Roughness)) DynamicProperties.Remove("roughness");

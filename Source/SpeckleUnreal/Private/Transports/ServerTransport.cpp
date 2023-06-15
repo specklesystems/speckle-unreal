@@ -67,13 +67,15 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 	this->OnComplete = OnCompleteAction;
 	this->OnError = OnErrorAction;
 	
+	const FString AuthString = AuthToken.IsEmpty() ? "" : "Bearer " + AuthToken; 
+	
 	// Create Request for Root Object
 	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 	const FString Endpoint = FString::Printf(TEXT("%s/objects/%s/%s/single"), *ServerUrl, *StreamId, *ObjectId);
 	Request->SetVerb("GET");
 	Request->SetURL(Endpoint);
 	Request->SetHeader("Accept", TEXT("text/plain"));
-	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	Request->SetHeader("Authorization", AuthString);
 	Request->SetHeader("apollographql-client-name", "Unreal Engine");
 	Request->SetHeader("apollographql-client-version", SPECKLE_CONNECTOR_VERSION);
 		
@@ -151,11 +153,12 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 	// Create Request
 	const FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 	{
+		const FString AuthString = AuthToken.IsEmpty() ? "" : "Bearer " + AuthToken; 
 		const FString EndPoint = FString::Printf(TEXT("%s/api/getobjects/%s"), *ServerUrl, *StreamId);
 		Request->SetVerb("POST");
 		Request->SetURL(EndPoint);
 		Request->SetHeader("Accept", TEXT("text/plain"));
-		Request->SetHeader("Authorization", "Bearer " + AuthToken);
+		Request->SetHeader("Authorization", AuthString);
 		Request->SetHeader("Content-Type", "application/json");
 		Request->SetContentAsString(Body);
 	}
