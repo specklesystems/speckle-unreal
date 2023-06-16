@@ -1,23 +1,23 @@
-
+﻿
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Instance.h"
 
-#include "BlockInstance.generated.h"
+#include "RevitInstance.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SPECKLEUNREAL_API UBlockInstance : public UInstance
+class SPECKLEUNREAL_API URevitInstance : public UInstance
 {
 	GENERATED_BODY()
 	
 public:
 	
-	UBlockInstance() : UInstance(TEXT("Objects.Other.BlockInstance")) {}
+	URevitInstance() : UInstance(TEXT("Objects.Other.Revit.RevitInstance")) {}
 
 	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport) override;
 
-};	
+};

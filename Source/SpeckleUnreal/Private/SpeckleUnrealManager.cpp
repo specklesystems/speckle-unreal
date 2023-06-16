@@ -60,7 +60,7 @@ void ASpeckleUnrealManager::Receive()
 	PrintMessage(Message);
 
 	// Setup network transports
-	UServerTransport* ServerTransport = UServerTransport::CreateServerTransport(ServerUrl,StreamId,AuthToken);
+	UServerTransport* ServerTransport = UServerTransport::CreateServerTransport(ServerUrl, StreamId, AuthToken);
 	
 	if(!KeepCache && LocalObjectCache)
 	{

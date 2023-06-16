@@ -48,6 +48,10 @@ public:
 
 	// Helper function to print a json obj to console
 	static FString DisplayAsString(const FString& msg, const TSharedPtr<FJsonObject> Obj);
+
+	UFUNCTION(BlueprintCallable, Category="Speckle/ObjectUtils", BlueprintPure)
+	static FString GetFriendlyObjectName(const UBase* SpeckleObject);
 	
-	
+	UFUNCTION(BlueprintCallable, Category="Speckle/ObjectUtils", BlueprintPure)
+	static FString GetBoringObjectName(const UBase* SpeckleObject);
 };

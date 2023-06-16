@@ -21,65 +21,81 @@ void UObjectModelRegistry::GenerateTypeRegistry()
 		if (Class->IsChildOf(UBase::StaticClass()) &&
 			!Class->HasAnyClassFlags(CLASS_Abstract))
 		{
-			const FString& SpeckleType = Class->GetDefaultObject<UBase>()->SpeckleType;;
-
-			ensureAlwaysMsgf(!TypeRegistry.Contains(SpeckleType),
-				TEXT("Base class: %s conflicts with: %s for SpeckleType: %s"),
+			const FString& SpeckleType = Class->GetDefaultObject<UBase>()->SpeckleType;
+			const FString TypeName = GetTypeName(SpeckleType);
+			
+			ensureAlwaysMsgf(!TypeRegistry.Contains(TypeName),
+				TEXT("Base class: %s conflicts with: %s for TypeName: %s"),
 				*Class->GetName(),
 				*TypeRegistry[SpeckleType]->GetName(),
 				*SpeckleType);
 
-			TypeRegistry.Add(SpeckleType, *It);
+			TypeRegistry.Add(TypeName, *It);
 		}
 	}
 }
 
 
-
-TSubclassOf<UBase> UObjectModelRegistry::FindClosestType(const FString& SpeckleType)
+bool UObjectModelRegistry::SplitSpeckleType(const FString& SpeckleType, FString& OutRemainder, FString& OutTypeName, const FString& Split)
 {
-	FString TypeString(SpeckleType);
-	TSubclassOf<UBase> Type = nullptr;
-
-	while(!TryGetRegisteredType(TypeString, Type))
+	if(SpeckleType.Split(Split, &OutRemainder, &OutTypeName, ESearchCase::CaseSensitive, ESearchDir::FromEnd))
 	{
-		if(!ParentType(TypeString, TypeString)) return nullptr;
+		return true;	
 	}
-		
-	return Type;
-	
+	else
+	{
+		OutTypeName = SpeckleType;
+		return false;
+	}
 }
 
-bool UObjectModelRegistry::ParentType(const FString& Type, FString& NextType)
+FString UObjectModelRegistry::GetTypeName(const FString& SpeckleType)
 {
-	int32 DotSplitIndex;
-	Type.FindLastChar('.', DotSplitIndex);
-	int32 ColonSplitIndex;
-	Type.FindLastChar(':', ColonSplitIndex);
-	const int32 SplitIndex = FGenericPlatformMath::Max(DotSplitIndex, ColonSplitIndex);
-
-	if(SplitIndex <= 0) return false;
-		
-	NextType = Type.Left(SplitIndex);
-	return true;
+	FString Discard, Ret;
+	SplitSpeckleType(SpeckleType, Discard, Ret);
+	return Ret;
 }
 
-TSubclassOf<UBase> UObjectModelRegistry::GetRegisteredType(const FString& SpeckleType)
+FString UObjectModelRegistry::GetSimplifiedTypeName(const FString& SpeckleType)
+{
+	FString Discard, Ret;
+	SplitSpeckleType(SpeckleType,Discard, Ret, ".");
+	return Ret;
+}
+
+TSubclassOf<UBase> UObjectModelRegistry::GetAtomicType(const FString& SpeckleType)
+{
+
+	FString WorkingType;
+	FString Remainder = FString(SpeckleType);
+
+	while(SplitSpeckleType(Remainder, Remainder, WorkingType))
+	{
+		TSubclassOf<UBase> Type;
+		if(TryGetRegisteredType(WorkingType, Type))
+		{
+			return Type;
+		}
+	}
+	return UBase::StaticClass();
+}
+
+TSubclassOf<UBase> UObjectModelRegistry::GetRegisteredType(const FString& TypeName)
 {
 	TSubclassOf<UBase> Type = nullptr;
-	TryGetRegisteredType(SpeckleType, Type);
+	TryGetRegisteredType(TypeName, Type);
 	return Type;
 }
 
-bool UObjectModelRegistry::TryGetRegisteredType(const FString& SpeckleType, TSubclassOf<UBase>& OutType)
+bool UObjectModelRegistry::TryGetRegisteredType(const FString& TypeName, TSubclassOf<UBase>& OutType)
 {
 	if(TypeRegistry.Num() == 0) GenerateTypeRegistry();
 
 
-	const bool Contains = TypeRegistry.Contains(SpeckleType);
+	const bool Contains = TypeRegistry.Contains(TypeName);
 	if(Contains)
 	{
-		OutType = *TypeRegistry.Find(SpeckleType);
+		OutType = *TypeRegistry.Find(TypeName);
 	}
 	return Contains;
 }

@@ -10,7 +10,8 @@
 class UMesh;
 
 /**
- * 
+ * This class does not exist in speckle sharp,
+ * This is a type to represent objects that have displayValues
  */
 UCLASS()
 class SPECKLEUNREAL_API UDisplayValueElement : public UBase
@@ -22,7 +23,7 @@ protected:
 	
 public:
 	
-	UDisplayValueElement() : UBase(TEXT("Objects.BuiltElements")) {}
+	UDisplayValueElement() : UBase(TEXT("Objects.Other.DisplayValueElement")) {}
 	
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Speckle|Objects")
     TArray<UMesh*> DisplayValue;

@@ -17,7 +17,7 @@ and [join our community forum](https://speckle.community/) where you can post an
 
 ## Notice
 
-We support Unreal Engine 4.26, 4.27, 5.0
+We officially support Unreal Engine 4.27, 5.0, 5.1, 5.2
 
 **Features**:
 - [Receiving Speckle geometry as Actors in editor and standalone runtime](https://speckle.systems/tutorials/getting-started-with-speckle-for-unreal/).
@@ -32,7 +32,7 @@ We support Unreal Engine 4.26, 4.27, 5.0
 | ---: | :---: | :--- |
 | [`Objects.Geometry.Mesh`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Geometry/Mesh.cs) | → | [Static Mesh Component](https://docs.unrealengine.com/4.27/en-US/API/Runtime/Engine/Components/UStaticMeshComponent/) /<br/> [Procedural Mesh Component](https://docs.unrealengine.com/4.27/en-US/API/Plugins/ProceduralMeshComponent/UProceduralMeshComponent/) |
 | [`Objects.Geometry.PointCloud`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Geometry/Pointcloud.cs) | → | [LiDAR Point Cloud](https://docs.unrealengine.com/4.27/en-US/WorkingWithContent/LidarPointCloudPlugin/LidarPointCloudPluginReference/) |
-| [`Objects.Other.BlockInstance`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Other/Block.cs) | → | Actor with Transform |
+| [`Objects.Other.Instance`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Other/Instance.cs) | → | Actor with Transform |
 | [`Objects.BuiltElements.View`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/BuiltElements/View.cs) | → | [Camera](https://docs.unrealengine.com/4.27/en-US/InteractiveExperiences/Framework/Camera/) |
 
 **Supported platforms**: Windows, Linux, MacOS
@@ -43,7 +43,8 @@ We support Unreal Engine 4.26, 4.27, 5.0
 - Currently no support for sending Unreal geometry to Speckle.
 - Does not use the .NET or Python SDK, or the Speckle Kit based workflow, all code is in native C++/BP.
 - Does not use our shared [Desktop UI 2](https://speckle.guide/user/ui2.html), only a simple editor UI is currently provided.
- 
+- Does not fetch [accounts from Speckle Manager](https://speckle.guide/user/manager.html#logging-in-adding-accounts), you must generate a [personal access token (auth token)](https://speckle.guide/dev/tokens.html#personal-access-tokens) to receive non-public streams.
+
 ## How to install
 
 **Speckle for Unreal Engine** can be installed through the [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/product/speckle-for-unreal-engine).

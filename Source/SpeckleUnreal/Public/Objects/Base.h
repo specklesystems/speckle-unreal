@@ -12,7 +12,7 @@ class ASpeckleUnrealManager;
 /**
  * Base type that all Object Models inherit from
  */
-UCLASS(BlueprintType, meta=(DisplayName="Base (Speckle.Objects)"))
+UCLASS(BlueprintType, meta=(DisplayName="Speckle Object (Base)"))
 class SPECKLEUNREAL_API UBase : public UObject
 {
 public:
@@ -31,14 +31,21 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString Id;
-	
-	TMap<FString, TSharedPtr<FJsonValue>> DynamicProperties; //TODO this won't be serialised!
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
-	FString Units;
+	int64 TotalChildrenCount;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
+	FString ApplicationId;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString SpeckleType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
+	FString Units;
+	
+	TMap<FString, TSharedPtr<FJsonValue>> DynamicProperties; //TODO this won't be serialised!
+	
 	
 	virtual bool Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITransport> ReadTransport)
 	{
@@ -52,6 +59,8 @@ public:
 		
 		if(Obj->TryGetStringField("units", Units)) DynamicProperties.Remove("units");
 		if(Obj->TryGetStringField("speckle_type", SpeckleType)) DynamicProperties.Remove("speckle_type");
+		if(Obj->TryGetStringField("applicationId", ApplicationId)) DynamicProperties.Remove("applicationId");
+		if(Obj->TryGetNumberField("totalChildrenCount", TotalChildrenCount)) DynamicProperties.Remove("totalChildrenCount");
 
 		return IsValid;
 	}

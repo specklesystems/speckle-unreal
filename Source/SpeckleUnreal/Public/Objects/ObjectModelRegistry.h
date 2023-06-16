@@ -23,29 +23,40 @@ private:
 
 	static void GenerateTypeRegistry();
 
-
 public:
-
-	/// Attempts to find the closest registered TSubclassOf<UBase>
-	/// by recursively stripping away a the most specific name specifier from the given SpeckleType
-	/// until a UBase type is found or the FString is exhausted.
-	///  
-	/// Eg. with an input of "Objects.Elements.Wall"
-	/// Will first look for a registered type of "Objects.Elements.Wall"
-	///	If one is not found, will look for "Objects.Elements" etc.
-	///	Returns nullptr if none found.
-	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	static TSubclassOf<UBase> FindClosestType(const FString& SpeckleType);
 	
+	/**
+	 * @brief Searches for a closest registered speckle type
+	 * by recursively stripping away a the most specific name specifier from the given SpeckleType
+	 * e.g. With an input of `"Objects.BuiltElements.Wall:Objects.BuiltElements.RevitWall"` will first search for
+	 * Will first look for a registered type of `"Objects.BuiltElements.RevitWall"`, then if not found `"Objects.BuiltElements.Wall"`, then simply will use UBase
+	 * @param SpeckleType The full speckle type
+	 * @return The closest registered type
+	 */
 	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	static bool ParentType(const FString& Type, FString& NextType);
+	static TSubclassOf<UBase> GetAtomicType(const FString& SpeckleType);
+	
+
+	// E.g. "Objects.BuiltElements.Wall:Objects.BuiltElements.RevitWall" -> "Objects.BuiltElements.RevitWall"
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Speckle|Objects")
+	static FString GetTypeName(const FString& SpeckleType);
+
+	// E.g. "Objects.BuiltElements.Wall:Objects.BuiltElements.RevitWall" -> "RevitWall"
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Speckle|Objects")
+	static FString GetSimplifiedTypeName(const FString& SpeckleType);
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Speckle|Objects")
+	static bool SplitSpeckleType(const FString& SpeckleType, FString& OutRemainder, FString& OutTypeName, const FString& Split = ":");
+	
+	/**
+	* @brief Attempts to find a `TSubclassOf<UBase>` with a `UBase::SpeckleType` matching the given SpeckleType param
+	 * @param TypeName 
+	 * @return the matching type or `nullptr` if none found.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
+	static TSubclassOf<UBase> GetRegisteredType(const FString& TypeName);
 
 	/// Attempts to find a TSubclassOf<UBase> with a UBase::SpeckleType matching the given SpeckleType param
-	///	Returns nullptr if none found.
 	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	static TSubclassOf<UBase> GetRegisteredType(const FString& SpeckleType);
-
-	/// Attempts to find a TSubclassOf<UBase> with a UBase::SpeckleType matching the given SpeckleType param
-	UFUNCTION(BlueprintCallable, Category="Speckle|Objects")
-	static bool TryGetRegisteredType(const FString& SpeckleType, TSubclassOf<UBase>& OutType);
+	static bool TryGetRegisteredType(const FString& TypeName, TSubclassOf<UBase>& OutType);
 };

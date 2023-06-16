@@ -9,6 +9,7 @@
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Conversion/Converters/MaterialConverter.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Objects/Utils/SpeckleObjectUtils.h"
 #include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
@@ -126,12 +127,14 @@ void USpeckleConverterComponent::AttachConvertedToOwner(AActor* AOwner, const UB
 		{
 	#if WITH_EDITOR
 			{
-				FString Name;
-				FText _Discard;
-				if( !(Base->TryGetDynamicString("name", Name) && FActorEditorUtils::ValidateActorName(FText::FromString(Name), _Discard)) )
+				FString Name = USpeckleObjectUtils::GetFriendlyObjectName(Base);
+				FText NameErrors;
+				
+				if(!FActorEditorUtils::ValidateActorName(FText::FromString(Name), NameErrors))
 				{
-					Name = FString::Printf(TEXT("%s - %s"), *Base->SpeckleType, *Base->Id);
+					Name = USpeckleObjectUtils::GetBoringObjectName(Base);
 				}
+				
 				NativeActor->SetActorLabel(Name);
 			}
 	#endif

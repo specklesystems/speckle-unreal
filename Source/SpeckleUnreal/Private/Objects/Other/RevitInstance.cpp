@@ -1,12 +1,12 @@
-
-#include "Objects/Other/BlockInstance.h"
+﻿
+#include "Objects/Other/RevitInstance.h"
 #include "LogSpeckle.h"
 
 #include "API/SpeckleSerializer.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Transports/Transport.h"
 
-bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInterface<ITransport> ReadTransport)
+bool URevitInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInterface<ITransport> ReadTransport)
 {
 	if(!Super::Parse(Obj, ReadTransport)) return false;
 	
@@ -21,7 +21,7 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 	//Geometries
 	//NOTE: This logic differs greatly from sharp/py implementations
 	const TSharedPtr<FJsonObject>* DefPtr;
-	if(!(Obj->TryGetObjectField("definition", DefPtr) || Obj->TryGetObjectField("blockDefinition", DefPtr) )) return false;
+	if(!Obj->TryGetObjectField("definition", DefPtr)) return false;
 	
 	const FString RefID = DefPtr->operator->()->GetStringField("referencedId");
 	const TSharedPtr<FJsonObject> Definition = ReadTransport->GetSpeckleObject(RefID);
@@ -34,12 +34,18 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 			DynamicProperties.Add("name", Definition->TryGetField("name"));
 		}
 	}
-
-	const auto Geometries = Definition->GetArrayField("geometry");
+	auto Geometries = TArray<TSharedPtr<FJsonValue>>();
+	const TArray<TSharedPtr<FJsonValue>>* ElementsPtr;
+	if(Definition->TryGetArrayField("elements", ElementsPtr))
+		Geometries.Append(*ElementsPtr);
+	const TArray<TSharedPtr<FJsonValue>>* DisplayValuePtr;
+	if(Definition->TryGetArrayField("displayValue", DisplayValuePtr))
+		Geometries.Append(*DisplayValuePtr);
+	
 
 	if(Geometries.Num() <= 0)
 	{
-		UE_LOG(LogSpeckle, Warning, TEXT("Block definition has no geometry. id: %s"), *RefID)
+		UE_LOG(LogSpeckle, Warning, TEXT("Instance definition has no geometry. id: %s"), *RefID)
 		return false;
 	}
 	

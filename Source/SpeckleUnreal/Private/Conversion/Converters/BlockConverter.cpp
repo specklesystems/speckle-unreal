@@ -4,10 +4,12 @@
 #include "Objects/Other/BlockInstance.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Engine/World.h"
+#include "Objects/Other/RevitInstance.h"
 
 UBlockConverter::UBlockConverter()
 {
 	SpeckleTypes.Add(UBlockInstance::StaticClass());
+	SpeckleTypes.Add(URevitInstance::StaticClass());
 	
 	BlockInstanceActorType = AActor::StaticClass();
 	ActorMobility = EComponentMobility::Static;
@@ -15,13 +17,13 @@ UBlockConverter::UBlockConverter()
 
 UObject* UBlockConverter::ConvertToNative_Implementation(const UBase* SpeckleBase, UWorld* World, TScriptInterface<ISpeckleConverter>&)
 {
-	const UBlockInstance* Block = Cast<UBlockInstance>(SpeckleBase);
+	const UInstance* Block = Cast<UInstance>(SpeckleBase);
 	if(Block == nullptr) return nullptr;
 
 	return BlockToNative(Block, World);
 }
 
-AActor* UBlockConverter::BlockToNative(const UBlockInstance* Block, UWorld* World)
+AActor* UBlockConverter::BlockToNative(const UInstance* Block, UWorld* World)
 {
 	AActor* BlockActor = CreateEmptyActor(World, USpeckleObjectUtils::CreateTransform(Block->Transform));
 	//Return the block actor as is,
