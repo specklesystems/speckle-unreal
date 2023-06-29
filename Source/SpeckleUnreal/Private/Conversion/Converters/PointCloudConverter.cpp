@@ -2,9 +2,11 @@
 #include "Conversion/Converters/PointCloudConverter.h"
 
 #include "LidarPointCloudActor.h"
+#include "LidarPointCloudShared.h"
 #include "LidarPointCloudComponent.h"
 #include "Objects/Geometry/PointCloud.h"
-
+#include "Engine/World.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 UPointCloudConverter::UPointCloudConverter()
 {

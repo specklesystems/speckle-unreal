@@ -11,6 +11,7 @@ class ITransport;
 class ISpeckleConverter;
 class UBase;
 class UAggregateConverter;
+class FJsonValue;
 struct FSlowTask;
 
 /**

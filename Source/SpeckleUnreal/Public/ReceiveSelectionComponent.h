@@ -2,9 +2,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
 #include "API/Models/SpeckleStream.h"
 
 #include "ReceiveSelectionComponent.generated.h"
+
 
 /**
  * Actor component for selecting a Speckle Stream + Object

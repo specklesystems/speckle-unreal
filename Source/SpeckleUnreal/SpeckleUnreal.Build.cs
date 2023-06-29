@@ -7,9 +7,17 @@ public class SpeckleUnreal : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
+		// #if UE_5_2_OR_LATER
+		// IWYUSupport = IWYUSupport.Full;
+		// #else 
+		// bEnforceIWYU = true;
+		// #endif
+		//
+		// bUseUnity = false;
+
 		PublicDefinitions.Add("SPECKLE_CONNECTOR_VERSION=\"2.15.0\"");
-		
-		PublicIncludePaths.AddRange(
+
+        PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
 			}
