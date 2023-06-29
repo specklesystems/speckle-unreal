@@ -1,10 +1,10 @@
 
 #include "ReceiveSelectionComponent.h"
 
+#include "API/Models/SpeckleUser.h"
+#include "API/ClientAPI.h"
 #include "JsonObjectConverter.h"
 #include "LogSpeckle.h"
-#include "API/ClientAPI.h"
-#include "API/Models/SpeckleUser.h"
 
 #if WITH_EDITOR
 void UReceiveSelectionComponent::PostEditChangeProperty(FPropertyChangedEvent& e)

@@ -11,6 +11,7 @@
 #include "Misc/ScopedSlowTask.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Dom/JsonValue.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 

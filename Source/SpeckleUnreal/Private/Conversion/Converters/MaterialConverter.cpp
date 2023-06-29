@@ -8,6 +8,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInterface.h"
 #include "Misc/Paths.h"
+#include "UObject/Package.h"
 
 
 UMaterialConverter::UMaterialConverter()

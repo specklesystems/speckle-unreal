@@ -128,7 +128,8 @@ FHttpRequestRef FClientAPI::CreatePostRequest(const FString& ServerUrl, const FS
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader("Accept-Encoding", Encoding);
 	Request->SetHeader("Content-Type", TEXT("application/json"));
-	Request->SetHeader("Authorization", "Bearer " + AuthToken);
+	if(!AuthToken.IsEmpty())
+		Request->SetHeader("Authorization","Bearer " + AuthToken);
 	Request->SetHeader("apollographql-client-name", "Unreal Engine");
 	Request->SetHeader("apollographql-client-version", SPECKLE_CONNECTOR_VERSION);
 	Request->SetContentAsString(PostPayload);

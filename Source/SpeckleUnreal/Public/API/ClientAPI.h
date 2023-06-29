@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Interfaces/IHttpRequest.h"
+#include "Dom/JsonObject.h"
 
 DECLARE_DELEGATE_OneParam(FErrorDelegate, const FString&);
 DECLARE_DELEGATE_OneParam(FAPIResponceDelegate, const FString&);

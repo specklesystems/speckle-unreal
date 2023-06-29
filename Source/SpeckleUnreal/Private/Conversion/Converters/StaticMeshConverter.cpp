@@ -16,6 +16,9 @@
 #include "Objects/Other/RenderMaterial.h"
 #include "Objects/Utils/SpeckleObjectUtils.h"
 #include "Components/StaticMeshComponent.h"
+#include "Misc/Paths.h"
+#include "UObject/Package.h"
+#include "Materials/MaterialInterface.h"
 
 #define LOCTEXT_NAMESPACE "FSpeckleUnrealModule"
 
