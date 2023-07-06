@@ -215,7 +215,7 @@ void UReceiveSelectionComponent::UpdateStreams()
 	if(!IsAccountValid || bManualMode) return;
 	
 	const FString LogName(__FUNCTION__);
-	const FString Payload = FString::Printf(TEXT("{\"query\": \"query{user{id streams(limit: %d){items{id name}}}}\"}"), Limit);
+	const FString Payload = FString::Printf(TEXT("{\"query\": \"query{activeUser{id streams(limit: %d){items{id name}}}}\"}"), Limit);
 
 	//Response Handling
 	auto OnComplete = [&](const FString& ResponseJson)
@@ -253,7 +253,7 @@ void UReceiveSelectionComponent::UpdateStreams()
 	FErrorDelegate ErrorDelegate;
 	ErrorDelegate.BindStatic(LogError, LogName);
 
-	FClientAPI::MakeGraphQLRequest(ServerUrl, AuthToken, "user", Payload, LogName, CompleteDelegate, ErrorDelegate);
+	FClientAPI::MakeGraphQLRequest(ServerUrl, AuthToken, "activeUser", Payload, LogName, CompleteDelegate, ErrorDelegate);
 	
 }
 
