@@ -15,7 +15,7 @@ public class SpeckleUnreal : ModuleRules
 		//
 		// bUseUnity = false;
 
-		PublicDefinitions.Add("SPECKLE_CONNECTOR_VERSION=\"2.15.0\"");
+		PublicDefinitions.Add("SPECKLE_CONNECTOR_VERSION=\"2.15.1\"");
 
         PublicIncludePaths.AddRange(
 			new string[] {
