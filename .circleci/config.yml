@@ -29,12 +29,13 @@ commands:
       copyright-string:
         type: string
     steps:
-      - run:
+      - run: #Remove BOM header, then add copyright comment
           name: "Add copyright notice to source files"
           command: |
             shopt -s globstar
             for file in Source/**/*.{cpp,hpp,c,h,cs};
               do if [ -f $file ]; then
+                sed -i '1s/^\xEF\xBB\xBF//' $file;
                 sed -i '1s/^/\/\/ <<parameters.copyright-string>>\n/' $file;
                 echo "added copyright notice to $file";
               fi;

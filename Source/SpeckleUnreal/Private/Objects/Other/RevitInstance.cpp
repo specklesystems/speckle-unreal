@@ -1,4 +1,4 @@
-﻿
+
 #include "Objects/Other/RevitInstance.h"
 #include "LogSpeckle.h"
 
