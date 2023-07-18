@@ -9,7 +9,7 @@
 #include "SpeckleConverter.generated.h"
 
 
-UINTERFACE()
+UINTERFACE(BlueprintType)
 class SPECKLEUNREAL_API USpeckleConverter : public UInterface
 {
 	GENERATED_BODY()
