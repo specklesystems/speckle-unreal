@@ -5,6 +5,7 @@
 #include "API/SpeckleSerializer.h"
 #include "Conversion/Converters/AggregateConverter.h"
 #include "Conversion/Converters/BlockConverter.h"
+#include "Conversion/Converters/CollectionConverter.h"
 #include "Conversion/Converters/PointCloudConverter.h"
 #include "Conversion/Converters/StaticMeshConverter.h"
 #include "Conversion/Converters/MaterialConverter.h"
@@ -22,6 +23,7 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 	static ConstructorHelpers::FObjectFinder<UPointCloudConverter> PointCloudConverter(TEXT("PointCloudConverter'/SpeckleUnreal/Converters/DefaultPointCloudConverter.DefaultPointCloudConverter'"));
 	static ConstructorHelpers::FObjectFinder<UBlockConverter> BlockConverter(TEXT("BlockConverter'/SpeckleUnreal/Converters/DefaultBlockConverter.DefaultBlockConverter'"));
 	static ConstructorHelpers::FObjectFinder<UMaterialConverter> MaterialConverter(TEXT("MaterialConverter'/SpeckleUnreal/Converters/DefaultMaterialConverter.DefaultMaterialConverter'"));
+	static ConstructorHelpers::FObjectFinder<UCollectionConverter> CollectionConverter(TEXT("CollectionConverter'/SpeckleUnreal/Converters/DefaultCollectionConverter.DefaultCollectionConverter'"));
 	static ConstructorHelpers::FObjectFinder<UObject> CameraConverter(TEXT("CameraConverter'/SpeckleUnreal/Converters/DefaultCameraConverter.DefaultCameraConverter'"));
 	//static ConstructorHelpers::FObjectFinder<ULightConverter> LightConverter(TEXT("LightConverter'/SpeckleUnreal/Converters/DefaultLightConverter.DefaultLightConverter'"));
 
@@ -31,6 +33,7 @@ USpeckleConverterComponent::USpeckleConverterComponent()
 	SpeckleConverter->SpeckleConverters.Add(PointCloudConverter.Object);
 	SpeckleConverter->SpeckleConverters.Add(BlockConverter.Object);
 	SpeckleConverter->SpeckleConverters.Add(MaterialConverter.Object);
+	SpeckleConverter->SpeckleConverters.Add(CollectionConverter.Object);
 	SpeckleConverter->SpeckleConverters.Add(CameraConverter.Object);
 	//SpeckleConverter->SpeckleConverters.Add(LightConverter.Object);
 	
@@ -41,8 +44,19 @@ AActor* USpeckleConverterComponent::RecursivelyConvertToNative(AActor* AOwner, c
 	const TScriptInterface<ITransport>& LocalTransport, bool DisplayProgressBar, TArray<AActor*>& OutActors)
 {
 	float ObjectsToConvert{};
-	Base->TryGetDynamicNumber("totalChildrenCount", ObjectsToConvert);
-
+	if(Base->TotalChildrenCount > 0)
+	{
+		ObjectsToConvert = Base->TotalChildrenCount;
+	}
+	else
+	{
+		Base->TryGetDynamicNumber("totalChildrenCount", ObjectsToConvert);
+	}
+	if(ObjectsToConvert <= 1)
+	{
+		ObjectsToConvert = 99999; //A large number
+	}
+	
 	// Progress bar
 	FScopedSlowTask Progress(ObjectsToConvert + 2,
 		LOCTEXT("SpeckleConvertoNative","Converting Speckle Objects to Native"), DisplayProgressBar);

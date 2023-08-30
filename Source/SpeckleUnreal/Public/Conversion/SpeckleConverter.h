@@ -34,6 +34,7 @@ public:
 	UObject* ConvertToNative(const UBase* SpeckleBase, UWorld* World, UPARAM(ref) TScriptInterface<ISpeckleConverter>& AvailableConverters);
 
 	/// Tries to convert a given Actor or Component into a Speckle Base
+	/// NOT IMPLEMENTED!!!
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ToSpeckle")
 	UBase* ConvertToSpeckle(const UObject* Object);
 
