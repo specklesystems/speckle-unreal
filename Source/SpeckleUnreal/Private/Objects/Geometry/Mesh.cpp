@@ -31,12 +31,12 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 
 		for (size_t i = 0, j = 0; i < NumberOfVertices; i++, j += 3)
 		{
-			Vertices.Add(Transform.InverseTransformPosition(FVector
+			Vertices.Add(FVector
 			(
 				ObjectVertices[j].Get()->AsNumber(),
 				-ObjectVertices[j + 1].Get()->AsNumber(),
 				ObjectVertices[j + 2].Get()->AsNumber()
-			) * ScaleFactor ));
+			) * ScaleFactor );
 		}
 		DynamicProperties.Remove("vertices");
 	}
