@@ -13,7 +13,7 @@
  * Either by Stream Id + Object Id (Object selection mode)
  * Or by Stream + Branch + Commit (Commit selection mode)
  */
-UCLASS(ClassGroup=(Speckle), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=(Speckle), meta=(BlueprintSpawnableComponent), HideCategories=(Activation, Collision, Cooking, Tags))
 class SPECKLEUNREAL_API UReceiveSelectionComponent : public UActorComponent
 {
     GENERATED_BODY()
@@ -126,7 +126,7 @@ protected: //Internal logic for branch/stream/commit fetching and selection
 #pragma endregion
 
 #pragma region Branch
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, Category="Speckle", meta=(DisplayName="Branch", GetOptions=GetBranchOptions, EditCondition="IsStreamValid && !bManualMode", NoResetToDefault))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, Category="Speckle", meta=(DisplayName="Branch", GetOptions=GetBranchOptions, EditCondition="IsAccountValid && !bManualMode", NoResetToDefault))
 	FString SelectedBranchText;
 	
 	UPROPERTY(BlueprintReadOnly, Transient, Category="Speckle")
@@ -150,7 +150,7 @@ protected: //Internal logic for branch/stream/commit fetching and selection
 #pragma endregion
 
 #pragma region Commit
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, Category="Speckle", meta=(DisplayName="Commit", GetOptions=GetCommitOptions, EditCondition="IsCommitValid && !bManualMode", NoResetToDefault))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, Category="Speckle", meta=(DisplayName="Commit", GetOptions=GetCommitOptions, EditCondition="IsAccountValid && !bManualMode", NoResetToDefault))
 	FString SelectedCommitText;
 	
 	UPROPERTY(BlueprintReadOnly, Transient, Category="Speckle")
