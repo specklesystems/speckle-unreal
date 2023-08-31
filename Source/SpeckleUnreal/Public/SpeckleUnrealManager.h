@@ -13,7 +13,7 @@ class FJsonObject;
 /**
  * An Actor to handle the receiving of Speckle objects into a level
  */
-UCLASS(ClassGroup=(Speckle), AutoCollapseCategories=("Speckle|Conversion"), BlueprintType)
+UCLASS(ClassGroup=(Speckle), AutoCollapseCategories=("Speckle|Conversion"), BlueprintType, HideCategories = (Collision, Rendering, Replication, HLOD, Physics, Networking, Input, Actor))
 class SPECKLEUNREAL_API ASpeckleUnrealManager : public AActor
 {
 	GENERATED_BODY()

@@ -101,10 +101,10 @@ AActor* UStaticMeshConverter::MeshesToNativeActor(const UBase* Parent, const TAr
 	FMatrix Transform = FMatrix::Identity;
 	// For single mesh, we check for transform
 	//TODO figure out how to handle DisplayValueElement with transform. Maybe we just grab transform from parent unconditionally? How does this affect blocks?
-	if(Parent == SpeckleMeshes[0])
-	{
-		Transform = SpeckleMeshes[0]->Transform;
-	}
+	// if(Parent == SpeckleMeshes[0])
+	// {
+	// 	Transform = SpeckleMeshes[0]->Transform;
+	// }
 	
 	AActor* Actor = CreateEmptyActor(World, USpeckleObjectUtils::CreateTransform(Transform));
 	TInlineComponentArray<UStaticMeshComponent*> Components;

@@ -33,7 +33,7 @@ public:
 	FString Id;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
-	int64 TotalChildrenCount;
+	int64 TotalChildrenCount = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Speckle|Objects")
 	FString ApplicationId;

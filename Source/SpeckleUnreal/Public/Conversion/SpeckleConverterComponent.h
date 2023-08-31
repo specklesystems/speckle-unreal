@@ -17,7 +17,7 @@ struct FSlowTask;
 /**
  * An Actor Component for encapsulating recursive conversion of Speckle Objects
  */
-UCLASS(ClassGroup=(Speckle), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=(Speckle), meta=(BlueprintSpawnableComponent), HideCategories=(Activation, Collision, Cooking, Tags))
 class SPECKLEUNREAL_API USpeckleConverterComponent : public UActorComponent
 {
 	GENERATED_BODY()

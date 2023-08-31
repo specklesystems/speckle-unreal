@@ -3,6 +3,7 @@
 
 #include "LogSpeckle.h"
 #include "Mixpanel.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "JsonObjectConverter.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
@@ -79,7 +80,12 @@ void UServerTransport::CopyObjectAndChildren(const FString& ObjectId,
 	Request->SetHeader("apollographql-client-version", SPECKLE_CONNECTOR_VERSION);
 		
 	// Response Callback
-	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3
+	auto ResponseHandler = [=, this](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable
+#else
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable
+#endif
+	
 	{
 		if(!bWasSuccessful)
 		{
@@ -163,7 +169,11 @@ void UServerTransport::FetchChildren(TScriptInterface<ITransport> TargetTranspor
 	}
 	
 	// Response Callback
-	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3
+	auto ResponseHandler = [=, this](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable
+#else
+	auto ResponseHandler = [=](FHttpRequestPtr, FHttpResponsePtr Response, bool bWasSuccessful) mutable
+#endif
 	{
 		// Request Fail
 		if(!bWasSuccessful)

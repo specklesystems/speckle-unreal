@@ -34,7 +34,7 @@ struct FSpeckleUser
 	FString Avatar;
 
 	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
-	bool Verified;
+	bool Verified = false;
 	
 	UPROPERTY(BlueprintReadWrite, Category="Speckle|API Models")
 	FString Role;
