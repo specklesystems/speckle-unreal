@@ -17,7 +17,7 @@ and [join our community forum](https://speckle.community/) where you can post an
 
 ## Notice
 
-We officially support Unreal Engine 4.27, 5.0, 5.1, 5.2
+We officially support Unreal Engine 4.27, 5.0, 5.1, 5.2, 5.3
 
 **Features**:
 - [Receiving Speckle geometry as Actors in editor and standalone runtime](https://speckle.systems/tutorials/getting-started-with-speckle-for-unreal/).
@@ -34,6 +34,7 @@ We officially support Unreal Engine 4.27, 5.0, 5.1, 5.2
 | [`Objects.Geometry.PointCloud`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Geometry/Pointcloud.cs) | → | [LiDAR Point Cloud](https://docs.unrealengine.com/4.27/en-US/WorkingWithContent/LidarPointCloudPlugin/LidarPointCloudPluginReference/) |
 | [`Objects.Other.Instance`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/Other/Instance.cs) | → | Actor with Transform |
 | [`Objects.BuiltElements.View`](https://github.com/specklesystems/speckle-sharp/blob/main/Objects/Objects/BuiltElements/View.cs) | → | [Camera](https://docs.unrealengine.com/4.27/en-US/InteractiveExperiences/Framework/Camera/) |
+| [`Speckle.Core.Models.Collection`](https://github.com/specklesystems/speckle-sharp/blob/main/Core/Core/Models/Collection.cs) | → | Empty Actor |
 
 **Supported platforms**: Windows, Linux, MacOS
 *Other platforms may work, but currently untested*.
