@@ -55,7 +55,7 @@ void ASpeckleUnrealManager::Receive()
 	const FString StreamId = ReceiveSelection->StreamId;
 	const FString ObjectId = ReceiveSelection->ObjectId;
 	
-	FAnalytics::TrackEvent( ServerUrl, "NodeRun", TMap<FString, FString> { {"name", StaticClass()->GetName() }, {"worldType", FString::FromInt(GetWorld()->WorldType)}});
+	FAnalytics::TrackEvent( ServerUrl, TEXT("NodeRun"), TMap<FString, FString> { {TEXT("name"), StaticClass()->GetName() }, {TEXT("worldType"), FString::FromInt(GetWorld()->WorldType)}});
 	FString Message = FString::Printf(TEXT("Fetching Objects from Speckle Server: %s"), *ServerUrl);
 	PrintMessage(Message);
 
@@ -104,7 +104,7 @@ void ASpeckleUnrealManager::HandleReceive(TSharedPtr<FJsonObject> RootObject, bo
 	else
 	{
 		FString Id;
-		RootObject->TryGetStringField("id", Id);
+		RootObject->TryGetStringField(TEXT("id"), Id);
 		FString Message = FString::Printf(TEXT("Failed to deserialise root object: %s"), *Id);
 		HandleError(Message);
 	}

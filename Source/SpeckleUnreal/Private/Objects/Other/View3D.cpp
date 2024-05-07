@@ -10,26 +10,26 @@ bool UView3D::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<IT
 	const float ScaleFactor = USpeckleObjectUtils::ParseScaleFactor(Units);
 
 	// Parse optional Name property
-	if(Obj->TryGetStringField("name", Name)) { }
+	if(Obj->TryGetStringField(TEXT("name"), Name)) { }
 	
 	// Parse Origin
-	if(!USpeckleObjectUtils::ParseVectorProperty(Obj, "origin", ReadTransport, Origin)) return false;
+	if(!USpeckleObjectUtils::ParseVectorProperty(Obj, TEXT("origin"), ReadTransport, Origin)) return false;
 	Origin *= ScaleFactor;
-	DynamicProperties.Remove("origin");
+	DynamicProperties.Remove(TEXT("origin"));
 
 	// Parse UpDirection
 	if(!USpeckleObjectUtils::ParseVectorProperty(Obj, "upDirection", ReadTransport, UpDirection)) return false;
 	UpDirection *= ScaleFactor;
-	DynamicProperties.Remove("upDirection");
+	DynamicProperties.Remove(TEXT("upDirection"));
 	
 	// Parse ForwardDirection
-	if(!USpeckleObjectUtils::ParseVectorProperty(Obj, "forwardDirection", ReadTransport, ForwardDirection)) return false;
+	if(!USpeckleObjectUtils::ParseVectorProperty(Obj, TEXT("forwardDirection"), ReadTransport, ForwardDirection)) return false;
 	ForwardDirection *= ScaleFactor;
-	DynamicProperties.Remove("forwardDirection");
+	DynamicProperties.Remove(TEXT("forwardDirection"));
 
 	// Parse IsOrthogonal
-	if(!Obj->TryGetBoolField("isOrthogonal", IsOrthogonal)) return false;
-	DynamicProperties.Remove("isOrthogonal");
+	if(!Obj->TryGetBoolField(TEXT("isOrthogonal"), IsOrthogonal)) return false;
+	DynamicProperties.Remove(TEXT("isOrthogonal"));
 	
 	return true;
 }

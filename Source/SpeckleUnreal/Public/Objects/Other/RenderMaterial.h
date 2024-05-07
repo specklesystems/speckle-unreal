@@ -40,25 +40,25 @@ public:
 	{
 		if(!Super::Parse(Obj, ReadTransport)) return false;
 	
-		if(!Obj->TryGetStringField("name", Name)) return false;
-		if(Obj->TryGetNumberField("opacity", Opacity)) DynamicProperties.Remove("opacity");
-		if(Obj->TryGetNumberField("metalness", Metalness)) DynamicProperties.Remove("metalness");
-		if(Obj->TryGetNumberField("roughness", Roughness)) DynamicProperties.Remove("roughness");
+		if(!Obj->TryGetStringField(TEXT("name"), Name)) return false;
+		if(Obj->TryGetNumberField(TEXT("opacity"), Opacity)) DynamicProperties.Remove(TEXT("opacity"));
+		if(Obj->TryGetNumberField(TEXT("metalness"), Metalness)) DynamicProperties.Remove(TEXT("metalness"));
+		if(Obj->TryGetNumberField(TEXT("roughness"), Roughness)) DynamicProperties.Remove(TEXT("roughness"));
 
 		bool IsValid = false;
 		
 		int32 ARGB;
-		if(Obj->TryGetNumberField("diffuse", ARGB))
+		if(Obj->TryGetNumberField(TEXT("diffuse"), ARGB))
 		{
 			Diffuse = FColor(ARGB);
-			DynamicProperties.Remove("diffuse");
+			DynamicProperties.Remove(TEXT("diffuse"));
 			IsValid = true;
 		}
 		
-		if(Obj->TryGetNumberField("emissive", ARGB))
+		if(Obj->TryGetNumberField(TEXT("emissive"), ARGB))
 		{
 			Emissive = FColor(ARGB);
-			DynamicProperties.Remove("emissive");
+			DynamicProperties.Remove(TEXT("emissive"));
 		}
 
 		return IsValid;
