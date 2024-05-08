@@ -22,7 +22,7 @@ public:
 
     // URL of the speckle server 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle")
-	FString ServerUrl = "https://speckle.xyz";
+	FString ServerUrl = "https://app.speckle.systems";
 	
 	// A Personal Access Token can be created from your Speckle Profile page (Treat tokens like passwords, do not share publicly)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Speckle", meta=(PasswordField=true))
