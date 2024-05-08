@@ -96,6 +96,9 @@ workflows:
       - generate-source-zip:
           name: "Generate Source Archive UE5.3"
           target: "5.3"
+      - generate-source-zip:
+          name: "Generate Source Archive UE5.4"
+          target: "5.4"
       - marketplace-deploy:
           name: "Deploy to marketplace"
           context: do-spaces-speckle-releases
@@ -105,3 +108,4 @@ workflows:
             - "Generate Source Archive UE5.1"
             - "Generate Source Archive UE5.2"
             - "Generate Source Archive UE5.3"
+            - "Generate Source Archive UE5.4"
