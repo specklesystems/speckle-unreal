@@ -15,27 +15,27 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 	//Transform
 	if(!USpeckleObjectUtils::TryParseTransform(Obj, Transform)) return false;
 	Transform.ScaleTranslation(FVector(ScaleFactor));
-	DynamicProperties.Remove("Transform");
+	DynamicProperties.Remove(TEXT("Transform"));
 	
 
 	//Geometries
 	//NOTE: This logic differs greatly from sharp/py implementations
 	const TSharedPtr<FJsonObject>* DefPtr;
-	if(!(Obj->TryGetObjectField("definition", DefPtr) || Obj->TryGetObjectField("blockDefinition", DefPtr) )) return false;
+	if(!(Obj->TryGetObjectField(TEXT("definition"), DefPtr) || Obj->TryGetObjectField(TEXT("blockDefinition"), DefPtr) )) return false;
 	
-	const FString RefID = DefPtr->operator->()->GetStringField("referencedId");
+	const FString RefID = DefPtr->operator->()->GetStringField(TEXT("referencedId"));
 	const TSharedPtr<FJsonObject> Definition = ReadTransport->GetSpeckleObject(RefID);
 	
-	if(!Obj->TryGetStringField("name", Name))
+	if(!Obj->TryGetStringField(TEXT("name"), Name))
 	{
-		if(Definition->TryGetStringField("name", Name))
+		if(Definition->TryGetStringField(TEXT("name"), Name))
 		{
 			//The instance has no name, so we'll steal it from the definition
-			DynamicProperties.Add("name", Definition->TryGetField("name"));
+			DynamicProperties.Add(TEXT("name"), Definition->TryGetField(TEXT("name")));
 		}
 	}
 
-	const auto Geometries = Definition->GetArrayField("geometry");
+	const auto Geometries = Definition->GetArrayField(TEXT("geometry"));
 
 	if(Geometries.Num() <= 0)
 	{
@@ -46,7 +46,7 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 	for(const auto& Geo : Geometries)
 	{
 		const TSharedPtr<FJsonObject> MeshReference = Geo->AsObject();
-		const FString ChildId = MeshReference->GetStringField("referencedId");
+		const FString ChildId = MeshReference->GetStringField(TEXT("referencedId"));
 
 		if(ReadTransport->HasObject(ChildId))
 		{
@@ -56,11 +56,11 @@ bool UBlockInstance::Parse(const TSharedPtr<FJsonObject> Obj,  const TScriptInte
 		}
 		else UE_LOG(LogSpeckle, Warning, TEXT("Block definition references an unknown object id: %s"), *ChildId)
 	}
-	DynamicProperties.Remove("geometry");
+	DynamicProperties.Remove(TEXT("geometry"));
 	
 	// Intentionally don't remove blockDefinition from dynamic properties,
 	// because we want the converter to create the child geometries for us
-	//DynamicProperties.Remove("blockDefinition");
+	//DynamicProperties.Remove(TEXT("blockDefinition"));
 	
 	return true;
 	

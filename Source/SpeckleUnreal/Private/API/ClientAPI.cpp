@@ -27,7 +27,7 @@ void FClientAPI::MakeGraphQLRequest(const FString& ServerUrl, const FString& Aut
 		if(!GetResponseAsJSON(Response, RequestLogName, Obj, OnError)) return;
 
 		const TSharedPtr<FJsonObject>* DataObjectPtr;
-		if(!Obj->TryGetObjectField("data", DataObjectPtr))
+		if(!Obj->TryGetObjectField(TEXT("data"), DataObjectPtr))
 		{
 			OnError(TEXT("%s responce was invalid, expected to find a \"data\" property in response"));
 			return;
@@ -89,7 +89,7 @@ void FClientAPI::MakeGraphQLRequest(const FString& ServerUrl, const FString& Aut
 		UE_LOG(LogSpeckle, Warning, TEXT("POST Request %s to %s failed to send"), *RequestLogName, *Request->GetURL() );
 	}
 	
-	FAnalytics::TrackEvent(Request->GetURL(), "NodeRun", TMap<FString, FString> { {"name", __FUNCTION__}});
+	FAnalytics::TrackEvent(Request->GetURL(), TEXT("NodeRun"), TMap<FString, FString> { {TEXT("name"), __FUNCTION__}});
 }
 
 
@@ -124,14 +124,14 @@ FHttpRequestRef FClientAPI::CreatePostRequest(const FString& ServerUrl, const FS
 {
 	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 
-	Request->SetURL(ServerUrl + "/graphql");
+	Request->SetURL(ServerUrl + TEXT("/graphql"));
 	Request->SetVerb(TEXT("POST"));
-	Request->SetHeader("Accept-Encoding", Encoding);
-	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->SetHeader(TEXT("Accept-Encoding"), Encoding);
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	if(!AuthToken.IsEmpty())
-		Request->SetHeader("Authorization","Bearer " + AuthToken);
-	Request->SetHeader("apollographql-client-name", "Unreal Engine");
-	Request->SetHeader("apollographql-client-version", SPECKLE_CONNECTOR_VERSION);
+		Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *AuthToken));
+	Request->SetHeader(TEXT("apollographql-client-name"), TEXT("Unreal Engine"));
+	Request->SetHeader(TEXT("apollographql-client-version"), SPECKLE_CONNECTOR_VERSION);
 	Request->SetContentAsString(PostPayload);
 
 	return Request;
@@ -178,10 +178,10 @@ bool FClientAPI::CheckForOperationErrors(const TSharedPtr<FJsonObject> GraphQLRe
 			FString Message;
 			const TSharedPtr<FJsonObject>* ErrorObject;
 			bool HadMessage = e->TryGetObject(ErrorObject)
-				&& (*ErrorObject)->TryGetStringField("message", Message);
+				&& (*ErrorObject)->TryGetStringField(TEXT("message"), Message);
 			if(!HadMessage)
 			{
-				Message = "An operation error occured but had no message!\n";
+				Message = TEXT("An operation error occured but had no message!\n");
 				UE_LOG(LogSpeckle, Warning, TEXT("%s"), *Message);
 			}
 			

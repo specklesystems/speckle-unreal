@@ -17,12 +17,12 @@ TArray<TSharedPtr<FJsonValue>> USpeckleObjectUtils::CombineChunks(const TArray<T
 	for(int32 i = 0; i < ArrayField.Num(); i++) 
 	{
 		FString Index;
-		if(ArrayField[i]->AsObject()->TryGetStringField("referencedId", Index))
+		if(ArrayField[i]->AsObject()->TryGetStringField(TEXT("referencedId"), Index))
 		{
 			if(!ensureAlwaysMsgf(Transport->HasObject(Index), TEXT("Failed to Dechunk array, Could not find chunk %s in transport"), *Index))
 				continue;
 			
-			const auto Chunk = Transport->GetSpeckleObject(Index)->GetArrayField("data");;
+			const auto Chunk = Transport->GetSpeckleObject(Index)->GetArrayField(TEXT("data"));;
 			ObjectPoints.Append(Chunk);
 		}
 		else
@@ -38,9 +38,9 @@ bool USpeckleObjectUtils::ResolveReference(const TSharedPtr<FJsonObject> Object,
 	FString SpeckleType;	
 	FString ReferenceID;
 
-	if (Object->TryGetStringField("speckle_type", SpeckleType)
-		&& SpeckleType == "reference"
-		&& Object->TryGetStringField("referencedId",ReferenceID))
+	if (Object->TryGetStringField(TEXT("speckle_type"), SpeckleType)
+		&& SpeckleType == TEXT("reference")
+		&& Object->TryGetStringField(TEXT("referencedId"),ReferenceID))
 	{
 		check(Transport != nullptr && Transport.GetObject() != nullptr)
 		
@@ -96,10 +96,10 @@ bool USpeckleObjectUtils::TryParseTransform(const TSharedPtr<FJsonObject> Speckl
 	const TSharedPtr<FJsonObject>* TransformObject;
 	const TArray<TSharedPtr<FJsonValue>>* TransformData;
 		
-	if(SpeckleObject->TryGetArrayField("transform", TransformData)) //Handle transform as array
+	if(SpeckleObject->TryGetArrayField(TEXT("transform"), TransformData)) //Handle transform as array
 	{ }
-	else if(SpeckleObject->TryGetObjectField("transform", TransformObject)
-		&& (*TransformObject)->TryGetArrayField("matrix", TransformData)) //Handle transform as object
+	else if(SpeckleObject->TryGetObjectField(TEXT("transform"), TransformObject)
+		&& (*TransformObject)->TryGetArrayField(TEXT("matrix"), TransformData)) //Handle transform as object
 	{ }
 	else return false;
 		
@@ -136,9 +136,9 @@ bool USpeckleObjectUtils::ParseVector(const TSharedPtr<FJsonObject> Object,
 	
 	double x = 0, y = 0, z = 0;
 	
-	if(!(Obj->TryGetNumberField("x", x)
-		&& Obj->TryGetNumberField("y", y)
-		&& Obj->TryGetNumberField("z", z))) return false;
+	if(!(Obj->TryGetNumberField(TEXT("x"), x)
+		&& Obj->TryGetNumberField(TEXT("y"), y)
+		&& Obj->TryGetNumberField(TEXT("z"), z))) return false;
 
 	OutObject = FVector(x,y,z);
 	//return true;
@@ -151,7 +151,7 @@ template <typename TBase>
 bool USpeckleObjectUtils::ParseSpeckleObject(const TSharedPtr<FJsonObject> Object,
 	const TScriptInterface<ITransport> Transport, TBase*& OutObject)
 {
-	static_assert(TIsDerivedFrom<TBase, UBase>::IsDerived, "Type TBase must inherit UBase");
+	static_assert(TIsDerivedFrom<TBase, UBase>::IsDerived, TEXT("Type TBase must inherit UBase"));
 
 	TSharedPtr<FJsonObject> Obj;
 	if(!ResolveReference(Object, Transport, Obj)) Obj = Object;
@@ -179,9 +179,9 @@ FString USpeckleObjectUtils::DisplayAsString(const FString& msg, const TSharedPt
 FString USpeckleObjectUtils::GetFriendlyObjectName(const UBase* SpeckleObject)
 {
 	FString Prefix;
-	if(!(SpeckleObject->TryGetDynamicString("name", Prefix)
-		|| SpeckleObject->TryGetDynamicString("Name", Prefix)
-		|| SpeckleObject->TryGetDynamicString("Family", Prefix)))
+	if(!(SpeckleObject->TryGetDynamicString(TEXT("name"), Prefix)
+		|| SpeckleObject->TryGetDynamicString(TEXT("Name"), Prefix)
+		|| SpeckleObject->TryGetDynamicString(TEXT("Family"), Prefix)))
 	{
 		Prefix = UObjectModelRegistry::GetSimplifiedTypeName(SpeckleObject->SpeckleType);
 	}

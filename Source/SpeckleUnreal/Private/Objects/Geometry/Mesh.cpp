@@ -14,7 +14,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 	if(USpeckleObjectUtils::TryParseTransform(Obj, Transform))
 	{
 		Transform.ScaleTranslation(FVector(ScaleFactor));
-		DynamicProperties.Remove("transform");
+		DynamicProperties.Remove(TEXT("transform"));
 	}
 	else
 	{
@@ -24,7 +24,7 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 
 	//Parse Vertices
 	{
-		TArray<TSharedPtr<FJsonValue>> ObjectVertices = USpeckleObjectUtils::CombineChunks(Obj->GetArrayField("vertices"), ReadTransport);
+		TArray<TSharedPtr<FJsonValue>> ObjectVertices = USpeckleObjectUtils::CombineChunks(Obj->GetArrayField(TEXT("vertices")), ReadTransport);
 		const int32 NumberOfVertices = ObjectVertices.Num() / 3;
 
 		Vertices.Reserve(NumberOfVertices);
@@ -38,24 +38,24 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 				ObjectVertices[j + 2].Get()->AsNumber()
 			) * ScaleFactor );
 		}
-		DynamicProperties.Remove("vertices");
+		DynamicProperties.Remove(TEXT("vertices"));
 	}
 
 	//Parse Faces
 	{
-		const TArray<TSharedPtr<FJsonValue>> FaceVertices = USpeckleObjectUtils::CombineChunks(Obj->GetArrayField("faces"), ReadTransport);
+		const TArray<TSharedPtr<FJsonValue>> FaceVertices = USpeckleObjectUtils::CombineChunks(Obj->GetArrayField(TEXT("faces")), ReadTransport);
 		Faces.Reserve(FaceVertices.Num());
 		for(const auto& VertIndex : FaceVertices)
 		{
 			Faces.Add(VertIndex->AsNumber());
 		}
-		DynamicProperties.Remove("faces");
+		DynamicProperties.Remove(TEXT("faces"));
 	}
 
 	//Parse TextureCoords
 	{
 		const TArray<TSharedPtr<FJsonValue>>* TextCoordArray;
-		if(Obj->TryGetArrayField("textureCoordinates", TextCoordArray))
+		if(Obj->TryGetArrayField(TEXT("textureCoordinates"), TextCoordArray))
 		{
 			TArray<TSharedPtr<FJsonValue>> TexCoords = USpeckleObjectUtils::CombineChunks(*TextCoordArray, ReadTransport);
 	
@@ -69,14 +69,14 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 					TexCoords[i + 1].Get()->AsNumber()
 				)); 
 			}
-			DynamicProperties.Remove("textureCoordinates");
+			DynamicProperties.Remove(TEXT("textureCoordinates"));
 		}
 	}
 
 	//Parse VertexColors
 	{
 		const TArray<TSharedPtr<FJsonValue>>* ColorArray;
-		if(Obj->TryGetArrayField("colors", ColorArray))
+		if(Obj->TryGetArrayField(TEXT("colors"), ColorArray))
 		{
 			TArray<TSharedPtr<FJsonValue>> Colors = USpeckleObjectUtils::CombineChunks(*ColorArray, ReadTransport);
 	
@@ -86,16 +86,16 @@ bool UMesh::Parse(const TSharedPtr<FJsonObject> Obj, const TScriptInterface<ITra
 			{
 				VertexColors.Add(FColor(Colors[i].Get()->AsNumber()));
 			}
-			DynamicProperties.Remove("colors");
+			DynamicProperties.Remove(TEXT("colors"));
 		}
 	}
 
 	//Parse Optional RenderMaterial
-	if (Obj->HasField("renderMaterial"))
+	if (Obj->HasField(TEXT("renderMaterial")))
 	{
 		RenderMaterial = NewObject<URenderMaterial>();
-		RenderMaterial->Parse(Obj->GetObjectField("renderMaterial"), ReadTransport);
-		DynamicProperties.Remove("renderMaterial");
+		RenderMaterial->Parse(Obj->GetObjectField(TEXT("renderMaterial")), ReadTransport);
+		DynamicProperties.Remove(TEXT("renderMaterial"));
 	}
 	
 	AlignVerticesWithTexCoordsByIndex();

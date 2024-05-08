@@ -51,16 +51,16 @@ public:
 	{
 		bool IsValid = false;
 		DynamicProperties = Obj->Values;
-		if(Obj->TryGetStringField("id", Id))
+		if(Obj->TryGetStringField(TEXT("id"), Id))
 		{
 			IsValid = true;
-			DynamicProperties.Remove("id");
+			DynamicProperties.Remove(TEXT("id"));
 		}
 		
-		if(Obj->TryGetStringField("units", Units)) DynamicProperties.Remove("units");
-		if(Obj->TryGetStringField("speckle_type", SpeckleType)) DynamicProperties.Remove("speckle_type");
-		if(Obj->TryGetStringField("applicationId", ApplicationId)) DynamicProperties.Remove("applicationId");
-		if(Obj->TryGetNumberField("totalChildrenCount", TotalChildrenCount)) DynamicProperties.Remove("totalChildrenCount");
+		if(Obj->TryGetStringField(TEXT("units"), Units)) DynamicProperties.Remove(TEXT("units"));
+		if(Obj->TryGetStringField(TEXT("speckle_type"), SpeckleType)) DynamicProperties.Remove(TEXT("speckle_type"));
+		if(Obj->TryGetStringField(TEXT("applicationId"), ApplicationId)) DynamicProperties.Remove(TEXT("applicationId"));
+		if(Obj->TryGetNumberField(TEXT("totalChildrenCount"), TotalChildrenCount)) DynamicProperties.Remove(TEXT("totalChildrenCount"));
 
 		return IsValid;
 	}

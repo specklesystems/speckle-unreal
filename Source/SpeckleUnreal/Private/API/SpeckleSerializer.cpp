@@ -24,9 +24,9 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj,
 	}
 		
 	FString SpeckleType;	
-	if (!Obj->TryGetStringField("speckle_type", SpeckleType)) return nullptr;
+	if (!Obj->TryGetStringField(TEXT("speckle_type"), SpeckleType)) return nullptr;
 	FString ObjectId = "";	
-	Obj->TryGetStringField("id", ObjectId);
+	Obj->TryGetStringField(TEXT("id"), ObjectId);
 		
 	TSubclassOf<UBase> BaseType;
 	
@@ -62,7 +62,7 @@ UBase* USpeckleSerializer::DeserializeBase(const TSharedPtr<FJsonObject> Obj,
 		}
 		
 		//If we couldn't even deserialize this to a Base, something is quite wrong...
-		if(WorkingType == "Base" || BaseType == UBase::StaticClass())
+		if(WorkingType == TEXT("Base") || BaseType == UBase::StaticClass())
 		{
 			UE_LOG(LogSpeckle, Warning, TEXT("Skipping deserilization of %s id: %s - object could not be deserilaized to Base"), *SpeckleType, *ObjectId );
 			return nullptr;

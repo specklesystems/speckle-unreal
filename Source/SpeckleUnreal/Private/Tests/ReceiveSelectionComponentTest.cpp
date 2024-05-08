@@ -64,6 +64,7 @@ bool FReceiveSelectionComponentTest::RunTest(const FString& Parameters)
 	ADD_LATENT_AUTOMATION_COMMAND(FCheckValidSelection(this, s));
 	ADD_LATENT_AUTOMATION_COMMAND(FCheckLimitMatch(this, s));
 
+	return true;
 	
 #else
 	TestTrue(TEXT("TEST_AUTH_TOKEN definition exists"), false);
@@ -71,7 +72,6 @@ bool FReceiveSelectionComponentTest::RunTest(const FString& Parameters)
 	return false;
 #endif
 	
-	return true;
 }
 #endif
 
