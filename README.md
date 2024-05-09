@@ -17,7 +17,7 @@ and [join our community forum](https://speckle.community/) where you can post an
 
 ## Notice
 
-We officially support Unreal Engine 4.27, 5.0, 5.1, 5.2, 5.3
+We officially support Unreal Engine 4.27, 5.0-5.4
 
 **Features**:
 - [Receiving Speckle geometry as Actors in editor and standalone runtime](https://speckle.systems/tutorials/getting-started-with-speckle-for-unreal/).
