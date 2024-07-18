@@ -54,7 +54,7 @@ bool FReceiveSelectionComponentTest::RunTest(const FString& Parameters)
 	
 	
 	s->AuthToken = TEST_AUTH_TOKEN;
-	s->ServerUrl = TEXT("https://latest.speckle.dev");
+	s->ServerUrl = TEXT("https://latest.speckle.systems");
 	s->bManualMode = false;
 	s->Refresh();
 	
