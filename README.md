@@ -10,7 +10,7 @@ enabling interoperable collaboration between Unreal and other Speckle connectors
 https://user-images.githubusercontent.com/45512892/187969471-3f548b17-3388-48ee-a07c-bd3a0ecf5149.mp4
 
 
-Checkout our dedicated [Tutorials and Docs](https://speckle.systems/tag/unreal/).
+Checkout our dedicated [Tutorials and Docs](https://v1.speckle.systems/tag/unreal/).
 
 If you are enjoying using Speckle, don't forget to ⭐ our [GitHub repositories](https://github.com/specklesystems),
 and [join our community forum](https://speckle.community/) where you can post any questions, suggestions, and discuss exciting projects!
