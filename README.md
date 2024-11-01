@@ -1,19 +1,20 @@
-# Speckle for Unreal Engine
+<h1 align="center">
+  <img src="https://user-images.githubusercontent.com/2679513/131189167-18ea5fe1-c578-47f6-9785-3748178e4312.png" width="150px"/><br/>
+  Speckle | Unreal
+</h1>
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/SpeckleSystems?style=social)](https://twitter.com/SpeckleSystems) [![Community forum users](https://img.shields.io/discourse/users?server=https%3A%2F%2Fspeckle.community&style=flat-square&logo=discourse&logoColor=white)](https://speckle.community) [![website](https://img.shields.io/badge/https://-speckle.systems-royalblue?style=flat-square)](https://speckle.systems) [![docs](https://img.shields.io/badge/docs-speckle.guide-orange?style=flat-square&logo=read-the-docs&logoColor=white)](https://speckle.guide/user/unreal.html)
+<p align="center"><a href="https://twitter.com/SpeckleSystems"><img src="https://img.shields.io/twitter/follow/SpeckleSystems?style=social" alt="Twitter Follow"></a> <a href="https://speckle.community"><img src="https://img.shields.io/discourse/users?server=https%3A%2F%2Fspeckle.community&amp;style=flat-square&amp;logo=discourse&amp;logoColor=white" alt="Community forum users"></a> <a href="https://speckle.systems"><img src="https://img.shields.io/badge/https://-speckle.systems-royalblue?style=flat-square" alt="website"></a> <a href="https://speckle.guide/dev/"><img src="https://img.shields.io/badge/docs-speckle.guide-orange?style=flat-square&amp;logo=read-the-docs&amp;logoColor=white" alt="docs"></a></p>
 
-Speckle makes integrating Unreal Engine with your 3D workflows even easier. </br>
-This plugin connects Unreal Engine to Speckle, allowing you to receive your versioned 3D data from Speckle inside Unreal Engine,
-enabling interoperable collaboration between Unreal and other Speckle connectors (Revit, Rhino, Blender, Sketchup, Unity, AutoCAD, [and more!](https://speckle.systems/features/connectors/))
+> Speckle is the first AEC data hub that connects with your favorite AEC tools. Speckle exists to overcome the challenges of working in a fragmented industry where communication, creative workflows, and the exchange of data are often hindered by siloed software and processes. It is here to make the industry better.
 
+<h3 align="center">
+    Speckle Connector for Unreal Engine
+</h3>
 
-https://user-images.githubusercontent.com/45512892/187969471-3f548b17-3388-48ee-a07c-bd3a0ecf5149.mp4
-
-
-Checkout our dedicated [Tutorials and Docs](https://v1.speckle.systems/tag/unreal/).
-
-If you are enjoying using Speckle, don't forget to ⭐ our [GitHub repositories](https://github.com/specklesystems),
-and [join our community forum](https://speckle.community/) where you can post any questions, suggestions, and discuss exciting projects!
+> [!WARNING]
+> This is a legacy repo! A new next generation connector will be coming soon. In the meantime, check out our active next generation repos here:
+> [`speckle-sharp-connectors`](https://github.com/specklesystems/speckle-sharp-connectors): our .NET next generation connectors and desktop UI
+> [`speckle-sharp-sdk`](https://github.com/specklesystems/speckle-sharp-sdk): our .NET SDK, Tests, and Objects
 
 ## Notice
 
