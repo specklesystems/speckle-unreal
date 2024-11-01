@@ -12,8 +12,8 @@
 </h3>
 
 > [!WARNING]
-> This is a legacy repo! A new next generation connector will be coming soon. In the meantime, check out our active next generation repos here:
-> [`speckle-sharp-connectors`](https://github.com/specklesystems/speckle-sharp-connectors): our .NET next generation connectors and desktop UI
+> This is a legacy repo! A new next generation connector will be coming soon. In the meantime, check out our active next generation repos here 👇<br/>
+> [`speckle-sharp-connectors`](https://github.com/specklesystems/speckle-sharp-connectors): our .NET next generation connectors and desktop UI<br/>
 > [`speckle-sharp-sdk`](https://github.com/specklesystems/speckle-sharp-sdk): our .NET SDK, Tests, and Objects
 
 ## Notice
